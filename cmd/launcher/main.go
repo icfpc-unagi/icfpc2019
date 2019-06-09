@@ -14,9 +14,6 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 )
 
-var password = ""
-var bucket = ""
-
 func main() {
 	pwd, err := os.Getwd()
 	if err != nil {

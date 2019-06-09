@@ -155,5 +155,8 @@ RUN chown -R unagi:unagi /home/unagi/.ssh
 RUN apt-get update -q && apt-get install -qy net-tools && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+RUN git config --global user.email 'ninetan@github.com' && \
+    git config --global user.name 'Ninetan'
+
 # Download repository.
 RUN git clone git@github.com:imos/icfpc2019.git /repo
