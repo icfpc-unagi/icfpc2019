@@ -1,0 +1,102 @@
+FROM ubuntu:18.04
+
+ENV RUSTUP_HOME=/usr/local/rustup
+ENV CARGO_HOME=/usr/local/cargo
+ENV PATH=/usr/local/cargo/bin:$PATH
+
+# Use GCP apt.
+RUN sed -i.bak -e "s%http://archive.ubuntu.com/ubuntu/%http://asia-northeast1.gce.archive.ubuntu.com/ubuntu/%g" /etc/apt/sources.list
+
+# Do not exclude man pages & other documentation
+RUN rm /etc/dpkg/dpkg.cfg.d/excludes
+# Reinstall all currently installed packages in order to get the man pages back
+RUN apt-get update && \
+    dpkg -l | grep ^ii | cut -d' ' -f3 | xargs apt-get install -y --reinstall && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install useful tools.
+RUN apt-get update && apt-get install -y \
+        build-essential devscripts ubuntu-standard software-properties-common \
+        screen lxc traceroute gdb \
+        vim git subversion mercurial cmake make \
+        dos2unix nkf curl xz-utils graphviz imagemagick \
+        openssh-server sudo && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /var/run/sshd
+
+# Install Rust.
+RUN set -eux; \
+    curl -o rustup-init "https://static.rust-lang.org/rustup/archive/1.12.0/x86_64-unknown-linux-gnu/rustup-init"; \
+    chmod +x rustup-init; \
+    ./rustup-init -y --no-modify-path --default-toolchain 1.27.1; \
+    rm rustup-init; \
+    chmod -R a+w $RUSTUP_HOME $CARGO_HOME; \
+    rustup --version; cargo --version; rustc --version
+
+# Install scripts (python, php, ruby).
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+        php-cli php-mysql php-curl php-pear python python-pip ruby && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install C++.
+RUN apt-get update && apt-get install -y clang clang-format && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install C#.
+RUN apt-get update && apt-get install -y mono-devel && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install Java.
+RUN apt-get update && apt-get install -y default-jre default-jdk && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install Bazel.
+RUN curl -L -o installer \
+    "https://github.com/bazelbuild/bazel/releases/download/0.15.2/bazel-0.15.2-installer-linux-x86_64.sh" && \
+    chmod +x installer && ./installer && rm ./installer
+RUN echo 'source /usr/local/lib/bazel/bin/bazel-complete.bash' > /etc/profile.d/99-bazel-complete.sh
+RUN chmod +x /etc/profile.d/99-bazel-complete.sh
+
+# Set locale to suppress an sshd warning.
+RUN echo 'LANG="en_US.UTF-8"' > /etc/default/locale
+
+# Install additional packages.
+RUN apt-get update && apt-get install -y libssl-dev && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Create unagi user.
+RUN useradd \
+        --home-dir=/home/unagi \
+        --create-home \
+        --uid=10001 \
+        --user-group \
+        --shell=/bin/bash \
+        unagi
+RUN echo 'unagi ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/unagi
+
+# Unagi password.
+ARG UNAGI_PASSWORD
+RUN [ "${UNAGI_PASSWORD}" != '' ]
+RUN echo "export UNAGI_PASSWORD='${UNAGI_PASSWORD}'" > /etc/profile.d/99-unagi.sh
+RUN echo "export RUSTUP_HOME=/usr/local/rustup" >> /etc/profile.d/99-unagi.sh
+RUN echo "export CARGO_HOME=/usr/local/cargo" >> /etc/profile.d/99-unagi.sh
+RUN echo "export PATH=\"\$HOME/icfpc2018-master/bin:/usr/local/cargo/bin:\$PATH\"" \
+    >> /etc/profile.d/99-unagi.sh
+RUN chmod +x /etc/profile.d/99-unagi.sh
+
+ADD ./data/unagi.pem /root/.ssh/id_rsa
+RUN chmod 600 /root/.ssh/id_rsa
+ADD ./data/unagi.pub /root/.ssh/authorized_keys
+RUN ssh-keyscan github.com >>/root/.ssh/known_hosts
+
+ADD ./data/unagi.pub /home/unagi/.ssh/authorized_keys
+ADD --chown=unagi:unagi ./data/unagi.pem /home/unagi/.ssh/id_rsa
+RUN chmod 600 /home/unagi/.ssh/id_rsa
+RUN ssh-keyscan github.com >> /home/unagi/.ssh/known_hosts
+RUN chown -R unagi:unagi /home/unagi/.ssh
+
+# Download repository.
+RUN sudo --user=unagi git clone git@github.com:imos/icfpc2018.git \
+    /home/unagi/icfpc2018-master
+
+CMD ["/bin/bash"]
