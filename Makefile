@@ -12,6 +12,10 @@ upload-launcher:
 	cd cmd/launcher && make upload
 .PHONY:
 
+upload-installer:
+	gsutil cp script/install-launcher.sh gs://unagi2019-public/install.sh
+.PHONY: upload-installer
+
 service_account:
 	openssl aes-256-cbc -d \
 		-in secret/service_account.json.encrypted \
