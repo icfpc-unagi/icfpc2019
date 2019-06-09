@@ -3,6 +3,10 @@ FROM ubuntu:18.04
 ENV DEBIAN_FRONTEND noninteractive
 ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=DontWarn
 
+ARG UNAGI_PASSWORD
+RUN [ "${UNAGI_PASSWORD}" != '' ]
+ENV UNAGI_PASSWORD=$UNAGI_PASSWORD
+
 ENV RUSTUP_HOME=/usr/local/rustup
 ENV CARGO_HOME=/usr/local/cargo
 ENV PATH=/usr/local/cargo/bin:/usr/local/go/bin:$PATH
@@ -135,8 +139,6 @@ RUN useradd \
 RUN echo 'unagi ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/unagi
 
 # Unagi password.
-ARG UNAGI_PASSWORD
-RUN [ "${UNAGI_PASSWORD}" != '' ]
 RUN echo "export UNAGI_PASSWORD='${UNAGI_PASSWORD}'" > /etc/profile.d/99-unagi.sh
 RUN chmod +x /etc/profile.d/99-unagi.sh
 
@@ -155,7 +157,7 @@ RUN chown -R unagi:unagi /home/unagi/.ssh
 RUN apt-get update -q && apt-get install -qy net-tools && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN git config --global user.email 'ninetan@github.com' && \
+RUN git config --global user.email '5896564+ninetan@users.noreply.github.com' && \
     git config --global user.name 'Ninetan'
 
 # Download repository.
