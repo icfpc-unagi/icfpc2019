@@ -15,3 +15,4 @@ tmpfile=`mktemp`
 echo -n "${tag}" > "${tmpfile}"
 gsutil cp "${tmpfile}" "gs://unagi2019-public/hash/docker-${TAG}"
 rm "${tmpfile}"
+docker push "unagi2019/image:${TAG}"
