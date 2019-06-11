@@ -21,6 +21,7 @@ jobs:
       - save_cache:
           key: project-cache
           paths:
+            - "./target"
             - "/usr/local/cargo/registry"
             - "/go/pkg"
             - "~/.cache/go-build"
