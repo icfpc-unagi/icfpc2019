@@ -10,6 +10,7 @@ Cargo.lock
 **/*.rs.bk
 
 /build
+.cache
 
 # OS-specific invisible files.
 .DS_Store

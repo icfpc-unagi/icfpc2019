@@ -120,7 +120,7 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Gcloud service account.
-ADD ./build/service_account.json /root/.config/service_account.json
+ADD ./build/service_account.json.decrypted /root/.config/service_account.json
 RUN gcloud auth activate-service-account \
     privileged@icfpc-compute.iam.gserviceaccount.com \
     --key-file=/root/.config/service_account.json && \
@@ -143,14 +143,25 @@ RUN echo "export UNAGI_PASSWORD='${UNAGI_PASSWORD}'" > /etc/profile.d/99-unagi.s
 RUN chmod +x /etc/profile.d/99-unagi.sh
 
 # SSH settings.
-ADD ./build/unagi.pem /root/.ssh/id_rsa
-ADD ./build/unagi.pem /home/unagi/.ssh/id_rsa
+ADD ./build/unagi.pem.decrypted /root/.ssh/id_rsa
+ADD ./build/unagi.pem.decrypted /home/unagi/.ssh/id_rsa
 RUN chmod 600 /root/.ssh/id_rsa /home/unagi/.ssh/id_rsa
 ADD ./secret/unagi.pub /root/.ssh/authorized_keys
 ADD ./secret/unagi.pub /home/unagi/.ssh/authorized_keys
 RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
 RUN ssh-keyscan github.com >> /home/unagi/.ssh/known_hosts
 RUN chown -R unagi:unagi /home/unagi/.ssh
+
+################################################################################
+# Followings are temporary commands.  They should be merged into somewhere
+# above.
+################################################################################
+
+RUN touch /UNAGI_IMAGE
+
+RUN echo '#!/usr/bin/env bash' > /usr/local/bin/unagi && \
+    echo 'exec "$@"' >> /usr/local/bin/unagi && \
+    chmod +x /usr/local/bin/unagi
 
 # Additional programs.
 # TODO(imos): This should be moved earlier once it gets stable.
@@ -159,6 +170,8 @@ RUN apt-get update -q && apt-get install -qy net-tools && \
 
 RUN git config --global user.email '5896564+ninetan@users.noreply.github.com' && \
     git config --global user.name 'Ninetan'
+
+ADD ./build/docker_config.json.decrypted /root/.docker/config.json
 
 # Download repository.
 RUN git clone git@github.com:imos/icfpc2019.git /repo

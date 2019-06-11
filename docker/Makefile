@@ -15,7 +15,7 @@ data/unagi.pub: ../ssh/unagi.pub
 	mkdir -p data
 	cp ../ssh/unagi.pub ./data/unagi.pub
 
-build-%: %.docker
+build-%: %.Dockerfile
 	cd .. && docker build --file docker/$*.Dockerfile \
 	    --build-arg UNAGI_PASSWORD=$${UNAGI_PASSWORD} \
 	    -t unagi2019/image:$* .

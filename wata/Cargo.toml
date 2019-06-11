@@ -1,0 +1,6 @@
+[package]
+name = "wata"
+version = "0.1.0"
+authors = ["Yoichi Iwata <yiwata@nii.ac.jp>"]
+
+[dependencies]

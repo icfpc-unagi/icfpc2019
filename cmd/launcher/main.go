@@ -15,6 +15,8 @@ import (
 )
 
 func main() {
+	checkIfUnagiDirecotry()
+
 	pwd, err := os.Getwd()
 	if err != nil {
 		panic(fmt.Sprintf("failed to get current directory: %s", err))
@@ -39,7 +41,10 @@ func main() {
 		"-v", "/var/run/docker.sock:/var/run/docker.sock",
 		"-v", pwd + ":/work",
 		"-v", "/:/host",
-		"-v", getCacheDirectory() + ":/root/.cache/icfpc2019",
+		"-v", getCacheDirectory("") + ":/root/.cache/icfpc2019",
+		"-v", getLocalCacheDirectory("cargo") + ":/usr/local/cargo/registry",
+		"-v", getLocalCacheDirectory("go-pkg") + ":/go/pkg",
+		"-v", getLocalCacheDirectory("go-cache") + ":/root/.cache/go-cache",
 		"-e", "HOST_PWD=" + pwd,
 		"-e", "HOST_LAUNCHER=" + exe,
 		"--privileged",
@@ -58,15 +63,47 @@ func main() {
 	}
 }
 
-func getCacheDirectory() string {
+func checkIfUnagiDirecotry() {
+	if _, err := os.Stat("UNAGI_REPOSITORY"); err != nil {
+		panic(fmt.Sprintf(
+			"unagi command must be run under Unagi team repository"))
+	}
+}
+
+func getCurrentDirectory() string {
+	pwd, err := os.Getwd()
+	if err != nil {
+		panic(fmt.Sprintf("failed to get current directory: %s", err))
+	}
+	return pwd
+}
+
+func getCacheDirectory(name string) string {
 	homeDir, err := homedir.Dir()
 	if err != nil {
 		panic(fmt.Sprintf("failed to home directory: %s", err))
 	}
 	cacheDir := path.Join(homeDir, ".cache", "icfpc2019")
-	if err := os.MkdirAll(path.Join(cacheDir, "icfpc2019"), 0755); err != nil {
-		panic(fmt.Sprintf("failed to create %s directory: %s",
-			path.Join(cacheDir, "icfpc2019"), err))
+	if name != "" {
+		cacheDir = path.Join(cacheDir, name)
+	}
+	if err := os.MkdirAll(cacheDir, 0755); err != nil {
+		panic(fmt.Sprintf("failed to create %s directory: %s", cacheDir, err))
+	}
+	return cacheDir
+}
+
+func getLocalCacheDirectory(name string) string {
+	pwd, err := os.Getwd()
+	if err != nil {
+		panic(fmt.Sprintf("failed to get current directory: %s", err))
+	}
+	cacheDir := path.Join(pwd, ".cache")
+	if name != "" {
+		cacheDir = path.Join(cacheDir, name)
+	}
+	if err := os.MkdirAll(cacheDir, 0755); err != nil {
+		panic(fmt.Sprintf("failed to create %s directory: %s", cacheDir, err))
 	}
 	return cacheDir
 }

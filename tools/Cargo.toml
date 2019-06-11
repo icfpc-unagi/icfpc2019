@@ -1,0 +1,8 @@
+[package]
+name = "unagi"
+version = "0.1.0"
+authors = ["Unagi"]
+
+[dependencies]
+utils = { version = "0.1.0", path = "../utils" }
+clap = "2.32.0"

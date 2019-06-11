@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "tools",
+    "utils",
+    "wata",
+]
