@@ -20,6 +20,7 @@ build/%.decrypted: secret/%.encrypted
 
 build: unagi/build
 build-go: unagi/build-go
+build-cs: unagi/build-cs
 
 test: unagi/test
 test-go: unagi/test-go
@@ -53,13 +54,17 @@ unagi/%:
 # Main routines
 ################################################################################
 
-orig@build:
+orig@build: orig@build-go orig@build-cs
 	cargo build --release
 .PHONY: build.orig
 
 orig@build-go:
 	cd build && go build ../...
 .PHONY: orig@build-go
+
+orig@build-cs:
+	bash script/build-csharp.sh
+.PHONY: orig@build-cs
 
 orig@test: orig@build
 	cargo test --release
