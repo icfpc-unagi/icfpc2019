@@ -1,0 +1,26 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: unagi2019/image:master
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+
+    environment:
+      TZ: "/usr/share/zoneinfo/Asia/Tokyo"
+
+    steps:
+      - checkout
+      - restore_cache:
+          key: project-cache
+      - run:
+          name: Test
+          command: make test
+      - save_cache:
+          key: project-cache
+          paths:
+            - "/usr/local/cargo/registry"
+            - "/go/pkg"
+            - "~/.cache/go-build"
