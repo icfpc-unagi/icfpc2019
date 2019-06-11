@@ -19,10 +19,17 @@ build/%.decrypted: secret/%.encrypted
 ################################################################################
 
 build: unagi/build
+build-go: unagi/build-go
+
 test: unagi/test
+test-go: unagi/test-go
+
 launcher: unagi/launcher
+
+upload: unagi/upload
 upload-launcher: unagi/upload-launcher
 upload-installer: unagi/upload-installer
+
 service_account: unagi/service_account
 private_key: unagi/private_key
 
@@ -50,9 +57,17 @@ orig@build:
 	cargo build --release
 .PHONY: build.orig
 
+orig@build-go:
+	cd build && go build ../...
+.PHONY: orig@build-go
+
 orig@test: orig@build
 	cargo test --release
 .PHONY: test.orig
+
+orig@test-go:
+	go test ./...
+.PHONY: orig@test-go
 
 orig@launcher:
 	cd cmd/launcher && make -j 6
@@ -67,6 +82,9 @@ orig@upload-launcher:
 orig@upload-installer:
 	gsutil cp script/install-launcher.sh gs://unagi2019-public/install.sh
 .PHONY: orig@upload-installer
+
+orig@upload: orig@upload-launcher orig@upload-installer
+.PHONY: orig@orig-upload
 
 orig@service_account:
 	openssl aes-256-cbc -d -md md5 \

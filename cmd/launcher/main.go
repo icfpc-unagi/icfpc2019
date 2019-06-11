@@ -44,7 +44,9 @@ func main() {
 		"-v", getCacheDirectory("") + ":/root/.cache/icfpc2019",
 		"-v", getLocalCacheDirectory("cargo") + ":/usr/local/cargo/registry",
 		"-v", getLocalCacheDirectory("go-pkg") + ":/go/pkg",
-		"-v", getLocalCacheDirectory("go-cache") + ":/root/.cache/go-cache",
+		"-v",
+		getLocalCacheDirectory("go-build-cache") +
+			":/root/.cache/go-build",
 		"-e", "HOST_PWD=" + pwd,
 		"-e", "HOST_LAUNCHER=" + exe,
 		"--privileged",
