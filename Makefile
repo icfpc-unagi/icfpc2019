@@ -59,6 +59,7 @@ orig@build: orig@build-go orig@build-cs
 .PHONY: build.orig
 
 orig@build-go:
+	mkdir -p build
 	cd build && go build ../...
 .PHONY: orig@build-go
 
