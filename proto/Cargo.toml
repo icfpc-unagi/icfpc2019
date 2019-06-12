@@ -1,0 +1,12 @@
+[package]
+name = "proto"
+version = "0.1.0"
+authors = ["Unagi"]
+
+[dependencies]
+futures = "0.1.16"
+grpcio = { version = "0.4.3", default-features = false, features = ["protobuf-codec"] }
+protobuf = "~2"
+
+[build-dependencies]
+protoc-grpcio = "0.3.1"

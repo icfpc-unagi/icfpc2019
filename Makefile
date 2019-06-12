@@ -24,6 +24,7 @@ build-cs: unagi/build-cs
 
 test: unagi/test
 test-go: unagi/test-go
+test-rs: unagi/test-rs
 
 launcher: unagi/launcher
 
@@ -67,13 +68,16 @@ orig@build-cs:
 	bash script/build-csharp.sh
 .PHONY: orig@build-cs
 
-orig@test: orig@build
-	cargo test --release
+orig@test: orig@build orig@test-go orig@test-rs
 .PHONY: test.orig
 
 orig@test-go:
 	go test ./...
 .PHONY: orig@test-go
+
+orig@test-rs:
+	cargo test --release
+.PHONY: orig@test-rs
 
 orig@launcher:
 	cd cmd/launcher && make -j 6

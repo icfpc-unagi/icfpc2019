@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+// TODO(imos): Enable the followings accessible.
+// import "google/protobuf/descriptor.proto";
+// import "google/protobuf/duration.proto";
+// import "google/protobuf/timestamp.proto";
+
+package unagi;
+
+message Example {
+  string string_field = 1;
+}
