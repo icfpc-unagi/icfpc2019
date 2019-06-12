@@ -157,6 +157,14 @@ RUN chown -R unagi:unagi /home/unagi/.ssh
 # above.
 ################################################################################
 
+RUN apt-get update -q && apt-get install -qy \
+        autoconf automake libtool curl make g++ unzip && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update -q && apt-get install -qy \
+        libprotobuf-dev libprotoc-dev protobuf-compiler && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 RUN touch /UNAGI_IMAGE
 
 RUN echo '#!/usr/bin/env bash' > /usr/local/bin/unagi && \
