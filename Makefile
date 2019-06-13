@@ -72,11 +72,11 @@ orig@build-cs:
 	bash script/build-csharp.sh
 .PHONY: orig@build-cs
 
-orig@test: orig@build orig@test-rs orig@test-go
+orig@test: orig@test-rs orig@test-go
 .PHONY: test.orig
 
 orig@test-rs:
-	cargo test --release
+	cargo test
 .PHONY: orig@test-rs
 
 orig@test-go:
