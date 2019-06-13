@@ -1,7 +1,9 @@
 [workspace]
 members = [
+    "example/rust",
+    "proto",
     "tools",
     "utils",
-    "proto",
     "wata",
 ]
+exclude = [".cache", "build"]

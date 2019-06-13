@@ -19,12 +19,13 @@ build/%.decrypted: secret/%.encrypted
 ################################################################################
 
 build: unagi/build
+build-rs: unagi/build-rs
 build-go: unagi/build-go
 build-cs: unagi/build-cs
 
 test: unagi/test
-test-go: unagi/test-go
 test-rs: unagi/test-rs
+test-go: unagi/test-go
 
 launcher: unagi/launcher
 
@@ -55,9 +56,12 @@ unagi/%:
 # Main routines
 ################################################################################
 
-orig@build: orig@build-go orig@build-cs
-	cargo build --release
+orig@build: orig@build-rs orig@build-go orig@build-cs
 .PHONY: build.orig
+
+orig@build-rs:
+	cargo build --release
+.PHONY: orig@build-rs
 
 orig@build-go:
 	mkdir -p build
@@ -68,16 +72,16 @@ orig@build-cs:
 	bash script/build-csharp.sh
 .PHONY: orig@build-cs
 
-orig@test: orig@build orig@test-go orig@test-rs
+orig@test: orig@build orig@test-rs orig@test-go
 .PHONY: test.orig
-
-orig@test-go:
-	go test ./...
-.PHONY: orig@test-go
 
 orig@test-rs:
 	cargo test --release
 .PHONY: orig@test-rs
+
+orig@test-go:
+	go test ./cmd/...
+.PHONY: orig@test-go
 
 orig@launcher:
 	cd cmd/launcher && make -j 6

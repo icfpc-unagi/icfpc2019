@@ -1,4 +1,5 @@
 extern crate proto;
+extern crate protobuf;
 
 pub fn utils_example() -> String {
     let mut x = proto::Example::new();
@@ -18,5 +19,14 @@ mod tests {
     #[test]
     fn util_example() {
         assert_eq!(utils_example(), "hello world");
+    }
+
+    #[test]
+    fn proto_to_string() {
+        // let mut x = proto::Example::new();
+        // x.set_string_field("hello world".into());
+        // assert_eq!(
+        //     protobuf::text_proto::print_to_string(&x),
+        //     r#"string_field: "hello world""#)
     }
 }
