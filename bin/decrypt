@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+openssl enc -d -base64 | \
+    openssl aes-256-cbc -d -salt -pbkdf2 -md md5 \
+        -in /dev/stdin -out /dev/stdout -pass "pass:$UNAGI_PASSWORD"

@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/mattn/go-isatty"
 	homedir "github.com/mitchellh/go-homedir"
 )
 
@@ -44,9 +45,13 @@ func main() {
 		"-e", "HOST_LAUNCHER=" + toLinuxPath(exe),
 		"--privileged",
 		"--pid=host",
-		"--rm", "-it",
-		getDockerImage(),
+		"--rm", "-i",
 	}
+	if isatty.IsTerminal(os.Stdin.Fd()) ||
+		isatty.IsCygwinTerminal(os.Stdin.Fd()) {
+		args = append(args, "-t")
+	}
+	args = append(args, getDockerImage())
 	args = append(args, os.Args[1:]...)
 	cmd := exec.Command("docker", args...)
 	cmd.Stdin = os.Stdin
