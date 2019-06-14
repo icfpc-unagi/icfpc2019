@@ -9,26 +9,14 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"regexp"
 	"strings"
 
 	homedir "github.com/mitchellh/go-homedir"
 )
 
 func main() {
-	checkIfUnagiDirecotry()
-
-	pwd, err := os.Getwd()
-	if err != nil {
-		panic(fmt.Sprintf("failed to get current directory: %s", err))
-	}
-
-	pwd = strings.Replace(
-		pwd, fmt.Sprintf(":%c", os.PathSeparator), "/", -1)
-	pwd = strings.Replace(
-		pwd, fmt.Sprintf("%c", os.PathSeparator), "/", -1)
-	if !strings.HasPrefix(pwd, "/") {
-		pwd = "/" + pwd
-	}
+	rootDir, relativeDir := getUnagiDirectory()
 
 	exe, err := os.Executable()
 	if err != nil {
@@ -37,18 +25,23 @@ func main() {
 
 	args := []string{
 		"run",
-		"-w", "/work",
+		"-w", "/work/" + toLinuxPath(relativeDir),
 		"-v", "/var/run/docker.sock:/var/run/docker.sock",
-		"-v", pwd + ":/work",
+		"-v", toLinuxPath(rootDir) + ":/work",
 		"-v", "/:/host",
-		"-v", getCacheDirectory("") + ":/root/.cache/icfpc2019",
-		"-v", getLocalCacheDirectory("cargo") + ":/usr/local/cargo/registry",
-		"-v", getLocalCacheDirectory("go-pkg") + ":/go/pkg",
 		"-v",
-		getLocalCacheDirectory("go-build-cache") +
+		toLinuxPath(getCacheDirectory("")) + ":/root/.cache/icfpc2019",
+		"-v",
+		toLinuxPath(getLocalCacheDirectory(rootDir, "cargo")) +
+			":/usr/local/cargo/registry",
+		"-v",
+		toLinuxPath(getLocalCacheDirectory(rootDir, "go-pkg")) +
+			":/go/pkg",
+		"-v",
+		toLinuxPath(getLocalCacheDirectory(rootDir, "go-build-cache")) +
 			":/root/.cache/go-build",
-		"-e", "HOST_PWD=" + pwd,
-		"-e", "HOST_LAUNCHER=" + exe,
+		"-e", "HOST_PWD=" + toLinuxPath(getCurrentDirectory()),
+		"-e", "HOST_LAUNCHER=" + toLinuxPath(exe),
 		"--privileged",
 		"--pid=host",
 		"--rm", "-it",
@@ -65,19 +58,30 @@ func main() {
 	}
 }
 
-func checkIfUnagiDirecotry() {
-	if _, err := os.Stat("UNAGI_REPOSITORY"); err != nil {
-		panic(fmt.Sprintf(
-			"unagi command must be run under Unagi team repository"))
+func getUnagiDirectory() (rootDir, relativeDir string) {
+	rootDir, relativeDir = getCurrentDirectory(), "."
+	for {
+		if _, err := os.Stat(
+			path.Join(rootDir, "UNAGI_REPOSITORY")); err == nil {
+			return
+		}
+		if path.Dir(rootDir) == rootDir {
+			panic("unagi command must be run under the team repository: " +
+				getCurrentDirectory())
+		}
+		relativeDir = path.Join(relativeDir, path.Base(rootDir))
+		rootDir = path.Dir(rootDir)
 	}
 }
 
-func getCurrentDirectory() string {
-	pwd, err := os.Getwd()
-	if err != nil {
-		panic(fmt.Sprintf("failed to get current directory: %s", err))
+func toLinuxPath(path string) string {
+	path = strings.Replace(
+		path, fmt.Sprintf("%c", os.PathSeparator), "/", -1)
+	if m := regexp.MustCompile(`^(\w):/(.*)$`).FindStringSubmatch(
+		path); m != nil && len(m) > 3 {
+		path = "/" + m[1] + "/" + m[2]
 	}
-	return pwd
+	return path
 }
 
 func getCacheDirectory(name string) string {
@@ -95,12 +99,8 @@ func getCacheDirectory(name string) string {
 	return cacheDir
 }
 
-func getLocalCacheDirectory(name string) string {
-	pwd, err := os.Getwd()
-	if err != nil {
-		panic(fmt.Sprintf("failed to get current directory: %s", err))
-	}
-	cacheDir := path.Join(pwd, ".cache")
+func getLocalCacheDirectory(rootDir string, name string) string {
+	cacheDir := path.Join(rootDir, ".cache")
 	if name != "" {
 		cacheDir = path.Join(cacheDir, name)
 	}
@@ -123,4 +123,12 @@ func getDockerImage() string {
 		panic(fmt.Sprintf("failed to receive image information: %s", err))
 	}
 	return "unagi2019/image:" + strings.TrimSpace(string(data))
+}
+
+func getCurrentDirectory() string {
+	pwd, err := os.Getwd()
+	if err != nil {
+		panic(fmt.Sprintf("failed to get current directory: %s", err))
+	}
+	return pwd
 }
