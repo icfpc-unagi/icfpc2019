@@ -1,5 +1,11 @@
 FROM ubuntu:18.04
 
+################################################################################
+# Environment variables (required for installation)
+# NOTE: environment variables not required for installation can be placed in
+# `Configurations` section.
+################################################################################
+
 ENV DEBIAN_FRONTEND noninteractive
 ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=DontWarn
 
@@ -9,9 +15,13 @@ ENV UNAGI_PASSWORD=$UNAGI_PASSWORD
 
 ENV RUSTUP_HOME=/usr/local/rustup
 ENV CARGO_HOME=/usr/local/cargo
-ENV PATH=/usr/local/cargo/bin:/usr/local/go/bin:$PATH
+ENV PATH=/work/bin:/usr/local/cargo/bin:/usr/local/go/bin:$PATH
 ENV GOROOT=/usr/local/go
 ENV GOPATH=/go
+
+################################################################################
+# Installation
+################################################################################
 
 # Use GCP apt.
 RUN sed -i.bak -e "s%http://archive.ubuntu.com/ubuntu/%http://asia-northeast1.gce.archive.ubuntu.com/ubuntu/%g" /etc/apt/sources.list
@@ -29,7 +39,7 @@ RUN apt-get update -q && \
     apt-get clean -q && rm -rf /var/lib/apt/lists/*
 
 # Install C++.
-RUN apt-get update -q && apt-get install -qy clang clang-format && \
+RUN apt-get update -q && apt-get install -qy clang clang-format g++ && \
     apt-get clean -q && rm -rf /var/lib/apt/lists/*
 
 # Install C#.
@@ -83,9 +93,14 @@ RUN apt-get update && apt-get install -y \
         screen lxc traceroute gdb \
         vim git subversion mercurial cmake make \
         dos2unix nkf curl xz-utils graphviz imagemagick \
-        openssh-server sudo && \
+        openssh-server sudo autoconf automake libtool make unzip net-tools && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /var/run/sshd
+
+# Install protobuf.
+RUN apt-get update -q && apt-get install -qy \
+        libprotobuf-dev libprotoc-dev protobuf-compiler && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Set locale to suppress an sshd warning.
 RUN echo 'LANG="en_US.UTF-8"' > /etc/default/locale
@@ -119,6 +134,10 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
     chmod +x /usr/local/bin/docker-compose && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+################################################################################
+# Configurations
+################################################################################
+
 # Gcloud service account.
 ADD ./build/service_account.json.decrypted /root/.config/service_account.json
 RUN gcloud auth activate-service-account \
@@ -142,6 +161,13 @@ RUN echo 'unagi ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/unagi
 RUN echo "export UNAGI_PASSWORD='${UNAGI_PASSWORD}'" > /etc/profile.d/99-unagi.sh
 RUN chmod +x /etc/profile.d/99-unagi.sh
 
+# Docker configuration.
+ADD ./build/docker_config.json.decrypted /root/.docker/config.json
+
+# Git settings.
+RUN git config --global user.email '5896564+ninetan@users.noreply.github.com' && \
+    git config --global user.name 'Ninetan'
+
 # SSH settings.
 ADD ./build/unagi.pem.decrypted /root/.ssh/id_rsa
 ADD ./build/unagi.pem.decrypted /home/unagi/.ssh/id_rsa
@@ -152,34 +178,22 @@ RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
 RUN ssh-keyscan github.com >> /home/unagi/.ssh/known_hosts
 RUN chown -R unagi:unagi /home/unagi/.ssh
 
-################################################################################
-# Followings are temporary commands.  They should be merged into somewhere
-# above.
-################################################################################
-
-RUN apt-get update -q && apt-get install -qy \
-        autoconf automake libtool curl make g++ unzip && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-RUN apt-get update -q && apt-get install -qy \
-        libprotobuf-dev libprotoc-dev protobuf-compiler && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-RUN touch /UNAGI_IMAGE
-
+# Add unagi command as proxy.
 RUN echo '#!/usr/bin/env bash' > /usr/local/bin/unagi && \
     echo 'exec "$@"' >> /usr/local/bin/unagi && \
     chmod +x /usr/local/bin/unagi
 
-# Additional programs.
-# TODO(imos): This should be moved earlier once it gets stable.
-RUN apt-get update -q && apt-get install -qy net-tools && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+# Mark as UNAGI_IMAGE.
+RUN touch /UNAGI_IMAGE
 
-RUN git config --global user.email '5896564+ninetan@users.noreply.github.com' && \
-    git config --global user.name 'Ninetan'
+################################################################################
+# Experimental
+################################################################################
 
-ADD ./build/docker_config.json.decrypted /root/.docker/config.json
+
+################################################################################
+# Repository pull
+################################################################################
 
 # Download repository.
 RUN git clone git@github.com:imos/icfpc2019.git /repo
