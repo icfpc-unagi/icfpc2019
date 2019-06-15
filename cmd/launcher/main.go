@@ -117,7 +117,7 @@ func getLocalCacheDirectory(rootDir string, name string) string {
 
 // getDockerImage returns an image name.
 func getDockerImage() string {
-	url := "https://storage.googleapis.com/unagi2019-public/hash/docker-master"
+	url := "https://storage.googleapis.com/icfpc-public-data/hash/docker-master"
 	resp, err := http.Get(url)
 	if err != nil {
 		panic(fmt.Sprintf("failed to get image information: %s", err))

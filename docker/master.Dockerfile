@@ -139,11 +139,11 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
 ################################################################################
 
 # Gcloud service account.
-ADD ./build/service_account.json.decrypted /root/.config/service_account.json
+ADD ./service_account.json /root/.config/service_account.json
 RUN gcloud auth activate-service-account \
-    privileged@icfpc-compute.iam.gserviceaccount.com \
+    docker@icfpc-primary.iam.gserviceaccount.com \
     --key-file=/root/.config/service_account.json && \
-    gcloud config set project icfpc-compute && \
+    gcloud config set project icfpc-primary && \
     gcloud config set compute/region asia-northeast1 && \
     gcloud config set compute/zone asia-northeast1-a
 
@@ -162,18 +162,18 @@ RUN echo "export UNAGI_PASSWORD='${UNAGI_PASSWORD}'" > /etc/profile.d/99-unagi.s
 RUN chmod +x /etc/profile.d/99-unagi.sh
 
 # Docker configuration.
-ADD ./build/docker_config.json.decrypted /root/.docker/config.json
+ADD ./docker_config.json /root/.docker/config.json
 
 # Git settings.
 RUN git config --global user.email '5896564+ninetan@users.noreply.github.com' && \
     git config --global user.name 'Ninetan'
 
 # SSH settings.
-ADD ./build/unagi.pem.decrypted /root/.ssh/id_rsa
-ADD ./build/unagi.pem.decrypted /home/unagi/.ssh/id_rsa
+ADD ./unagi.pem /root/.ssh/id_rsa
+ADD ./unagi.pem /home/unagi/.ssh/id_rsa
 RUN chmod 600 /root/.ssh/id_rsa /home/unagi/.ssh/id_rsa
-ADD ./secret/unagi.pub /root/.ssh/authorized_keys
-ADD ./secret/unagi.pub /home/unagi/.ssh/authorized_keys
+ADD ./unagi.pub /root/.ssh/authorized_keys
+ADD ./unagi.pub /home/unagi/.ssh/authorized_keys
 RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
 RUN ssh-keyscan github.com >> /home/unagi/.ssh/known_hosts
 RUN chown -R unagi:unagi /home/unagi/.ssh

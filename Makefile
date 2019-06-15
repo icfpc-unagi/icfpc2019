@@ -94,7 +94,7 @@ orig@upload-launcher:
 .PHONY: orig@upload-launcher
 
 orig@upload-installer:
-	gsutil cp script/install-launcher.sh gs://unagi2019-public/install.sh
+	gsutil cp script/install-launcher.sh gs://icfpc-public-data/install.sh
 .PHONY: orig@upload-installer
 
 orig@upload: orig@upload-launcher orig@upload-installer

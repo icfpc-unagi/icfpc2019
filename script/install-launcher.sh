@@ -28,7 +28,7 @@ os="$(uname | tr '[A-Z]' '[a-z]')"
 file="$HOME/.cache/icfpc2019/unagi"
 mkdir -p "$(dirname "${file}")"
 curl --silent -z "${file}" -o "${file}.tmp" \
-    "https://storage.googleapis.com/unagi2019-public/bin/launcher-${os}" &&
+    "https://storage.googleapis.com/icfpc-public-data/bin/launcher-${os}" &&
 if [ -f "${file}.tmp" ]; then
     chmod +x "${file}.tmp"
     mv "${file}.tmp" "${file}"

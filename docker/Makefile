@@ -2,6 +2,11 @@ usage:
 	@echo 'Usage: make (upload|build)'
 .PHONY: usage
 
+../build/docker:
+	-rm ../build/docker
+	unagi bash generate-docker-data.sh
+.PHONY: ../build/docker
+
 upload: data/unagi.pem data/unagi.pub
 	rsync -e "../bin/gcloud-ssh" -a --delete . docker:docker
 .PHONY: upload
@@ -15,10 +20,10 @@ data/unagi.pub: ../ssh/unagi.pub
 	mkdir -p data
 	cp ../ssh/unagi.pub ./data/unagi.pub
 
-build-%: %.Dockerfile
-	cd .. && docker build --file docker/$*.Dockerfile \
+build-%: %.Dockerfile ../build/docker
+	docker build --file $*.Dockerfile \
 	    --build-arg UNAGI_PASSWORD=$${UNAGI_PASSWORD} \
-	    -t unagi2019/image:$* .
+	    -t unagi2019/image:$* ../build/docker
 .PHONY: build-%
 
 build: build-master
@@ -33,7 +38,7 @@ sshd: sshd-master
 .PHONY: sshd
 
 push-%:
-	sudo docker push unagi2019/image:$*
+	docker push unagi2019/image:$*
 .PHONY: push-%
 
 push: push-master

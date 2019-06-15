@@ -13,6 +13,6 @@ docker tag "unagi2019/image:${TAG}" "unagi2019/image:${tag}"
 docker push "unagi2019/image:${tag}"
 tmpfile=`mktemp`
 echo -n "${tag}" > "${tmpfile}"
-gsutil cp "${tmpfile}" "gs://unagi2019-public/hash/docker-${TAG}"
+gsutil cp "${tmpfile}" "gs://icfpc-public-data/hash/docker-${TAG}"
 rm "${tmpfile}"
 docker push "unagi2019/image:${TAG}"

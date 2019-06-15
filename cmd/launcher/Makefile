@@ -9,7 +9,7 @@ build-%: .FORCE
 .PHONY: build-%
 
 upload-%: build-%
-	gsutil cp ../../build/launcher-$* gs://unagi2019-public/bin/
+	gsutil cp ../../build/launcher-$* gs://icfpc-public-data/bin/
 .PHONY: upload
 
 .FORCE:
