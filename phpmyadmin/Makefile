@@ -11,7 +11,7 @@ orig@build: ../build/phpmyadmin.tar.xz
 	cd ../build && unagi tar -Jxf phpmyadmin.tar.xz
 	mv ../build/phpMyAdmin-4.6.3-all-languages ../build/phpmyadmin
 	cp config/* ../build/phpmyadmin/
-	sed -e "s/{{UNAGI_PASSWORD}}/$${UNAGI_PASSWORD}}/g" \
+	sed -e "s/{{UNAGI_PASSWORD}}/$${UNAGI_PASSWORD}/g" \
 		../build/phpmyadmin/config.inc.php.template \
 		> ../build/phpmyadmin/config.inc.php
 .PHONY: build
