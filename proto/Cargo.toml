@@ -4,9 +4,10 @@ version = "0.1.0"
 authors = ["Unagi"]
 
 [dependencies]
-futures = "0.1.16"
-grpcio = { version = "0.4.4", default-features = false, features = ["protobuf-codec"] }
-protobuf = "2.6.2"
+grpc            = "~0.6"
+protobuf        = "~2"
+futures         = "~0.1"
+futures-cpupool = "~0.1"
 
 [build-dependencies]
-protoc-grpcio = "1.0.2"
+protoc-rust-grpc = "0.6.1"
