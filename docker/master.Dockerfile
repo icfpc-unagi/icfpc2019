@@ -199,3 +199,7 @@ RUN apt-get update && apt-get install -y jq && \
 
 # Download repository.
 RUN git clone git@github.com:imos/icfpc2019.git /repo
+
+# Fill quick survey.
+RUN echo "last_answer_survey_time: $(date '+%s')" > \
+    /root/.config/gcloud/.last_survey_prompt.yaml

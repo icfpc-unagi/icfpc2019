@@ -52,9 +52,12 @@ func main() {
 		"--pid=host",
 		"--rm", "-i",
 	}
-	if *tty || (len(os.Args) == 1 &&
-		(isatty.IsTerminal(os.Stdin.Fd()) ||
-			isatty.IsCygwinTerminal(os.Stdin.Fd()))) {
+	if (isatty.IsTerminal(os.Stdin.Fd()) &&
+		isatty.IsTerminal(os.Stdout.Fd()) &&
+		isatty.IsTerminal(os.Stderr.Fd())) ||
+		(isatty.IsCygwinTerminal(os.Stdin.Fd()) &&
+			isatty.IsCygwinTerminal(os.Stdout.Fd()) &&
+			isatty.IsCygwinTerminal(os.Stderr.Fd())) {
 		args = append(args, "-t")
 	}
 	args = append(args, getDockerImage())

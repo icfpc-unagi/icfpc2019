@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Usage: instance-create
+
+source "$(dirname "${BASH_SOURCE}")/imosh" || exit 1
+DEFINE_string instance '' 'Instance ID (e.g., job-*)'
+DEFINE_bool dryrun false 'Enable dryrun mode'
+DEFINE_string gcp_project 'icfpc-compute' 'GCP project'
+eval "${IMOSH_INIT}"
+
+set -eu
+
+gce() {
+  if [ "${FLAGS_instance}" == '' ]; then
+    LOG FATAL '--instance is required'
+  fi
+  while read instance; do
+    name="$(echo "${instance}" | jq -r '.name')"
+    zone="$(echo "${instance}" | jq -r '.zone')"
+    zone="${zone##*/}"
+    LOG INFO "Deleting instance (name=${name}, zone=${zone})..."
+    run gcloud compute \
+        --project="${FLAGS_gcp_project}" --format=json --quiet \
+        instances delete \
+        "${name}" --zone="${zone}"
+  done < <(
+      gcloud --project="${FLAGS_gcp_project}" --format=json \
+          compute instances list --filter="name:${FLAGS_instance}" | \
+          jq -Mc '.[] | {name: .name, zone: .zone}'
+  )
+}
+
+run() {
+  args=()
+  for arg in "$@"; do
+    func::escapeshellarg arg
+    args+=("${arg}")
+  done
+  if (( FLAGS_dryrun )); then
+    echo "Command: ${args[*]}"
+  else
+    LOG INFO "command: ${args[*]}"
+    "$@"
+  fi
+}
+
+gce
