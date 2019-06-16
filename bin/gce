@@ -1,0 +1,245 @@
+#!/usr/bin/env bash
+# Usage: run
+
+zones=(
+  asia-east1-a
+  asia-east1-b
+  asia-east1-c
+  asia-southeast1-a
+  asia-southeast1-b
+  asia-southeast1-c
+)
+num_zones="${#zones[@]}"
+default_zone="${zones[$(( RANDOM % num_zones ))]}"
+
+source "$(dirname "${BASH_SOURCE}")/imosh" || exit 1
+DEFINE_string instance 'auto' 'Instance ID'
+DEFINE_bool create false 'Create an instance'
+DEFINE_bool dryrun false 'Enable dryrun mode'
+DEFINE_bool premium false 'Enable premium mode'
+DEFINE_int cpu 0 '# of CPUs'
+DEFINE_int memory 0 'Size of memory'
+DEFINE_int disk 0 'Size of disk'
+DEFINE_string gcp_project 'icfpc-compute' 'GCP project'
+DEFINE_string gcp_zone "${default_zone}" 'GCP zone'
+
+execute() {
+  local args=()
+  local arg=''
+  for arg in "$@"; do
+    func::escapeshellarg arg
+    args+=("${arg}")
+  done
+  LOG INFO "Command: ${args[*]}"
+  if (( ! FLAGS_dryrun )); then
+    "$@"
+  fi
+}
+
+gce::create() {
+  LOG INFO "Creating an instance for ${FLAGS_instance}..."
+
+  local cpu="${FLAGS_cpu}"
+  if (( cpu < 1 )); then cpu=1; fi
+  if (( 1 < cpu && cpu % 2 == 1 )); then cpu="$(( cpu + 1 ))"; fi
+  if (( cpu > 96 )); then LOG FATAL "Too many CPUs requested: ${cpu}"; fi
+
+  local memory="${FLAGS_memory}"
+  if (( memory < 4 )); then memory=4; fi
+  if (( memory < cpu )); then memory="${cpu}"; fi
+  if (( memory > cpu * 6 )); then
+    LOG FATAL "Too much memory requested: ${memory} > ${cpu} * 6"
+  fi
+  memory="$(( memory * 1024 ))"
+
+  local disk="${FLAGS_disk}"
+  disk="$(( disk + 20 ))"
+
+  local scopes=(
+    https://www.googleapis.com/auth/cloud-platform
+    # TODO(imos): Try to remove the followings
+    https://www.googleapis.com/auth/devstorage.read_only
+    https://www.googleapis.com/auth/logging.write
+    https://www.googleapis.com/auth/monitoring.write
+    https://www.googleapis.com/auth/servicecontrol
+    https://www.googleapis.com/auth/service.management.readonly
+    https://www.googleapis.com/auth/trace.append
+  )
+  gcloud_args=(
+      gcloud
+      compute
+      --project="${FLAGS_gcp_project}"
+      --format=json
+      --quiet
+      instances create "${FLAGS_instance}"
+      --zone="${FLAGS_gcp_zone}"
+      --machine-type="custom-${cpu}-${memory}"
+      --subnet=default
+      --network-tier=PREMIUM
+      # --service-account=docker@icfpc-primary.iam.gserviceaccount.com
+      --scopes="$(sub::join ',' scopes)"
+      --image-family=image
+      --image-project=icfpc-primary
+      --boot-disk-size="${disk}GB"
+      --boot-disk-type=pd-standard
+      --boot-disk-device-name="${FLAGS_instance}"
+  )
+  if (( FLAGS_premium )); then
+    gcloud_args+=(
+        --maintenance-policy=MIGRATE
+    )
+  else
+    gcloud_args+=(
+        --no-restart-on-failure
+        --maintenance-policy=TERMINATE
+        --preemptible
+    )
+  fi
+  execute "${gcloud_args[@]}"
+  if (( FLAGS_dryrun )); then
+    cat <<'EOM'
+[
+  {
+    "canIpForward": false,
+    "cpuPlatform": "Intel Broadwell",
+    "creationTimestamp": "2019-06-15T21:45:49.066-07:00",
+    "deletionProtection": false,
+    "disks": [
+      {
+        "autoDelete": true,
+        "boot": true,
+        "deviceName": "job-20190616-044545-6579f718",
+        "guestOsFeatures": [
+          {
+            "type": "VIRTIO_SCSI_MULTIQUEUE"
+          }
+        ],
+        "index": 0,
+        "interface": "SCSI",
+        "kind": "compute#attachedDisk",
+        "licenses": [
+          "https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/licenses/ubuntu-1804-lts"
+        ],
+        "mode": "READ_WRITE",
+        "source": "https://www.googleapis.com/compute/v1/projects/icfpc-compute/zones/asia-east1-a/disks/job-20190616-044545-6579f718",
+        "type": "PERSISTENT"
+      }
+    ],
+    "id": "4701816158450907028",
+    "kind": "compute#instance",
+    "labelFingerprint": "42WmSpB8rSM=",
+    "machineType": "https://www.googleapis.com/compute/v1/projects/icfpc-compute/zones/asia-east1-a/machineTypes/custom-1-4096",
+    "metadata": {
+      "fingerprint": "kbXJoUjlqfg=",
+      "kind": "compute#metadata"
+    },
+    "name": "job-20190616-044545-6579f718",
+    "networkInterfaces": [
+      {
+        "accessConfigs": [
+          {
+            "kind": "compute#accessConfig",
+            "name": "external-nat",
+            "natIP": "34.80.8.26",
+            "networkTier": "PREMIUM",
+            "type": "ONE_TO_ONE_NAT"
+          }
+        ],
+        "fingerprint": "y7wQqvUB1kA=",
+        "kind": "compute#networkInterface",
+        "name": "nic0",
+        "network": "https://www.googleapis.com/compute/v1/projects/icfpc-compute/global/networks/default",
+        "networkIP": "10.140.0.18",
+        "subnetwork": "https://www.googleapis.com/compute/v1/projects/icfpc-compute/regions/asia-east1/subnetworks/default"
+      }
+    ],
+    "scheduling": {
+      "automaticRestart": false,
+      "onHostMaintenance": "TERMINATE",
+      "preemptible": true
+    },
+    "selfLink": "https://www.googleapis.com/compute/v1/projects/icfpc-compute/zones/asia-east1-a/instances/job-20190616-044545-6579f718",
+    "serviceAccounts": [
+      {
+        "email": "476706604080-compute@developer.gserviceaccount.com",
+        "scopes": [
+          "https://www.googleapis.com/auth/cloud-platform",
+          "https://www.googleapis.com/auth/devstorage.read_only",
+          "https://www.googleapis.com/auth/logging.write",
+          "https://www.googleapis.com/auth/monitoring.write",
+          "https://www.googleapis.com/auth/service.management.readonly",
+          "https://www.googleapis.com/auth/servicecontrol",
+          "https://www.googleapis.com/auth/trace.append"
+        ]
+      }
+    ],
+    "startRestricted": false,
+    "status": "RUNNING",
+    "tags": {
+      "fingerprint": "42WmSpB8rSM="
+    },
+    "zone": "https://www.googleapis.com/compute/v1/projects/icfpc-compute/zones/asia-east1-a"
+  }
+]
+EOM
+  fi
+}
+
+gce::info() {
+  LOG INFO "Searching instances for ${FLAGS_instance}..."
+  gcloud --project="${FLAGS_gcp_project}" --format=json \
+      compute instances list --filter="name:${FLAGS_instance}"
+}
+
+gce::run() {
+  local args=()
+  for arg in "$@"; do
+    func::escapeshellarg arg
+    args+=("${arg}")
+  done
+  if (( FLAGS_create )); then
+    gce::create >/dev/null
+  fi
+  instance_info="$(mktemp)"
+  gce::info >"${instance_info}"
+  while read instance; do
+    name="$(echo "${instance}" | jq -r '.name')"
+    zone="$(echo "${instance}" | jq -r '.zone')"
+    zone="${zone##*/}"
+    ip="$(echo "${instance}" | \
+        jq -r '.networkInterfaces[].accessConfigs[].natIP')"
+    LOG INFO "Instance: name=${name}, zone=${zone}, ip=${ip}"
+    for i in `seq 120`; do
+      if ssh "guest@${ip}" true 2>/dev/null; then
+        break
+      fi
+      sleep 1
+    done
+    LOG INFO "Running on ${ip}: ${args[*]}"
+    ssh "guest@${ip}" -- "${args[*]}"
+  done < <(jq -Mc '.[]' "${instance_info}")
+}
+
+if sub::is_main; then
+  IMOSH_PREDICATE=2 eval "${IMOSH_INIT}"
+  if [ "${FLAGS_instance}" == 'auto' ]; then
+    FLAGS_instance="job-$(sub::date 'Ymd-His')-$(
+        sub::substr "$(sub::md5 "$RANDOM.$RANDOM.$RANDOM.$RANDOM")" 0 8
+    )"
+    FLAGS_create=1
+    LOG INFO "Instance ID is generated: ${FLAGS_instance}"
+  fi
+  LOG INFO "Arguments: $*"
+  if [ "$#" -eq 0 ] || [ "${1}" = 'help' ]; then
+    imosh::help
+    exit
+  fi
+  COMMAND="${1}"
+  shift
+  case "${COMMAND}" in
+    'create' | 'run' )
+      "gce::${COMMAND}" "$@";;
+    *)
+      LOG FATAL "Unknown command: ${COMMAND}";;
+  esac
+fi

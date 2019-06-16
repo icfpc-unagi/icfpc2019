@@ -184,6 +184,8 @@ ADD ./unagi.pub /root/.ssh/google_compute_engine.pub
 ADD ./unagi.pub /home/unagi/.ssh/authorized_keys
 ADD ./unagi.pub /home/unagi/.ssh/id_rsa.pub
 ADD ./unagi.pub /home/unagi/.ssh/google_compute_engine.pub
+ADD ./ssh_config /root/.ssh/config
+ADD ./ssh_config /home/unagi/.ssh/config
 RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
 RUN ssh-keyscan github.com >> /home/unagi/.ssh/known_hosts
 RUN chown -R unagi:unagi /home/unagi/.ssh
@@ -202,6 +204,8 @@ RUN touch /UNAGI_IMAGE
 
 RUN apt-get update && apt-get install -y jq && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+
+
 
 ################################################################################
 # Repository pull
