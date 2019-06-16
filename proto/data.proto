@@ -7,6 +7,43 @@ syntax = "proto3";
 
 package unagi;
 
+message Api {
+  // API Request defition.
+  //
+  // NEXT ID TO USE: 2
+  message Request {
+    message Context {}
+    Context context = 1;
+
+    message StartInstance {
+      double cpu = 1;  // in cores.
+      double memory = 2;  // in GB.
+      double disk = 3;  // in GB.
+    }
+    StartInstance start_instance = 2;
+  }
+
+  // API Response defition.
+  //
+  // NEXT ID TO USE: 2
+  message Response {
+    message Context {}
+    Context context = 1;
+
+    message StartInstance {
+      Job.Id job_id = 1;
+    }
+    StartInstance start_instance = 2;
+  }
+}
+
+message Job {
+  message Id {
+    string zone = 1;
+    string name = 2;
+  }
+}
+
 message Example {
   string string_field = 1;
 }

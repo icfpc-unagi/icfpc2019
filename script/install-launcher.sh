@@ -2,6 +2,18 @@
 
 set -eu
 
+ask() {
+    while :; do
+        read -p "$* (Y/n)? " answer
+        case "${answer}" in
+            '' ) return 0 ;;
+            [yY]* ) return 0 ;;
+            [nN]* ) return 1 ;;
+            * ) echo 'Please answer yes or no.' >&2
+        esac
+    done
+}
+
 bootstrap_directory='/usr/local/bin'
 path="${PATH}:"
 for candidate in ~/.local/bin ~/bin; do
