@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# $ bash script/build-gce-image.sh all
 
 source "$(dirname "${BASH_SOURCE}")/../bin/imosh" || exit 1
 DEFINE_string project 'icfpc-primary' 'Project ID.'
@@ -77,7 +78,7 @@ do_all() {
   do_start
   do_wait
   do_setup
-  do_ssh shutdown now || true
+  do_ssh sudo shutdown now || true
 }
 
 if [ "$#" -eq 0 ]; then

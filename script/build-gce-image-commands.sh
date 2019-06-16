@@ -25,6 +25,12 @@ do_setup_guest() {
         adduser --disabled-password --gecos '' 'guest'
     fi
     usermod -G docker,ubuntu,google-sudoers guest
+    mkdir -p /home/guest/.ssh
+    rm -rf /home/guest/.ssh/authorized_keys
+    for user in imos iwiwi chokudai toslunar wata-orz sulume; do
+        curl "https://github.com/${user}.keys" \
+            >> /home/guest/.ssh/authorized_keys
+    done
 }
 
 do_install_git_lfs() {
@@ -118,7 +124,7 @@ do_clean() {
 }
 
 do_shutdown() {
-    shutdown now
+    shutdown
 }
 
 for target in "$@"; do
