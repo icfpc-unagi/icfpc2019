@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+# Usage: instance-create
+
+source "$(dirname "${BASH_SOURCE}")/imosh" || exit 1
+DEFINE_string instance \
+    "job-$(sub::date 'Ymd-His')-$(
+        sub::substr "$(sub::md5 "$RANDOM.$RANDOM.$RANDOM.$RANDOM")" 0 8
+    )" 'Instance ID'
+DEFINE_bool dryrun false 'Enable dryrun mode'
+DEFINE_bool premium false 'Enable premium mode'
+DEFINE_int cpu 0 '# of CPUs'
+DEFINE_int memory 0 'Size of memory'
+DEFINE_int disk 0 'Size of disk'
+DEFINE_string gcp_project 'icfpc-compute' 'GCP project'
+DEFINE_string gcp_zone 'asia-east1-a' 'GCP zone'
+eval "${IMOSH_INIT}"
+
+set -eu
+
+gce() {
+  cpu="${FLAGS_cpu}"
+  if (( cpu < 1 )); then cpu=1; fi
+  if (( 1 < cpu && cpu % 2 == 1 )); then cpu="$(( cpu + 1 ))"; fi
+  if (( cpu > 96 )); then LOG FATAL "Too many CPUs requested: ${cpu}"; fi
+
+  memory="${FLAGS_memory}"
+  if (( memory < 4 )); then memory=4; fi
+  if (( memory < cpu )); then memory="${cpu}"; fi
+  if (( memory > cpu * 6 )); then
+    LOG FATAL "Too much memory requested: ${memory} > ${cpu} * 6"
+  fi
+  memory="$(( memory * 1024 ))"
+
+  disk="${FLAGS_disk}"
+  disk+=20
+
+  scopes=(
+    https://www.googleapis.com/auth/cloud-platform
+    # TODO(imos): Try to remove the followings
+    https://www.googleapis.com/auth/devstorage.read_only
+    https://www.googleapis.com/auth/logging.write
+    https://www.googleapis.com/auth/monitoring.write
+    https://www.googleapis.com/auth/servicecontrol
+    https://www.googleapis.com/auth/service.management.readonly
+    https://www.googleapis.com/auth/trace.append
+  )
+  gcloud_args=(
+      gcloud
+      compute
+      --project="${FLAGS_gcp_project}"
+      --format=json
+      --quiet
+      instances create "${FLAGS_instance}"
+      --zone="${FLAGS_gcp_zone}"
+      --machine-type="custom-${cpu}-${memory}"
+      --subnet=default
+      --network-tier=PREMIUM
+      # --service-account=docker@icfpc-primary.iam.gserviceaccount.com
+      --scopes="$(sub::join ',' scopes)"
+      --image-family=image
+      --image-project=icfpc-primary
+      --boot-disk-size="${disk}GB"
+      --boot-disk-type=pd-standard
+      --boot-disk-device-name="${FLAGS_instance}"
+  )
+  if (( FLAGS_premium )); then
+    gcloud_args+=(
+        --maintenance-policy=MIGRATE
+    )
+  else
+    gcloud_args+=(
+        --no-restart-on-failure
+        --maintenance-policy=TERMINATE
+        --preemptible
+    )
+  fi
+  run "${gcloud_args[@]}"
+}
+
+run() {
+  args=()
+  for arg in "$@"; do
+    func::escapeshellarg arg
+    args+=("${arg}")
+  done
+  if (( FLAGS_dryrun )); then
+    echo "Command: ${args[*]}"
+  else
+    LOG INFO "command: ${args[*]}"
+    "$@"
+  fi
+}
+
+gce

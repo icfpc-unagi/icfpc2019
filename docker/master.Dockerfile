@@ -190,6 +190,8 @@ RUN touch /UNAGI_IMAGE
 # Experimental
 ################################################################################
 
+RUN apt-get update && apt-get install -y jq && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ################################################################################
 # Repository pull

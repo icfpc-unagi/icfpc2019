@@ -3,6 +3,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -16,7 +17,11 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 )
 
+var tty = flag.Bool("tty", false, "Enable tty.")
+
 func main() {
+	flag.Parse()
+
 	rootDir, relativeDir := getUnagiDirectory()
 
 	exe, err := os.Executable()
@@ -47,8 +52,9 @@ func main() {
 		"--pid=host",
 		"--rm", "-i",
 	}
-	if isatty.IsTerminal(os.Stdin.Fd()) ||
-		isatty.IsCygwinTerminal(os.Stdin.Fd()) {
+	if *tty || (len(os.Args) == 1 &&
+		(isatty.IsTerminal(os.Stdin.Fd()) ||
+			isatty.IsCygwinTerminal(os.Stdin.Fd()))) {
 		args = append(args, "-t")
 	}
 	args = append(args, getDockerImage())
