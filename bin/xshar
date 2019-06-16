@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# Usage: xshar files...
+# Usage: xshar [options] executable [files...]
+
+xshar::print_header() {
+  local bootstrap="$1"
+  local command='#!/usr/bin/env bash
+set -e -u
+while :; do
+  XSHAR_ROOT="${TMPDIR:-/tmp}/shar."
+  i=0; while (( ( i += 1 ) <= 4 )); do
+    XSHAR_ROOT+="$(printf "%02x" "$(( RANDOM % 256 ))")"
+  done
+  if [ ! -d "${XSHAR_ROOT}" ]; then
+    break
+  fi
+done
+mkdir -p "${XSHAR_ROOT}/depot"
+rm_xshar_root() { rm -rf "${XSHAR_ROOT}"; }
+trap rm_xshar_root EXIT
+tail -n +NUM_OF_LINES "${BASH_SOURCE}" | {
+  pushd "${XSHAR_ROOT}/depot" >/dev/null
+  tar zxf - >/dev/null 2>/dev/null
+  popd >/dev/null
+}
+'
+  local eom="EOM_$(
+    i=0; while (( ( i += 1 ) <= 16 )); do
+      printf "%02X" "$(( RANDOM % 256 ))"
+    done
+  )"
+  command+="cat <<'${eom}' > \${XSHAR_ROOT}/BOOTSTRAP
+${bootstrap}
+${eom}
+"
+  command+="XSHAR_WORKDIR='$(pwd)'
+"
+  command+='
+set +eu
+source "${XSHAR_ROOT}/BOOTSTRAP"
+exit 0
+'
+  local no_new_lines="${command//$'\n'/}"
+  local len_command="${#command}"
+  local len_no_new_lines="${#no_new_lines}"
+  local num_of_lines="$(( len_command - len_no_new_lines + 1 ))"
+  echo -n "${command/NUM_OF_LINES/${num_of_lines}}"
+}
+
+xshar::archive() {
+  local output="$1"; shift
+  local bootstrap="$1"; shift
+  xshar::print_header "${bootstrap}" > "${output}"
+  local args=(tar zcf - -C /)
+  local pwd="$(pwd)"
+  for arg in "$@"; do
+    case "${arg}" in
+      /* ) args+=("${arg#/}");;
+      * ) args+=("${pwd#/}/${arg}");;
+    esac
+  done
+  "${args[@]}" >> "${output}"
+  chmod +x "${output}"
+}
+
+xshar::main() {
+  local executable="$1"
+  if [ ! -f "${executable}" ]; then
+    echo "xshar: first argument must be a file: ${executable}" >&2
+    exit 1
+  fi
+  if [ ! -x "${executable}" ]; then
+    echo "xshar: first argument must be an executable file: ${executable}" >&2
+    exit 1
+  fi
+  local output="$(basename "${executable}").shar"
+  local pwd="$(pwd)"
+  local bootstrap
+  case "${executable}" in
+    /* ) bootstrap="\${XSHAR_ROOT}/depot${executable}";;
+    * ) bootstrap="\${XSHAR_ROOT}/depot${pwd}/${executable}";;
+  esac
+  xshar::archive "${output}" "${bootstrap}" "$@"
+}
+
+xshar::main "$@"
