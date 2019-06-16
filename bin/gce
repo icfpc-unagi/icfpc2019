@@ -36,6 +36,12 @@ execute() {
   fi
 }
 
+gce::info() {
+  LOG INFO "Searching instances for ${FLAGS_instance}..."
+  gcloud --project="${FLAGS_gcp_project}" --format=json \
+      compute instances list --filter="name:${FLAGS_instance}"
+}
+
 gce::create() {
   LOG INFO "Creating an instance for ${FLAGS_instance}..."
 
@@ -96,99 +102,43 @@ gce::create() {
     )
   fi
   execute "${gcloud_args[@]}"
-  if (( FLAGS_dryrun )); then
-    cat <<'EOM'
-[
-  {
-    "canIpForward": false,
-    "cpuPlatform": "Intel Broadwell",
-    "creationTimestamp": "2019-06-15T21:45:49.066-07:00",
-    "deletionProtection": false,
-    "disks": [
-      {
-        "autoDelete": true,
-        "boot": true,
-        "deviceName": "job-20190616-044545-6579f718",
-        "guestOsFeatures": [
-          {
-            "type": "VIRTIO_SCSI_MULTIQUEUE"
-          }
-        ],
-        "index": 0,
-        "interface": "SCSI",
-        "kind": "compute#attachedDisk",
-        "licenses": [
-          "https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/licenses/ubuntu-1804-lts"
-        ],
-        "mode": "READ_WRITE",
-        "source": "https://www.googleapis.com/compute/v1/projects/icfpc-compute/zones/asia-east1-a/disks/job-20190616-044545-6579f718",
-        "type": "PERSISTENT"
-      }
-    ],
-    "id": "4701816158450907028",
-    "kind": "compute#instance",
-    "labelFingerprint": "42WmSpB8rSM=",
-    "machineType": "https://www.googleapis.com/compute/v1/projects/icfpc-compute/zones/asia-east1-a/machineTypes/custom-1-4096",
-    "metadata": {
-      "fingerprint": "kbXJoUjlqfg=",
-      "kind": "compute#metadata"
-    },
-    "name": "job-20190616-044545-6579f718",
-    "networkInterfaces": [
-      {
-        "accessConfigs": [
-          {
-            "kind": "compute#accessConfig",
-            "name": "external-nat",
-            "natIP": "34.80.8.26",
-            "networkTier": "PREMIUM",
-            "type": "ONE_TO_ONE_NAT"
-          }
-        ],
-        "fingerprint": "y7wQqvUB1kA=",
-        "kind": "compute#networkInterface",
-        "name": "nic0",
-        "network": "https://www.googleapis.com/compute/v1/projects/icfpc-compute/global/networks/default",
-        "networkIP": "10.140.0.18",
-        "subnetwork": "https://www.googleapis.com/compute/v1/projects/icfpc-compute/regions/asia-east1/subnetworks/default"
-      }
-    ],
-    "scheduling": {
-      "automaticRestart": false,
-      "onHostMaintenance": "TERMINATE",
-      "preemptible": true
-    },
-    "selfLink": "https://www.googleapis.com/compute/v1/projects/icfpc-compute/zones/asia-east1-a/instances/job-20190616-044545-6579f718",
-    "serviceAccounts": [
-      {
-        "email": "476706604080-compute@developer.gserviceaccount.com",
-        "scopes": [
-          "https://www.googleapis.com/auth/cloud-platform",
-          "https://www.googleapis.com/auth/devstorage.read_only",
-          "https://www.googleapis.com/auth/logging.write",
-          "https://www.googleapis.com/auth/monitoring.write",
-          "https://www.googleapis.com/auth/service.management.readonly",
-          "https://www.googleapis.com/auth/servicecontrol",
-          "https://www.googleapis.com/auth/trace.append"
-        ]
-      }
-    ],
-    "startRestricted": false,
-    "status": "RUNNING",
-    "tags": {
-      "fingerprint": "42WmSpB8rSM="
-    },
-    "zone": "https://www.googleapis.com/compute/v1/projects/icfpc-compute/zones/asia-east1-a"
-  }
-]
-EOM
+}
+
+gce::internal::delete_instance() {
+  local zone="$1"
+  local name="$2"
+  LOG INFO "Deleting instance: zone=${zone}, name=${name}"
+  if execute gcloud compute \
+      --project="${FLAGS_gcp_project}" --format=none --quiet \
+      instances delete "${name}" --zone="${zone}"; then
+    LOG INFO "Successfully deleted instance: zone=${zone}, name=${name}"
+  else
+    LOG ERROR "Failed to delete instance: zone=${zone}, name=${name}"
   fi
 }
 
-gce::info() {
-  LOG INFO "Searching instances for ${FLAGS_instance}..."
-  gcloud --project="${FLAGS_gcp_project}" --format=json \
-      compute instances list --filter="name:${FLAGS_instance}"
+gce::delete() {
+  if (( FLAGS_create )); then
+    LOG FATAL 'Delete requires --instance.'
+  fi
+
+  local instance_info="$(mktemp)"
+  gce::info >"${instance_info}"
+
+  local pids=()
+  while read instance; do
+    local zone="$(echo "${instance}" | jq -r '.zone')"
+    zone="${zone##*/}"
+    local name="$(echo "${instance}" | jq -r '.name')"
+    gce::internal::delete_instance "${zone}" "${name}" &
+    pids+=("$!")
+  done < <(jq -Mc '.[]' "${instance_info}")
+
+  local pid
+  for pid in "${pids[@]}"; do
+    wait "${pid}"
+  done
+  LOG INFO 'Delete operation is done.'
 }
 
 gce::run() {
@@ -209,7 +159,7 @@ gce::run() {
     ip="$(echo "${instance}" | \
         jq -r '.networkInterfaces[].accessConfigs[].natIP')"
     LOG INFO "Instance: name=${name}, zone=${zone}, ip=${ip}"
-    for i in `seq 120`; do
+    for i in `seq 300`; do
       if ssh "guest@${ip}" true 2>/dev/null; then
         break
       fi
@@ -237,7 +187,7 @@ if sub::is_main; then
   COMMAND="${1}"
   shift
   case "${COMMAND}" in
-    'create' | 'run' )
+    'create' | 'run' | 'delete' )
       "gce::${COMMAND}" "$@";;
     *)
       LOG FATAL "Unknown command: ${COMMAND}";;
