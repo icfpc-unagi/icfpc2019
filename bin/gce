@@ -15,6 +15,7 @@ default_zone="${zones[$(( RANDOM % num_zones ))]}"
 source "$(dirname "${BASH_SOURCE}")/imosh" || exit 1
 DEFINE_string instance 'auto' 'Instance ID'
 DEFINE_bool create false 'Create an instance'
+DEFINE_bool delete false 'Create an instance'
 DEFINE_bool dryrun false 'Enable dryrun mode'
 DEFINE_bool premium false 'Enable premium mode'
 DEFINE_int cpu 0 '# of CPUs'
@@ -107,13 +108,14 @@ gce::create() {
 gce::internal::delete_instance() {
   local zone="$1"
   local name="$2"
+
   LOG INFO "Deleting instance: zone=${zone}, name=${name}"
   if execute gcloud compute \
       --project="${FLAGS_gcp_project}" --format=none --quiet \
       instances delete "${name}" --zone="${zone}"; then
     LOG INFO "Successfully deleted instance: zone=${zone}, name=${name}"
   else
-    LOG ERROR "Failed to delete instance: zone=${zone}, name=${name}"
+    LOG WARNING "Failed to delete instance: zone=${zone}, name=${name}"
   fi
 }
 
@@ -141,33 +143,68 @@ gce::delete() {
   LOG INFO 'Delete operation is done.'
 }
 
+gce::internal::watchdog() {
+  local zone="$1"
+  local name="$2"
+
+  while kill -0 "${IMOSH_ROOT_PID}"; do
+    timeout 30 gcloud compute \
+        --project="${FLAGS_gcp_project}" --format=none --quiet \
+        instances add-metadata "${name}" \
+        --metadata=watchdog="$(TZ=UTC sub::date 'Y-m-d\TH:i:s\Z')" \
+        --zone="${zone}" >/dev/null 2>/dev/null &
+    sleep 10
+  done
+}
+
 gce::run() {
   local args=()
+  local arg
   for arg in "$@"; do
     func::escapeshellarg arg
     args+=("${arg}")
   done
+
   if (( FLAGS_create )); then
     gce::create >/dev/null
   fi
-  instance_info="$(mktemp)"
+
+  local instance_info="$(mktemp)"
   gce::info >"${instance_info}"
-  while read instance; do
-    name="$(echo "${instance}" | jq -r '.name')"
-    zone="$(echo "${instance}" | jq -r '.zone')"
-    zone="${zone##*/}"
-    ip="$(echo "${instance}" | \
-        jq -r '.networkInterfaces[].accessConfigs[].natIP')"
-    LOG INFO "Instance: name=${name}, zone=${zone}, ip=${ip}"
-    for i in `seq 300`; do
-      if ssh "guest@${ip}" true 2>/dev/null; then
-        break
-      fi
-      sleep 1
-    done
-    LOG INFO "Running on ${ip}: ${args[*]}"
-    ssh "guest@${ip}" -- "${args[*]}"
-  done < <(jq -Mc '.[]' "${instance_info}")
+  local num_instances="$(jq -Mc length "${instance_info}")"
+  if [ "${num_instances}" != 1 ]; then
+    if (( num_instances == 0 )); then
+      LOG FATAL "No instance matched: ${FLAGS_instance}"
+    else
+      LOG FATAL "Multiple instances matched: ${FLAGS_instance}"
+    fi
+  fi
+
+  local instance="$(jq -Mc '.[]' "${instance_info}")"
+  local zone="$(echo "${instance}" | jq -r '.zone')"
+  zone="${zone##*/}"
+  local name="$(echo "${instance}" | jq -r '.name')"
+  local ip="$(echo "${instance}" | \
+      jq -r '.networkInterfaces[].accessConfigs[].natIP')"
+  LOG INFO "Instance: name=${name}, zone=${zone}, ip=${ip}"
+
+  gce::internal::watchdog "${zone}" "${name}" &
+  watchdog_pid="$!"
+
+  if (( FLAGS_delete )); then
+    sub::atexit "gce::internal::delete_instance '${zone}' '${name}'"
+  fi
+
+  for i in `seq 300`; do
+    if ssh "guest@${ip}" true 2>/dev/null; then
+      break
+    fi
+    sleep 1
+  done
+
+  LOG INFO "Running on ${ip}: ${args[*]}"
+  ssh "guest@${ip}" -- "${args[*]}"
+  kill -TERM "${watchdog_pid}"
 }
 
 if sub::is_main; then
@@ -177,6 +214,7 @@ if sub::is_main; then
         sub::substr "$(sub::md5 "$RANDOM.$RANDOM.$RANDOM.$RANDOM")" 0 8
     )"
     FLAGS_create=1
+    FLAGS_delete=1
     LOG INFO "Instance ID is generated: ${FLAGS_instance}"
   fi
   LOG INFO "Arguments: $*"
