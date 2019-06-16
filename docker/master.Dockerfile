@@ -170,10 +170,20 @@ RUN git config --global user.email '5896564+ninetan@users.noreply.github.com' &&
 
 # SSH settings.
 ADD ./unagi.pem /root/.ssh/id_rsa
+ADD ./unagi.pem /root/.ssh/google_compute_engine
 ADD ./unagi.pem /home/unagi/.ssh/id_rsa
-RUN chmod 600 /root/.ssh/id_rsa /home/unagi/.ssh/id_rsa
+ADD ./unagi.pem /home/unagi/.ssh/google_compute_engine
+RUN chmod 600 \
+    /root/.ssh/id_rsa \
+    /root/.ssh/google_compute_engine \
+    /home/unagi/.ssh/id_rsa \
+    /home/unagi/.ssh/google_compute_engine
 ADD ./unagi.pub /root/.ssh/authorized_keys
+ADD ./unagi.pub /root/.ssh/id_rsa.pub
+ADD ./unagi.pub /root/.ssh/google_compute_engine.pub
 ADD ./unagi.pub /home/unagi/.ssh/authorized_keys
+ADD ./unagi.pub /home/unagi/.ssh/id_rsa.pub
+ADD ./unagi.pub /home/unagi/.ssh/google_compute_engine.pub
 RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
 RUN ssh-keyscan github.com >> /home/unagi/.ssh/known_hosts
 RUN chown -R unagi:unagi /home/unagi/.ssh

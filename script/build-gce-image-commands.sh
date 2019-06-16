@@ -27,7 +27,7 @@ do_setup_guest() {
     usermod -G docker,ubuntu,google-sudoers guest
     mkdir -p /home/guest/.ssh
     rm -rf /home/guest/.ssh/authorized_keys
-    for user in imos iwiwi chokudai toslunar wata-orz sulume; do
+    for user in imos iwiwi chokudai toslunar wata-orz sulume ninetan; do
         curl "https://github.com/${user}.keys" \
             >> /home/guest/.ssh/authorized_keys
     done
@@ -110,8 +110,6 @@ do_install_docker() {
     "registry-mirrors": ["https://mirror.gcr.io"]
 }
 EOM
-    docker login --username unagi2019 --password "${FLAGS_password}"
-    docker pull unagi2019/image:master
 }
 
 do_install_unagi() {
@@ -121,6 +119,13 @@ do_install_unagi() {
 do_clean() {
     apt-get -y autoremove
     apt-get -y clean
+}
+
+do_docker_pull() {
+    sudo -H docker login --username unagi2019 --password "${FLAGS_password}"
+    sudo -H -u guest \
+        docker login --username unagi2019 --password "${FLAGS_password}"
+    sudo -H docker pull unagi2019/image:master
 }
 
 do_shutdown() {

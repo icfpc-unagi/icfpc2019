@@ -13,7 +13,7 @@ do_start() {
   LOG INFO 'Starting instance...'
   gcloud compute --project="${FLAGS_project}" instances create \
       "${FLAGS_instance}" \
-      --zone="${FLAGS_zone}" --machine-type=custom-1-4096 --subnet=default \
+      --zone="${FLAGS_zone}" --machine-type=custom-4-4096 --subnet=default \
       --network-tier=PREMIUM --maintenance-policy=MIGRATE \
       --service-account=289881194472-compute@developer.gserviceaccount.com \
       --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append \
@@ -35,7 +35,7 @@ do_wait() {
 }
 
 do_ssh() {
-  gcloud compute --project="${FLAGS_project}" ssh "${FLAGS_instance}" \
+  gcloud compute --project="${FLAGS_project}" ssh "ubuntu@${FLAGS_instance}" \
       --zone="${FLAGS_zone}" -- "$@"
 }
 
@@ -45,8 +45,10 @@ do_scp() {
 }
 
 do_setup() {
-  do_scp "$(dirname "${BASH_SOURCE}")/../bin" "${FLAGS_instance}":/tmp/
-  do_scp "$(dirname "${BASH_SOURCE}")/../script" "${FLAGS_instance}":/tmp/
+  do_scp "$(dirname "${BASH_SOURCE}")/../bin" \
+      "ubuntu@${FLAGS_instance}":/tmp/
+  do_scp "$(dirname "${BASH_SOURCE}")/../script" \
+      "ubuntu@${FLAGS_instance}":/tmp/
 
   if [ "$#" -ge 1 ]; then
     targets=("$@")
@@ -61,6 +63,7 @@ do_setup() {
         install_docker
         # setup_guest depends on install_docker.
         setup_guest
+        docker_pull
         install_unagi
         clean
         setup_swapfile
