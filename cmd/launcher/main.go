@@ -58,7 +58,7 @@ func main() {
 		args = append(args, "-t")
 	}
 	args = append(args, getDockerImage())
-	args = append(args, os.Args[1:]...)
+	args = append(args, flag.Args()...)
 	cmd := exec.Command("docker", args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
