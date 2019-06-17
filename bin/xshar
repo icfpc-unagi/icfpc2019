@@ -51,6 +51,17 @@ if ! tail -n +NUM_OF_LINES "${BASH_SOURCE}" | {
 }; then
   exit 1
 fi
+if [ "${PATH}" != "" ]; then
+  IFS=: paths=(${PATH})
+  xshar_path=''
+  for path in "${paths[@]}"; do
+    case "${path}" in
+      /* ) xshar_path+="${XSHAR_ROOT}${path}:";;
+      "~/"* ) xshar_path+="${XSHAR_ROOT}${HOME}${path#"~"}:";;
+    esac
+  done
+  export PATH="${xshar_path}${PATH}"
+fi
 '
   local eom="EOM_$(
     i=0; while (( ( i += 1 ) <= 16 )); do
