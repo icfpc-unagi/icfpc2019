@@ -122,8 +122,8 @@ xshar::main() {
     local pwd="$(pwd)"
     local bootstrap
     case "${executable}" in
-      /* ) bootstrap="\${XSHAR_ROOT}/depot${executable} \"\$@\"";;
-      * ) bootstrap="\${XSHAR_ROOT}/depot${pwd}/${executable} \"\$@\"";;
+      /* ) bootstrap="\${XSHAR_ROOT}${executable} \"\$@\"";;
+      * ) bootstrap="\${XSHAR_ROOT}${pwd}/${executable} \"\$@\"";;
     esac
     if [ "${output}" == '' ]; then
       output="$(basename "${executable}").shar"
