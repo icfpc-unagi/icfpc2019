@@ -1,43 +1,71 @@
 #!/usr/bin/env bash
-# Usage: xshar files...
 # Usage: xshar [options] executable [files...]
+#
+# Options:
+#   -h | --help     Show this message.
+#   -v | --version  Show version.
+#   -o file | --output=file
+#                   Path to output an executable shell archive file to.
+#   -c command | --command=command
+#                   Comamnd as an entrypoint.
+
+xshar::help() {
+  while read line; do
+    case "${line}" in
+      \#!* ) continue;;
+      \#* ) line="${line#\#}"; echo "${line# }";;
+      * ) break;;
+    esac
+  done < "${BASH_SOURCE}"
+}
+
+xshar::version() {
+  echo 'xshar v0.1'
+}
 
 xshar::print_header() {
   local bootstrap="$1"
   local command='#!/usr/bin/env bash
 set -e -u
 while :; do
-  XSHAR_ROOT="${TMPDIR:-/tmp}/shar."
+  XSHAR_HOME="${TMPDIR:-/tmp}/shar."
   i=0; while (( ( i += 1 ) <= 4 )); do
-    XSHAR_ROOT+="$(printf "%02x" "$(( RANDOM % 256 ))")"
+    XSHAR_HOME+="$(printf "%02x" "$(( RANDOM % 256 ))")"
   done
-  if [ ! -d "${XSHAR_ROOT}" ]; then
+  if [ ! -d "${XSHAR_HOME}" ]; then
     break
   fi
 done
-mkdir -p "${XSHAR_ROOT}/depot"
-rm_xshar_root() { rm -rf "${XSHAR_ROOT}"; }
+export XSHAR_HOME="${XSHAR_HOME}"
+export XSHAR_ROOT="${XSHAR_HOME}/root"
+mkdir -p "${XSHAR_ROOT}"
+rm_xshar_root() { rm -rf "${XSHAR_HOME}"; }
 trap rm_xshar_root EXIT
-tail -n +NUM_OF_LINES "${BASH_SOURCE}" | {
-  pushd "${XSHAR_ROOT}/depot" >/dev/null
-  tar zxf - >/dev/null 2>/dev/null
+if ! tail -n +NUM_OF_LINES "${BASH_SOURCE}" | {
+  pushd "${XSHAR_ROOT}" >/dev/null
+  if ! tar zxf - >/dev/null 2>/dev/null; then
+    echo "xshar: failed extract files" >&2
+    exit 1
+  fi
   popd >/dev/null
-}
+}; then
+  exit 1
+fi
 '
   local eom="EOM_$(
     i=0; while (( ( i += 1 ) <= 16 )); do
       printf "%02X" "$(( RANDOM % 256 ))"
     done
   )"
-  command+="cat <<'${eom}' > \${XSHAR_ROOT}/BOOTSTRAP
+  command+="cat <<'${eom}' > \${XSHAR_HOME}/BOOTSTRAP
 ${bootstrap}
 ${eom}
 "
-  command+="XSHAR_WORKDIR='$(pwd)'
+  command+="export XSHAR_WORKDIR=\${XSHAR_ROOT}'$(pwd)'
 "
   command+='
 set +eu
-source "${XSHAR_ROOT}/BOOTSTRAP"
+source "${XSHAR_HOME}/BOOTSTRAP"
 exit 0
 '
   local no_new_lines="${command//$'\n'/}"
@@ -51,36 +79,84 @@ xshar::archive() {
   local output="$1"; shift
   local bootstrap="$1"; shift
   xshar::print_header "${bootstrap}" > "${output}"
-  local args=(tar zcf - -C /)
-  local pwd="$(pwd)"
-  for arg in "$@"; do
-    case "${arg}" in
-      /* ) args+=("${arg#/}");;
-      * ) args+=("${pwd#/}/${arg}");;
-    esac
-  done
-  "${args[@]}" >> "${output}"
+  if [ "$#" != 0 ]; then
+    local args=(tar zcf - -C /)
+    local pwd="$(pwd)"
+    for arg in "$@"; do
+      case "${arg}" in
+        /* ) args+=("${arg#/}");;
+        * ) args+=("${pwd#/}/${arg}");;
+      esac
+    done
+    "${args[@]}" >> "${output}"
+  fi
   chmod +x "${output}"
 }
 
 xshar::main() {
-  local executable="$1"
-  if [ ! -f "${executable}" ]; then
-    echo "xshar: first argument must be a file: ${executable}" >&2
-    exit 1
+  if [ "${command}" == '' ]; then
+    if [ "$#" == 0 ]; then
+      echo 'xshar: executable file is required' >&2
+      exit 1
+    fi
+    local executable="$1"
+    if [ ! -f "${executable}" ]; then
+      echo "xshar: first argument must be a file: ${executable}" >&2
+      exit 1
+    fi
+    if [ ! -x "${executable}" ]; then
+      echo "xshar: first argument must be an executable file: ${executable}" >&2
+      exit 1
+    fi
+    local pwd="$(pwd)"
+    local bootstrap
+    case "${executable}" in
+      /* ) bootstrap="\${XSHAR_ROOT}/depot${executable} \"\$@\"";;
+      * ) bootstrap="\${XSHAR_ROOT}/depot${pwd}/${executable} \"\$@\"";;
+    esac
+    if [ "${output}" == '' ]; then
+      output="$(basename "${executable}").shar"
+    fi
+  else
+    bootstrap="${command} \"\$@\""
   fi
-  if [ ! -x "${executable}" ]; then
-    echo "xshar: first argument must be an executable file: ${executable}" >&2
-    exit 1
+  if [ "${output}" == '' ]; then
+    output="output.shar"
   fi
-  local output="$(basename "${executable}").shar"
-  local pwd="$(pwd)"
-  local bootstrap
-  case "${executable}" in
-    /* ) bootstrap="\${XSHAR_ROOT}/depot${executable}";;
-    * ) bootstrap="\${XSHAR_ROOT}/depot${pwd}/${executable}";;
-  esac
   xshar::archive "${output}" "${bootstrap}" "$@"
 }
 
-xshar::main "$@"
+break=''
+args=()
+output=''
+command=''
+while [ "$#" != 0 ]; do
+  arg="$1"
+  case "${arg}" in
+    '-h' | '--help' ) xshar::help; exit 0;;
+    '-v' | '--version' ) xshar::version; exit 0;;
+    --output=* ) output="${arg#*=}";;
+    --command=* ) command="${arg#*=}";;
+    '-o' | '--output' )
+      if [ "$#" == 0 ]; then
+        echo 'xshar: -o requires an argument' >&2
+        exit 1
+      fi
+      shift; output="$1"
+      ;;
+    '-c' | '--command' )
+      if [ "$#" == 0 ]; then
+        echo 'xshar: -c requires an argument' >&2
+        exit 1
+      fi
+      shift; command="$1"
+      ;;
+    *) break=1;;
+  esac
+  if [ "${break}" == 1 ]; then
+    break
+  fi
+  shift
+done
+args+=("$@")
+xshar::main "${args[@]}"
