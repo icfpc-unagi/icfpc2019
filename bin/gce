@@ -160,10 +160,12 @@ gce::internal::watchdog() {
 gce::run() {
   local args=()
   local arg
-  for arg in "$@"; do
-    func::escapeshellarg arg
-    args+=("${arg}")
-  done
+  if [ "$#" != 0 ]; then
+    for arg in "$@"; do
+      func::escapeshellarg arg
+      args+=("${arg}")
+    done
+  fi
 
   if (( FLAGS_create )); then
     gce::create >/dev/null
@@ -207,12 +209,18 @@ gce::run() {
   kill -TERM "${watchdog_pid}"
 }
 
+gce::list() {
+  LOG INFO "Listing instances for ${FLAGS_gcp_project}..."
+  gcloud --project="${FLAGS_gcp_project}" --format=json \
+      compute instances list | jq -Mcr '.[] | .name'
+}
+
 if sub::is_main; then
   IMOSH_PREDICATE=2 eval "${IMOSH_INIT}"
   if [ "${FLAGS_instance}" == 'auto' ]; then
-    FLAGS_instance="job-$(sub::date 'Ymd-His')-$(
-        sub::substr "$(sub::md5 "$RANDOM.$RANDOM.$RANDOM.$RANDOM")" 0 8
-    )"
+    FLAGS_instance="job-$(sub::date 'mdHi')-$(
+        sub::substr "$(sub::md5 "$RANDOM.$RANDOM.$RANDOM.$RANDOM")" 0 6
+    )-${HOST_USER:-unknown}"
     FLAGS_create=1
     FLAGS_delete=1
     LOG INFO "Instance ID is generated: ${FLAGS_instance}"
@@ -225,7 +233,7 @@ if sub::is_main; then
   COMMAND="${1}"
   shift
   case "${COMMAND}" in
-    'create' | 'run' | 'delete' )
+    'create' | 'run' | 'delete' | 'list' )
       "gce::${COMMAND}" "$@";;
     *)
       LOG FATAL "Unknown command: ${COMMAND}";;

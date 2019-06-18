@@ -17,7 +17,7 @@ for directory in *; do
     for file in `find "${directory}" -name '*.cs'`; do
         echo "Building $file..." >&2;
         name="$(basename "${file%.cs}")"
-        mcs -out:"build/$name" "$file";
+        mcs -out:"build/$name.exe" "$file";
         cat <<EOM > "build/${name}"
 #!/usr/bin/env bash
 exec unagi mono "\$(dirname "\${BASH_SOURCE}")/${name}.exe"

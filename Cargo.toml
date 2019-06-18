@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "example/rust",
+    "example/rust-hello",
     "proto",
     "tools",
     "utils",

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"os/user"
 	"path"
 	"regexp"
 	"strings"
@@ -27,6 +28,23 @@ func main() {
 	exe, err := os.Executable()
 	if err != nil {
 		panic(fmt.Sprintf("failed to get executable path: %s", err))
+	}
+
+	user := func() string {
+		if u := os.Getenv("HOST_USER"); u != "" {
+			return u
+		} else if u := os.Getenv("USER"); u != "" {
+			return u
+		} else if u, err := user.Current(); err != nil {
+			return u.Username
+		} else if u, err := exec.Command("id", "-un").Output(); err != nil {
+			return string(u)
+		}
+		panic("failed to guess user")
+	}()
+	user = strings.ToLower(user)
+	if !regexp.MustCompile(`^[a-z][a-z0-9\-]{1,16}$`).MatchString(user) {
+		panic(fmt.Sprintf("inavlid user: %s", user))
 	}
 
 	args := []string{
@@ -48,6 +66,7 @@ func main() {
 			":/root/.cache/go-build",
 		"-e", "HOST_PWD=" + toLinuxPath(getCurrentDirectory()),
 		"-e", "HOST_LAUNCHER=" + toLinuxPath(exe),
+		"-e", "HOST_USER=" + user,
 		"--privileged",
 		"--pid=host",
 		"--rm", "-i",
@@ -83,7 +102,7 @@ func getUnagiDirectory() (rootDir, relativeDir string) {
 			panic("unagi command must be run under the team repository: " +
 				getCurrentDirectory())
 		}
-		relativeDir = path.Join(relativeDir, path.Base(rootDir))
+		relativeDir = path.Join(path.Base(rootDir), relativeDir)
 		rootDir = path.Dir(rootDir)
 	}
 }
