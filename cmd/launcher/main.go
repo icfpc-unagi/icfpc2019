@@ -71,6 +71,9 @@ func main() {
 		"--pid=host",
 		"--rm", "-i",
 	}
+	if os.Getenv("TERM") == "xterm-256color" {
+		args = append(args, "-e", "TERM=xterm-256color")
+	}
 	if (isatty.IsTerminal(os.Stdin.Fd()) &&
 		isatty.IsTerminal(os.Stdout.Fd()) &&
 		isatty.IsTerminal(os.Stderr.Fd())) ||
