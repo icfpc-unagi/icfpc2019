@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+exec ssh -t guest@master.icfpc.sx9.jp unagi --force "$@"

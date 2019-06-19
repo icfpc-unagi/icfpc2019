@@ -20,6 +20,7 @@ import (
 
 var tty = flag.Bool("tty", false, "Enable tty.")
 var image = flag.String("image", "", "Image to use.")
+var force = flag.Bool("force", false, "Mount the current directory")
 
 func main() {
 	flag.Parse()
@@ -97,6 +98,10 @@ func main() {
 
 func getUnagiDirectory() (rootDir, relativeDir string) {
 	rootDir, relativeDir = getCurrentDirectory(), "."
+	if *force {
+		return
+	}
+
 	for {
 		if _, err := os.Stat(
 			path.Join(rootDir, "UNAGI_REPOSITORY")); err == nil {
