@@ -19,6 +19,8 @@ do_setup() {
       "ubuntu@${FLAGS_ip}":/tmp/
   internal::scp "$(dirname "${BASH_SOURCE}")/../script" \
       "ubuntu@${FLAGS_ip}":/tmp/
+  internal::scp "$(dirname "${BASH_SOURCE}")/../docker" \
+      "ubuntu@${FLAGS_ip}":/tmp/
 
   if [ "$#" -ge 1 ]; then
     targets=("$@")
@@ -35,6 +37,7 @@ do_setup() {
         setup_guest
         docker_pull
         install_unagi
+        install_pem
         clean
         setup_swapfile
     )

@@ -32,6 +32,7 @@ do_setup_guest() {
         curl "https://github.com/${user}.keys" \
             >> /home/guest/.ssh/authorized_keys
     done
+    chown -R guest /home/guest/.ssh
 }
 
 do_install_git_lfs() {
@@ -127,6 +128,18 @@ do_docker_pull() {
     sudo -H -u guest \
         docker login --username unagi2019 --password "${FLAGS_password}"
     sudo -H docker pull unagi2019/image:master
+}
+
+do_install_pem() {
+    apt-get update -qqy
+    DEBIAN_FRONTEND=noninteractive apt-get install -qqy openssl
+    cat "$(dirname "${BASH_SOURCE}")/../docker/data/unagi.pem.encrypted" |
+        UNAGI_PASSWORD="${FLAGS_password}" \
+        "$(dirname "${BASH_SOURCE}")/../bin/decrypt" > /home/guest/.ssh/id_rsa
+    cp "$(dirname "${BASH_SOURCE}")/../docker/data/unagi.pub" \
+        /home/guest/.ssh/id_rsa.pub
+    chmod 0400 /home/guest/.ssh/id_rsa
+    chown -R guest /home/guest/.ssh
 }
 
 do_shutdown() {

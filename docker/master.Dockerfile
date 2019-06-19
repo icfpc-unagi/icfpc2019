@@ -84,7 +84,8 @@ RUN curl -o go.tar.gz https://dl.google.com/go/go1.12.5.linux-amd64.tar.gz && \
 
 # Install scripts (python, php, ruby).
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-        php-cli php-mysql php-curl php-pear python python-pip ruby && \
+        php-cli php-mysql php-curl php-pear \
+        python python-pip python3 python3-pip ruby && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install other useful tools.
@@ -120,6 +121,9 @@ RUN echo "deb http://packages.cloud.google.com/apt" \
         google-cloud-sdk-app-engine-python google-cloud-sdk-app-engine-go \
         google-cloud-sdk-datastore-emulator && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install AWS CLI.
+RUN python3 -m pip install awscli
 
 # Install Docker.
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
@@ -173,7 +177,7 @@ ADD ./unagi.pem /root/.ssh/id_rsa
 ADD ./unagi.pem /root/.ssh/google_compute_engine
 ADD ./unagi.pem /home/unagi/.ssh/id_rsa
 ADD ./unagi.pem /home/unagi/.ssh/google_compute_engine
-RUN chmod 600 \
+RUN chmod 400 \
     /root/.ssh/id_rsa \
     /root/.ssh/google_compute_engine \
     /home/unagi/.ssh/id_rsa \
@@ -189,6 +193,11 @@ ADD ./ssh_config /home/unagi/.ssh/config
 RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
 RUN ssh-keyscan github.com >> /home/unagi/.ssh/known_hosts
 RUN chown -R unagi:unagi /home/unagi/.ssh
+
+# AWS settings.
+ADD ./aws_config /root/.aws/config
+ADD ./aws_credentials /root/.aws/credentials
+RUN chmod 400 /root/.aws/credentials
 
 # Add unagi command as proxy.
 RUN echo '#!/usr/bin/env bash' > /usr/local/bin/unagi && \

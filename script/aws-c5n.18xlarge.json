@@ -1,0 +1,136 @@
+{
+  "IamFleetRole": "arn:aws:iam::650239496920:role/aws-ec2-spot-fleet-tagging-role",
+  "AllocationStrategy": "lowestPrice",
+  "TargetCapacity": 1,
+  "SpotPrice": "4",
+  "ValidFrom": "2019-06-19T09:30:17Z",
+  "ValidUntil": "2020-06-19T09:30:17Z",
+  "TerminateInstancesWithExpiration": true,
+  "LaunchSpecifications": [
+    {
+      "ImageId": "ami-02b92887d02cbd9a6",
+      "InstanceType": "c5n.18xlarge",
+      "KeyName": "ec2-oregon",
+      "EbsOptimized": true,
+      "Monitoring": {
+        "Enabled": true
+      },
+      "BlockDeviceMappings": [
+        {
+          "DeviceName": "/dev/sda1",
+          "Ebs": {
+            "DeleteOnTermination": true,
+            "VolumeType": "gp2",
+            "VolumeSize": 500,
+            "SnapshotId": "snap-0d6acddb668a5d02b"
+          }
+        }
+      ],
+      "NetworkInterfaces": [
+        {
+          "DeviceIndex": 0,
+          "SubnetId": "subnet-0aa14c7768b229138",
+          "DeleteOnTermination": true,
+          "Groups": [
+            "sg-0fca92ad6e7b66d3c"
+          ],
+          "AssociatePublicIpAddress": true
+        }
+      ]
+    },
+    {
+      "ImageId": "ami-02b92887d02cbd9a6",
+      "InstanceType": "c5n.18xlarge",
+      "KeyName": "ec2-oregon",
+      "EbsOptimized": true,
+      "Monitoring": {
+        "Enabled": true
+      },
+      "BlockDeviceMappings": [
+        {
+          "DeviceName": "/dev/sda1",
+          "Ebs": {
+            "DeleteOnTermination": true,
+            "VolumeType": "gp2",
+            "VolumeSize": 500,
+            "SnapshotId": "snap-0d6acddb668a5d02b"
+          }
+        }
+      ],
+      "NetworkInterfaces": [
+        {
+          "DeviceIndex": 0,
+          "SubnetId": "subnet-02b1fd7015fbe8dca",
+          "DeleteOnTermination": true,
+          "Groups": [
+            "sg-0fca92ad6e7b66d3c"
+          ],
+          "AssociatePublicIpAddress": true
+        }
+      ]
+    },
+    {
+      "ImageId": "ami-02b92887d02cbd9a6",
+      "InstanceType": "c5n.18xlarge",
+      "KeyName": "ec2-oregon",
+      "EbsOptimized": true,
+      "Monitoring": {
+        "Enabled": true
+      },
+      "BlockDeviceMappings": [
+        {
+          "DeviceName": "/dev/sda1",
+          "Ebs": {
+            "DeleteOnTermination": true,
+            "VolumeType": "gp2",
+            "VolumeSize": 500,
+            "SnapshotId": "snap-0d6acddb668a5d02b"
+          }
+        }
+      ],
+      "NetworkInterfaces": [
+        {
+          "DeviceIndex": 0,
+          "SubnetId": "subnet-0002599f6455012fe",
+          "DeleteOnTermination": true,
+          "Groups": [
+            "sg-0fca92ad6e7b66d3c"
+          ],
+          "AssociatePublicIpAddress": true
+        }
+      ]
+    },
+    {
+      "ImageId": "ami-02b92887d02cbd9a6",
+      "InstanceType": "c5n.18xlarge",
+      "KeyName": "ec2-oregon",
+      "EbsOptimized": true,
+      "Monitoring": {
+        "Enabled": true
+      },
+      "BlockDeviceMappings": [
+        {
+          "DeviceName": "/dev/sda1",
+          "Ebs": {
+            "DeleteOnTermination": true,
+            "VolumeType": "gp2",
+            "VolumeSize": 500,
+            "SnapshotId": "snap-0d6acddb668a5d02b"
+          }
+        }
+      ],
+      "NetworkInterfaces": [
+        {
+          "DeviceIndex": 0,
+          "SubnetId": "subnet-0fff7edae4c7610d1",
+          "DeleteOnTermination": true,
+          "Groups": [
+            "sg-0fca92ad6e7b66d3c"
+          ],
+          "AssociatePublicIpAddress": true
+        }
+      ]
+    }
+  ],
+  "Type": "request"
+}
