@@ -19,6 +19,7 @@ import (
 )
 
 var tty = flag.Bool("tty", false, "Enable tty.")
+var image = flag.String("image", "", "Image to use.")
 
 func main() {
 	flag.Parse()
@@ -148,6 +149,10 @@ func getLocalCacheDirectory(rootDir string, name string) string {
 
 // getDockerImage returns an image name.
 func getDockerImage() string {
+	if *image != "" {
+		return "unagi2019/image:" + *image
+	}
+
 	url := "https://storage.googleapis.com/icfpc-public-data/hash/docker-master"
 	resp, err := http.Get(url)
 	if err != nil {

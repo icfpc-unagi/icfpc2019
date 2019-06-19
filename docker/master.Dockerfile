@@ -216,6 +216,10 @@ RUN apt-get update && apt-get install -y jq && \
 
 ENV CARGO_TARGET_DIR=/work/build
 
+ENV SHELL=/bin/bash
+RUN echo 'PS1="\e[0;32m\]\u@unagi\[\e[m\]:\e[0;34m\]\w\[\e[m\]# "' \
+    >> /root/.bashrc
+
 ################################################################################
 # Repository pull
 ################################################################################
@@ -226,3 +230,5 @@ RUN git clone git@github.com:imos/icfpc2019.git /repo
 # Fill quick survey.
 RUN echo "last_answer_survey_time: $(date '+%s')" > \
     /root/.config/gcloud/.last_survey_prompt.yaml
+
+CMD /bin/bash --login
