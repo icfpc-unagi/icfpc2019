@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# Usage: run
+
+source "$(dirname "${BASH_SOURCE}")/imosh" || exit 1
+DEFINE_string instance 'auto' 'Instance ID'
+DEFINE_bool create false 'Create an instance'
+DEFINE_bool delete false 'Create an instance'
+DEFINE_bool dryrun false 'Enable dryrun mode'
+DEFINE_int disk 500 'Size of disk'
+DEFINE_string instance_type 'c5.xlarge' 'Instance type'
+DEFINE_string price '0.2' 'Spot price'
+DEFINE_string image 'ami-02b92887d02cbd9a6' 'Image ID'
+
+execute() {
+  local args=()
+  local arg=''
+  for arg in "$@"; do
+    func::escapeshellarg arg
+    args+=("${arg}")
+  done
+  LOG INFO "Command: ${args[*]}"
+  if (( ! FLAGS_dryrun )); then
+    "$@"
+  fi
+}
+
+ec2::create() {
+  LOG INFO ''
+  local ebs_info="$(
+      aws ec2 describe-images --image-ids="${FLAGS_image}" | \
+          unagi jq '[.Images[].BlockDeviceMappings[].Ebs][0]')"
+  local snapshot_id="$(echo "${ebs_info}" | jq '.SnapshotId')"
+
+  spec_file=`mktemp`
+  local now="$(sub::time)"
+  valid_until="$(( now + 365 * 24 * 60 * 60 ))"
+  cat "$(dirname "${BASH_SOURCE}")/data/aws-template.json" \
+      | jq ".ValidFrom = \"$(TZ='UTC' sub::date 'Y-m-d\TH:i:s\Z')\"" \
+      | jq ".ValidUntil = \"$(
+          TZ='UTC' sub::date 'Y-m-d\TH:i:s\Z' "${valid_until}")\"" \
+      | jq ".SpotPrice = \"${FLAGS_price}\"" \
+      | jq ".LaunchSpecifications[].InstanceType = \"${FLAGS_instance_type}\"" \
+      | jq ".LaunchSpecifications[].ImageId = \"${FLAGS_image}\"" \
+      | jq ".LaunchSpecifications[].BlockDeviceMappings[].Ebs.SnapshotId =
+          ${snapshot_id}" \
+      | jq ".LaunchSpecifications[].BlockDeviceMappings[].Ebs.VolumeSize =
+          ${FLAGS_disk}" \
+      > "${spec_file}"
+  if (( FLAGS_dryrun )); then
+    echo "Spot fleet request config:"
+    cat "${spec_file}"
+  else
+    aws ec2 request-spot-fleet --spot-fleet-request-config "file://${spec_file}"
+  fi
+}
+
+if sub::is_main; then
+  IMOSH_PREDICATE=2 eval "${IMOSH_INIT}"
+  if [ "${FLAGS_instance}" == 'auto' ]; then
+    FLAGS_instance="job-$(sub::date 'mdHi')-$(
+        sub::substr "$(sub::md5 "$RANDOM.$RANDOM.$RANDOM.$RANDOM")" 0 6
+    )-${HOST_USER:-unknown}"
+    FLAGS_create=1
+    FLAGS_delete=1
+    LOG INFO "Instance ID is generated: ${FLAGS_instance}"
+  fi
+  LOG INFO "Arguments: $*"
+  if [ "$#" -eq 0 ] || [ "${1}" = 'help' ]; then
+    imosh::help
+    exit
+  fi
+  COMMAND="${1}"
+  shift
+  case "${COMMAND}" in
+    'create' | 'run' | 'delete' | 'list' )
+      "ec2::${COMMAND}" "$@";;
+    *)
+      LOG FATAL "Unknown command: ${COMMAND}";;
+  esac
+fi

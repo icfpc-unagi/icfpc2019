@@ -21,6 +21,7 @@ import (
 var tty = flag.Bool("tty", false, "Enable tty.")
 var image = flag.String("image", "", "Image to use.")
 var force = flag.Bool("force", false, "Mount the current directory")
+var bare = flag.Bool("bare", false, "Disable init-wrapper")
 
 func main() {
 	flag.Parse()
@@ -75,6 +76,9 @@ func main() {
 	}
 	if os.Getenv("TERM") == "xterm-256color" {
 		args = append(args, "-e", "TERM=xterm-256color")
+	}
+	if !*bare {
+		args = append(args, "-e", "UNAGI_INIT=1")
 	}
 	if (isatty.IsTerminal(os.Stdin.Fd()) &&
 		isatty.IsTerminal(os.Stdout.Fd()) &&

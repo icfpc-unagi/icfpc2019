@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+if [ "${UNAGI_INIT:-}" != '' ]; then
+  mkdir -p /nfs
+  sshfs guest@52.195.11.214:/home/guest/nfs /nfs \
+      -o reconnect,uid=0,gid=0,delay_connect
+fi
+
+exec "$@"

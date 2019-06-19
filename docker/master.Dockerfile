@@ -211,7 +211,7 @@ RUN touch /UNAGI_IMAGE
 # Experimental
 ################################################################################
 
-RUN apt-get update && apt-get install -y jq && \
+RUN apt-get update && apt-get install -y jq sshfs && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ENV CARGO_TARGET_DIR=/work/build
@@ -219,6 +219,9 @@ ENV CARGO_TARGET_DIR=/work/build
 ENV SHELL=/bin/bash
 RUN echo 'PS1="\e[0;32m\]\u@unagi\[\e[m\]:\e[0;34m\]\w\[\e[m\]# "' \
     >> /root/.bashrc
+
+ADD ./init-wrapper /usr/local/bin/init-wrapper
+RUN chmod +x /usr/local/bin/init-wrapper
 
 ################################################################################
 # Repository pull
@@ -232,3 +235,4 @@ RUN echo "last_answer_survey_time: $(date '+%s')" > \
     /root/.config/gcloud/.last_survey_prompt.yaml
 
 CMD /bin/bash --login
+ENTRYPOINT [ "/usr/local/bin/init-wrapper" ]
