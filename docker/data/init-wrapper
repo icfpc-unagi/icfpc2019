@@ -26,9 +26,9 @@ if [ "${UNAGI_INIT:-}" != '' ]; then
   if [ "${commit_id}" != "${head_commit_id}" ]; then
     export XUNAGI_PULL=yes
     pushd /repo >/dev/null
-    git pull -f
-    git reset --hard
-    git clean -df
+    git pull -q -f
+    git reset -q --hard
+    git clean -qdf
     rsync -a --delete /repo/ ~/.cache/icfpc2019/github/
     popd >/dev/null
   else
