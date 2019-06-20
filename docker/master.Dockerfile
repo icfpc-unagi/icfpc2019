@@ -121,6 +121,9 @@ RUN echo "deb http://packages.cloud.google.com/apt" \
         google-cloud-sdk-app-engine-python google-cloud-sdk-app-engine-go \
         google-cloud-sdk-datastore-emulator && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 \
+    -O /usr/local/bin/cloud_sql_proxy && \
+    chmod +x /usr/local/bin/cloud_sql_proxy
 
 # Install AWS CLI.
 RUN python3 -m pip install awscli
