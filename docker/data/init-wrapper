@@ -26,9 +26,11 @@ if [ "${UNAGI_INIT:-}" != '' ]; then
     export XUNAGI_PULL=yes
     pushd /repo >/dev/null
     git pull -f
+    git reset --hard
+    git clean -df
     tmpdir="$(echo ~/.cache/icfpc2019/github.$RANDOM.$RANDOM.$RANDOM.$RANDOM)"
     cp -a /repo "${tmpdir}"
-    mv -f "${tmpdir}" ~/.cache/icfpc2019/github
+    mv -fT "${tmpdir}" ~/.cache/icfpc2019/github
     popd >/dev/null
   else
     export XUNAGI_PULL=no
