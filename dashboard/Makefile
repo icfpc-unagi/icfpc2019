@@ -8,3 +8,8 @@ build:
 run: build
 	bash run.sh
 .PHONY: run
+
+upload: build
+	gcloud app deploy --project=icfpc-dashboard \
+		--promote --version=master app.yaml
+.PHONY: upload

@@ -54,11 +54,6 @@ func main() {
 	)
 
 	var err error
-	// if appengine.IsDevAppServer() {
-	// 	cfg := mysql.Cfg(connectionName, user, password)
-	// 	// cfg.DBName = <DATABASE_NAME>
-	// 	db, err = mysql.DialCfg(cfg)
-	// } else {
 	if appengine.IsDevAppServer() {
 		dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s",
 			user,
@@ -67,13 +62,13 @@ func main() {
 			"")
 		db, err = sql.Open("mysql", dsn)
 	} else {
-		target := fmt.Sprintf("%s:%s@unix(%s)/", user, password, connectionName)
+		target := fmt.Sprintf(
+			"%s:%s@unix(/cloudsql/%s)/", user, password, connectionName)
 		db, err = sql.Open("mysql", target)
 		if err != nil {
 			log.Fatalf("Could not open db: %v", err)
 		}
 	}
-	// }
 
 	http.HandleFunc("/", handle)
 	http.HandleFunc("/sql", handler)

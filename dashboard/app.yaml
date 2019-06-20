@@ -11,7 +11,7 @@ handlers:
   redirect_http_response_code: 301
 
 env_variables:
-  CLOUDSQL_CONNECTION_NAME: "/cloudsql/icfpc-primary:asia-northeast1:primary"
+  CLOUDSQL_CONNECTION_NAME: "icfpc-primary:asia-northeast1:primary"
   CLOUDSQL_USER: "unagi"
 
 includes:
