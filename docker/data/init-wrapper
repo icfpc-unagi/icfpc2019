@@ -28,7 +28,7 @@ if [ "${UNAGI_INIT:-}" != '' ]; then
     git pull -f
     git reset --hard
     git clean -df
-    rsync -a --delete ~/.cache/icfpc2019/github/ /repo/
+    rsync -a --delete /repo/ ~/.cache/icfpc2019/github/
     popd >/dev/null
   else
     export XUNAGI_PULL=no
