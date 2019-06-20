@@ -22,6 +22,7 @@ if [ "${UNAGI_INIT:-}" != '' ]; then
   else
     export XUNAGI_SYNC=no
   fi
+
   if [ "${commit_id}" != "${head_commit_id}" ]; then
     export XUNAGI_PULL=yes
     pushd /repo >/dev/null
