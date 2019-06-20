@@ -70,7 +70,7 @@ orig@build-rs:
 
 orig@build-go:
 	mkdir -p build/gobuild
-	cd build/gobuild && go build ../../cmd/...
+	cd go && go build ./...
 .PHONY: orig@build-go
 
 orig@build-cs:
@@ -85,7 +85,7 @@ orig@test-rs:
 .PHONY: orig@test-rs
 
 orig@test-go:
-	go test ./cmd/...
+	cd go && go test ./...
 .PHONY: orig@test-go
 
 orig@test-sh:
@@ -93,13 +93,13 @@ orig@test-sh:
 .PHONY: orig@test-sh
 
 orig@launcher:
-	cd cmd/launcher && make -j 6
+	cd go/cmd/launcher && make -j 6
 	cp script/launcher.sh build/launcher
 	chmod +x build/launcher
 .PHONY: orig@launcher
 
 orig@upload-launcher:
-	cd cmd/launcher && make -j 6 upload
+	cd go/cmd/launcher && make -j 6 upload
 .PHONY: orig@upload-launcher
 
 orig@upload-installer:
@@ -139,7 +139,7 @@ orig@push-docker-%: orig@docker-%
 .PHONY: orig@push-docker-%
 
 orig@run-dashboard:
-	cd dashboard && make run
+	cd go/dashboard && make run
 .PHONY: orig@run-dashboard
 
 ################################################################################

@@ -4,8 +4,8 @@ upload: upload-linux upload-darwin upload-windows
 .PHONY: upload
 
 build-%: .FORCE
-	mkdir -p ../../build
-	GOOS=$* GOARCH=amd64 go build -o ../../build/launcher-$* ./
+	mkdir -p ../../../build
+	CGO_ENABLED=0 GOOS=$* GOARCH=amd64 go build -o ../../../build/launcher-$* ./
 .PHONY: build-%
 
 upload-%: build-%
