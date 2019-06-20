@@ -22,6 +22,7 @@ var tty = flag.Bool("tty", false, "Enable tty.")
 var image = flag.String("image", "", "Image to use.")
 var force = flag.Bool("force", false, "Mount the current directory")
 var bare = flag.Bool("bare", false, "Disable init-wrapper")
+var root = flag.String("root", "", "Root directory")
 
 func main() {
 	flag.Parse()
@@ -101,6 +102,11 @@ func main() {
 }
 
 func getUnagiDirectory() (rootDir, relativeDir string) {
+	if *root != "" {
+		rootDir, relativeDir = *root, "."
+		return
+	}
+
 	rootDir, relativeDir = getCurrentDirectory(), "."
 	if *force {
 		return

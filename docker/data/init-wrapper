@@ -1,9 +1,40 @@
 #!/usr/bin/env bash
 
 if [ "${UNAGI_INIT:-}" != '' ]; then
+  export XUNAGI_INIT=yes
   mkdir -p /nfs
   sshfs guest@52.195.11.214:/home/guest/nfs /nfs \
       -o reconnect,uid=0,gid=0,delay_connect
+  export XUNAGI_SSHFS=yes
+  commit_id="local"
+  head_commit_id="remote"
+  if [ -d ~/.cache/icfpc2019/github ]; then
+    export XUNAGI_SYNC=yes
+    curl --silent \
+        https://storage.googleapis.com/icfpc2019-asia/info/GIT_COMMIT_ID \
+        >/tmp/GIT_HEAD_COMMIT_ID &
+    git_commit_id_pid="$!"
+    rsync -a --delete ~/.cache/icfpc2019/github /repo/
+    rsync -a --delete ~/.cache/icfpc2019/github /repo/
+    wait "${git_commit_id_pid}"
+    commit_id="$(cd /repo; git rev-parse HEAD)"
+    head_commit_id="$(cat /tmp/GIT_HEAD_COMMIT_ID)"
+  else
+    export XUNAGI_SYNC=no
+  fi
+  if [ "${commit_id}" != "${head_commit_id}" ]; then
+    export XUNAGI_PULL=yes
+    pushd /repo >/dev/null
+    git pull -f
+    tmpdir="$(echo ~/.cache/icfpc2019/github.$RANDOM.$RANDOM.$RANDOM.$RANDOM)"
+    cp -a /repo "${tmpdir}"
+    mv -f "${tmpdir}" ~/.cache/icfpc2019/github
+    popd >/dev/null
+  else
+    export XUNAGI_PULL=no
+  fi
+else
+  export XUNAGI_INIT=no
 fi
 
 exec "$@"

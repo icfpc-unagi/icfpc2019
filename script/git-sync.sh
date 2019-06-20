@@ -16,7 +16,8 @@ while :; do
   sleep 5 &
   git pull
   rsync -a --delete --exclude=.git/ ~/github/ ~/Dropbox/ICFPC2019/github
-  git rev-parse HEAD > ~/nfs/GIT_COMMIT_ID
+  git rev-parse HEAD > ~/info/GIT_COMMIT_ID
+  unagi --root ~/ --bare gsutil cp -r /work/info gs://icfpc2019-asia/
   git rev-parse HEAD > ~/Dropbox/ICFPC2019/GIT_COMMIT_ID
   wait
 done
