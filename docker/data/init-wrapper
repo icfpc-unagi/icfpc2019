@@ -14,8 +14,8 @@ if [ "${UNAGI_INIT:-}" != '' ]; then
         https://storage.googleapis.com/icfpc2019-asia/info/GIT_COMMIT_ID \
         >/tmp/GIT_HEAD_COMMIT_ID &
     git_commit_id_pid="$!"
-    rsync -a --delete ~/.cache/icfpc2019/github /repo/
-    rsync -a --delete ~/.cache/icfpc2019/github /repo/
+    rsync -a --delete ~/.cache/icfpc2019/github/ /repo/
+    rsync -a --delete ~/.cache/icfpc2019/github/ /repo/
     wait "${git_commit_id_pid}"
     commit_id="$(cd /repo; git rev-parse HEAD)"
     head_commit_id="$(cat /tmp/GIT_HEAD_COMMIT_ID)"
@@ -28,12 +28,7 @@ if [ "${UNAGI_INIT:-}" != '' ]; then
     git pull -f
     git reset --hard
     git clean -df
-    tmpdir1="$(echo ~/.cache/icfpc2019/github.$RANDOM.$RANDOM.$RANDOM.$RANDOM)"
-    tmpdir2="$(echo ~/.cache/icfpc2019/github.$RANDOM.$RANDOM.$RANDOM.$RANDOM)"
-    cp -a /repo "${tmpdir1}"
-    mv ~/.cache/icfpc2019/github "${tmpdir2}"
-    mv "${tmpdir1}" ~/.cache/icfpc2019/github
-    rm -rf "${tmpdir2}"
+    rsync -a --delete ~/.cache/icfpc2019/github/ /repo/
     popd >/dev/null
   else
     export XUNAGI_PULL=no
