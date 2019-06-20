@@ -34,6 +34,8 @@ upload: unagi/upload
 upload-launcher: unagi/upload-launcher
 upload-installer: unagi/upload-installer
 
+deploy-dashboard: unagi/deploy-dashboard
+
 service_account: unagi/service_account
 private_key: unagi/private_key
 
@@ -56,6 +58,7 @@ unagi/%:
 run-%:
 	unagi --appengine make "orig@run-$*"
 .PHONY: run-%
+
 
 ################################################################################
 # Main routines
@@ -141,6 +144,10 @@ orig@push-docker-%: orig@docker-%
 orig@run-dashboard:
 	cd go/dashboard && make run
 .PHONY: orig@run-dashboard
+
+orig@deploy-dashboard:
+	cd go/dashboard && make deploy
+.PHONY: orig@deploy-dashboard
 
 ################################################################################
 # Sub-routines
