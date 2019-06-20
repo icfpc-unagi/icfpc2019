@@ -53,6 +53,10 @@ unagi/%:
 	unagi make "orig@$*"
 .PHONY: unagi/%
 
+run-%:
+	unagi --appengine make "orig@run-$*"
+.PHONY: run-%
+
 ################################################################################
 # Main routines
 ################################################################################
@@ -133,6 +137,10 @@ orig@docker-%:
 orig@push-docker-%: orig@docker-%
 	bash script/push-docker-image.sh "$*"
 .PHONY: orig@push-docker-%
+
+orig@run-dashboard:
+	cd dashboard && make run
+.PHONY: orig@run-dashboard
 
 ################################################################################
 # Sub-routines

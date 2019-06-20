@@ -23,6 +23,7 @@ var image = flag.String("image", "", "Image to use.")
 var force = flag.Bool("force", false, "Mount the current directory")
 var bare = flag.Bool("bare", false, "Disable init-wrapper")
 var root = flag.String("root", "", "Root directory")
+var appengine = flag.Bool("appengine", false, "Expose ports for AppEngine")
 
 func main() {
 	flag.Parse()
@@ -80,6 +81,9 @@ func main() {
 	}
 	if !*bare {
 		args = append(args, "-e", "UNAGI_INIT=1")
+	}
+	if *appengine {
+		args = append(args, "-p", "8080:8080", "-p", "8000:8000")
 	}
 	if (isatty.IsTerminal(os.Stdin.Fd()) &&
 		isatty.IsTerminal(os.Stdout.Fd()) &&

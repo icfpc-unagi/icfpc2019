@@ -144,6 +144,8 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
 
 # Gcloud service account.
 ADD ./service_account.json /root/.config/service_account.json
+ADD ./service_account.p12 /root/.config/service_account.p12
+ADD ./service_account.pem /root/.config/service_account.pem
 RUN gcloud auth activate-service-account \
     docker@icfpc-primary.iam.gserviceaccount.com \
     --key-file=/root/.config/service_account.json && \

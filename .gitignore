@@ -11,6 +11,7 @@ Cargo.lock
 
 /build
 .cache
+**/secret.yaml
 
 # OS-specific invisible files.
 .DS_Store
