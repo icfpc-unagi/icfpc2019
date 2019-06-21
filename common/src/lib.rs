@@ -44,7 +44,7 @@ pub enum Action {
     Drill
 }
 
-pub fn output(list: &Vec<Action>) -> String {
+pub fn actions_to_string(list: &Vec<Action>) -> String {
     let mut out = String::new();
     for mv in list {
         match mv {
