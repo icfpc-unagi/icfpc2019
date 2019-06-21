@@ -2,7 +2,7 @@ use crate::Square;
 
 
 type APos = (usize, usize);
-type RPos = (isize, isize);
+type RPos = (i32, i32);
 
 
 pub fn is_visible(map: &Vec<Vec<Square>>, current_pos: APos, relative_pos: RPos) -> bool {
@@ -21,8 +21,8 @@ pub fn is_visible(map: &Vec<Vec<Square>>, current_pos: APos, relative_pos: RPos)
 fn get_mat<T>(mat: &Vec<Vec<T>>, a: APos, r: RPos) -> Option<&T> {
     let (ax, ay) = a;
     let (rx, ry) = r;
-    let x = (ax as isize + rx) as usize;
-    let y = (ay as isize + ry) as usize;
+    let x = (ax as i32 + rx) as usize;
+    let y = (ay as i32 + ry) as usize;
     let vec = mat.get(x)?;
     return vec.get(y);
 }
@@ -73,7 +73,7 @@ fn deps(v: RPos) -> Vec<RPos> {
 }
 
 
-fn gcd(a: isize, b: isize) -> isize {
+fn gcd(a: i32, b: i32) -> i32 {
     if b == 0 {
         a
     } else {
