@@ -57,7 +57,7 @@ impl<'a> BFS<'a> {
             self.que_head += 1;
 
             if (x, y) == (target_x, target_y) {
-                eprintln!("{}", self.flg[x][y].0);
+                // eprintln!("{}", self.flg[x][y].0);
                 break;
             }
 
@@ -116,7 +116,7 @@ mod tests {
             let (sx, sy) = random_empty_cell();
             let (tx, ty) = random_empty_cell();
 
-            let mut ps = PlayerState::new_initial(sx, sy);
+            let mut ps = PlayerState::new(sx, sy);
             let actions = bfs.search_fewest_actions_to_move(&ps, tx, ty);
 
             for a in actions.iter() {
