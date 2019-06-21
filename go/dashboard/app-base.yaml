@@ -1,4 +1,8 @@
 handlers:
+- url: /api/
+  script: auto
+  redirect_http_response_code: 301
+
 - url: /.*
   script: auto
   secure: always

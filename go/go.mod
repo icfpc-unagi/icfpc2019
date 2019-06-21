@@ -2,6 +2,7 @@ module github.com/imos/icfpc2019/go
 
 require (
 	github.com/go-sql-driver/mysql v1.4.1
+	github.com/golang/protobuf v1.3.1
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/mattn/go-isatty v0.0.8
 	github.com/mitchellh/go-homedir v1.1.0
