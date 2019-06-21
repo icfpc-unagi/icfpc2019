@@ -1,14 +1,21 @@
 pub mod reach;
 
+#[macro_export]
+macro_rules! mat {
+	($($e:expr),*) => { Vec::from(vec![$($e),*]) };
+	($($e:expr,)*) => { Vec::from(vec![$($e),*]) };
+	($e:expr; $d:expr) => { Vec::from(vec![$e; $d]) };
+	($e:expr; $d:expr $(; $ds:expr)+) => { Vec::from(vec![mat![$e $(; $ds)*]; $d]) };
+}
 
-#[derive(Copy, Debug, Clone)]
+#[derive(Copy, Debug, Clone, PartialEq, Eq)]
 pub enum Square {
     Empty,
     Block,
     Filled,
 }
 
-#[derive(Copy, Debug, Clone)]
+#[derive(Copy, Debug, Clone, PartialEq, Eq)]
 pub enum Booster {
     Extension,
     Fast,
