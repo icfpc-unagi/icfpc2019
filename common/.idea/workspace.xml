@@ -13,7 +13,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="20bb4acd-211e-4cc1-8187-8b417978b609" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib.rs" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -32,8 +31,8 @@
           <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/src/reach.rs">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-582">
-                  <caret line="19" lean-forward="true" selection-start-line="19" selection-end-line="19" />
+                <state relative-caret-position="255">
+                  <caret line="17" column="1" lean-forward="true" selection-start-line="17" selection-start-column="1" selection-end-line="17" selection-end-column="1" />
                   <folding>
                     <element signature="e#1810#1811#0" expanded="true" />
                     <element signature="e#1849#1850#0" expanded="true" />
@@ -45,19 +44,29 @@
           <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/src/lib.rs">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="3450">
-                  <caret line="230" selection-start-line="230" selection-end-line="230" />
+                <state relative-caret-position="64">
+                  <caret line="24" column="10" lean-forward="true" selection-start-line="24" selection-start-column="10" selection-end-line="24" selection-end-column="10" />
                 </state>
               </provider>
             </entry>
           </file>
           <file pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/src/task.rs">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="648">
+                  <caret line="175" lean-forward="true" selection-start-line="175" selection-end-line="175" />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/src/main.rs">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="60">
-                  <caret line="4" selection-start-line="4" selection-end-line="4" />
+                <state relative-caret-position="75">
+                  <caret line="5" lean-forward="true" selection-start-line="5" selection-end-line="5" />
                   <folding>
                     <element signature="e#26#27#0" expanded="true" />
+                    <element signature="e#106#107#0" expanded="true" />
                   </folding>
                 </state>
               </provider>
@@ -94,7 +103,7 @@
             <entry file="file://$USER_HOME$/Downloads/part-1-initial (1)/prob-002.desc">
               <provider selected="true" editor-type-id="text-editor">
                 <state>
-                  <caret column="1081" lean-forward="true" selection-start-column="1081" selection-end-column="1081" />
+                  <caret column="1081" selection-start-column="1081" selection-end-column="1081" />
                 </state>
               </provider>
             </entry>
@@ -122,13 +131,13 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>Square</find>
       <find>println</find>
       <find>print</find>
       <find>#</find>
       <find>ts.iter</find>
       <find>dbg!</find>
       <find>debug_map</find>
+      <find>Square</find>
     </findStrings>
     <replaceStrings>
       <replace>eprint</replace>
@@ -142,9 +151,9 @@
       <list>
         <option value="$PROJECT_DIR$/src/main.rst.rs" />
         <option value="$PROJECT_DIR$/src/task.rs.py" />
+        <option value="$PROJECT_DIR$/src/main.rs" />
         <option value="$PROJECT_DIR$/src/task.rs" />
         <option value="$PROJECT_DIR$/src/lib.rs" />
-        <option value="$PROJECT_DIR$/src/main.rs" />
       </list>
     </option>
   </component>
@@ -215,12 +224,12 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1561116572458</updated>
-      <workItem from="1561116573753" duration="9642000" />
+      <workItem from="1561116573753" duration="9977000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="9642000" />
+    <option name="totallyTimeSpent" value="9977000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1440" height="877" extended-state="6" />
@@ -265,20 +274,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/task.rs">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/reach.rs">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-582">
-          <caret line="19" lean-forward="true" selection-start-line="19" selection-end-line="19" />
-          <folding>
-            <element signature="e#1810#1811#0" expanded="true" />
-            <element signature="e#1849#1850#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/Downloads/part-1-initial (1)/prob-080.desc">
       <provider selected="true" editor-type-id="text-editor">
         <state>
@@ -292,24 +287,43 @@
     <entry file="file://$USER_HOME$/Downloads/part-1-initial (1)/prob-002.desc">
       <provider selected="true" editor-type-id="text-editor">
         <state>
-          <caret column="1081" lean-forward="true" selection-start-column="1081" selection-end-column="1081" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/lib.rs">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3450">
-          <caret line="230" selection-start-line="230" selection-end-line="230" />
+          <caret column="1081" selection-start-column="1081" selection-end-column="1081" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main.rs">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="4" selection-start-line="4" selection-end-line="4" />
+        <state relative-caret-position="75">
+          <caret line="5" lean-forward="true" selection-start-line="5" selection-end-line="5" />
           <folding>
             <element signature="e#26#27#0" expanded="true" />
+            <element signature="e#106#107#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/reach.rs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="17" column="1" lean-forward="true" selection-start-line="17" selection-start-column="1" selection-end-line="17" selection-end-column="1" />
+          <folding>
+            <element signature="e#1810#1811#0" expanded="true" />
+            <element signature="e#1849#1850#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/lib.rs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="64">
+          <caret line="24" column="10" lean-forward="true" selection-start-line="24" selection-start-column="10" selection-end-line="24" selection-end-column="10" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/task.rs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="648">
+          <caret line="175" lean-forward="true" selection-start-line="175" selection-end-line="175" />
         </state>
       </provider>
     </entry>
