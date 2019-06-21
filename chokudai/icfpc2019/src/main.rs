@@ -1,10 +1,11 @@
 use common::*;
 use common::reach::*;
 use common::bfs::*;
+use common::sim::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct State{
-    pub p: PlayerState,     //プレイヤー情報
+    pub p: WorkerState,     //プレイヤー情報
     pub field: Vec<Vec<Square>>,    //壁情報
     pub item_field: Vec<Vec<Option<Booster>>>,   //アイテム情報
 }
@@ -12,7 +13,7 @@ pub struct State{
 ///初期Stateを作るための関数
 fn get_first_state(field: Vec<Vec<Square>>, item_field: Vec<Vec<Option<Booster>>>, fx: usize, fy: usize) -> State{
     State{
-        p: PlayerState::new(fx, fy),
+        p: WorkerState::new(fx, fy),
         field: field,
         item_field: item_field,
     }
@@ -266,15 +267,9 @@ fn main() {
 
             for act in actions
             {
-                current_state.p.apply_action(act);
+                // apply_action で field と item_field も更新する
+                apply_action(act, &mut current_state.p, &mut current_state.field, &mut current_state.item_field);
                 final_action.push(act);
-                for dxy in &current_state.p.manipulators{
-                    if is_visible(&(current_state.field), (current_state.p.x, current_state.p.y), *dxy){
-                        current_state.field[current_state.p.x + (*dxy).0 as usize][current_state.p.y + (*dxy).1 as usize] = Square::Filled;
-                    }
-                }
-
-
             }
         }
         

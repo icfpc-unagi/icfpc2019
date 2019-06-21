@@ -1,5 +1,7 @@
 use crate::*;
 
+use sim::*;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BFS {
     xsize: usize,
@@ -77,7 +79,7 @@ impl BFS {
     fn search<F: Fn(usize, usize) -> bool>(
         &mut self,
         map: &Vec<Vec<Square>>,
-        player_state: &PlayerState,
+        player_state: &WorkerState,
         condition_func: F,
     ) -> (Vec<Action>, usize, usize) {
         self.que_vec.push((player_state.x, player_state.y));
@@ -115,7 +117,7 @@ impl BFS {
     pub fn search_with_goals(
         &mut self,
         map: &Vec<Vec<Square>>,
-        player_state: &PlayerState,
+        player_state: &WorkerState,
     ) -> (Vec<Action>, usize, usize) {
         // Search
         let mut is_goal = vec![];
@@ -147,7 +149,7 @@ impl BFS {
     pub fn search_fewest_actions_to_satisfy<F: Fn(usize, usize) -> bool>(
         &mut self,
         map: &Vec<Vec<Square>>,
-        player_state: &PlayerState,
+        player_state: &WorkerState,
         condition_func: F,
     ) -> (Vec<Action>, usize, usize) {
         let ret = self.search(map, player_state, condition_func);
@@ -158,7 +160,7 @@ impl BFS {
     pub fn search_fewest_actions_to_move(
         &mut self,
         map: &Vec<Vec<Square>>,
-        player_state: &PlayerState,
+        player_state: &WorkerState,
         target_x: usize,
         target_y: usize,
     ) -> Vec<Action> {
@@ -171,7 +173,7 @@ impl BFS {
     pub fn search_fewest_actions_to_wrap(
         &mut self,
         map: &Vec<Vec<Square>>,
-        player_state: &PlayerState,
+        player_state: &WorkerState,
         target_x: usize,
         target_y: usize,
     ) -> (Vec<Action>, usize, usize) {
@@ -209,6 +211,7 @@ mod tests {
             let mut rng = rand::thread_rng(); // デフォルトの乱数生成器を初期化します
 
             let map = &task.0;
+            let booster = &task.1;
             let xsize = map.len();
             let ysize = map[0].len();
 
@@ -225,11 +228,11 @@ mod tests {
                 let (sx, sy) = random_empty_cell();
                 let (tx, ty) = random_empty_cell();
 
-                let mut ps = PlayerState::new(sx, sy);
+                let mut ps = WorkerState::new(sx, sy);
                 let actions = bfs.search_fewest_actions_to_move(&map, &ps, tx, ty);
 
                 for a in actions.iter() {
-                    ps.apply_action(*a);
+                    apply_action(*a, &mut ps, &mut map, &mut booster);
                     assert_eq!(map[ps.x][ps.y], Square::Empty);
                 }
                 assert_eq!(ps.x, tx);
@@ -246,6 +249,7 @@ mod tests {
             let mut rng = rand::thread_rng(); // デフォルトの乱数生成器を初期化します
 
             let map = &task.0;
+            let booster = &task.1;
             let xsize = map.len();
             let ysize = map[0].len();
 
@@ -262,13 +266,13 @@ mod tests {
                 let (sx, sy) = random_empty_cell();
                 let (tx, ty) = random_empty_cell();
 
-                let mut ps = PlayerState::new(sx, sy);
+                let mut ps = WorkerState::new(sx, sy);
                 ps.manipulators.push((2, 5));  // MAJI YABAI DESU
 
                 let (actions, gx, gy) = bfs.search_fewest_actions_to_wrap(&map, &ps, tx, ty);
 
                 for a in actions.iter() {
-                    ps.apply_action(*a);
+                    apply_action(*a, &mut ps, &mut map, &mut booster);
                     assert_eq!(map[ps.x][ps.y], Square::Empty);
                 }
                 assert_eq!(ps.x, gx);
