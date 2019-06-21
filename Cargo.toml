@@ -10,3 +10,6 @@ members = [
     "wata",
 ]
 exclude = [".cache", "build"]
+
+[profile.dev]
+overflow-checks = false
