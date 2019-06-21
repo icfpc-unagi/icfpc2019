@@ -29,6 +29,7 @@ test-go: unagi/test-go
 test-sh: unagi/test-sh
 
 launcher: unagi/launcher
+api: unagi/api
 
 upload: unagi/upload
 upload-launcher: unagi/upload-launcher
@@ -100,6 +101,10 @@ orig@launcher:
 	cp script/launcher.sh build/launcher
 	chmod +x build/launcher
 .PHONY: orig@launcher
+
+orig@api:
+	cd go/cmd/api && make
+.PHONY: orig@api
 
 orig@upload-launcher:
 	cd go/cmd/launcher && make -j 6 upload
