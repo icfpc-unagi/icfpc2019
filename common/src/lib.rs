@@ -4,6 +4,7 @@ pub mod player_state;
 pub mod sol;
 pub mod bfs;
 
+pub use reach::*;
 pub use task::*;
 pub use player_state::*;
 pub use bfs::*;

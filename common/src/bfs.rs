@@ -105,8 +105,8 @@ impl<'a> BFS<'a> {
     pub fn search_fewest_actions_to_wrap(
         &mut self,
         player_state: &PlayerState,
-        x: usize,
-        y: usize,
+        target_x: usize,
+        target_y: usize,
     ) -> Vec<Action> {
 
 
