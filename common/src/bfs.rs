@@ -5,7 +5,9 @@ pub struct BFS<'a> {
     map: &'a Vec<Vec<Square>>,
     que_vec: Vec<(usize, usize)>,
     que_head: usize,
-    flg: Vec<Vec<(usize, usize)>>,
+    pot: Vec<Vec<(usize, usize)>>,
+    goals: Vec<(usize, usize)>,
+    is_goal: Vec<Vec<(usize)>>, // ここにこの向きで来ればゴール
 }
 
 impl<'a> BFS<'a> {
@@ -14,22 +16,34 @@ impl<'a> BFS<'a> {
             map,
             que_vec: vec![],
             que_head: 0,
-            flg: vec![vec![(!0, !0); map[0].len()]; map.len()],
+            pot: vec![vec![(!0, !0); map[0].len()]; map.len()],
+            goals: vec![],
+            is_goal: vec![vec![!0; map[0].len()]; map.len()],
         }
     }
 
-    pub fn clean_up(&mut self) {
+    fn clean_up(&mut self) {
         for (x, y) in self.que_vec.iter() {
-            self.flg[*x][*y] = (!0, !0);
+            self.pot[*x][*y] = (!0, !0);
         }
         self.que_vec.clear();
         self.que_head = 0;
+
+        for (x, y) in self.goals.iter() {
+            self.is_goal[*x][*y] = !0;
+        }
+        self.goals.clear();
     }
 
-    pub fn construct_actions(&mut self, mut x: usize, mut y: usize) -> Vec<Action> {
+    fn add_goal(&mut self, x: usize, y: usize, d: usize) {
+        self.goals.push((x, y));
+        self.is_goal[x][y] = d;
+    }
+
+    fn construct_actions(&mut self, mut x: usize, mut y: usize) -> Vec<Action> {
         let mut actions = vec![];
         loop {
-            let (c, d) = self.flg[x][y];
+            let (c, d) = self.pot[x][y];
             if c == 0 {
                 break;
             }
@@ -43,38 +57,47 @@ impl<'a> BFS<'a> {
         actions
     }
 
+    fn search(&mut self, player_state: &PlayerState) -> Vec<Action> {
+        self.que_vec.push((player_state.x, player_state.y));
+        self.pot[player_state.x][player_state.y].0 = 0;
+
+        let mut x = !0;
+        let mut y = !0;
+
+        while self.que_head < self.que_vec.len() {
+            x = self.que_vec[self.que_head].0;
+            y = self.que_vec[self.que_head].1;
+            self.que_head += 1;
+
+            if self.is_goal[x][y] != !0 {
+                // eprintln!("{}", self.flg[x][y].0);
+                break;
+            }
+
+            let c = self.pot[x][y].0;
+            for d in 0..4 {
+                let (tx, ty) = apply_move((x, y), d);
+
+                if self.map[tx][ty] == Square::Block || self.pot[tx][ty].0 != !0 {
+                    continue;
+                }
+
+                self.pot[tx][ty] = (c + 1, d);
+                self.que_vec.push((tx, ty));
+            }
+        }
+
+        self.construct_actions(x, y)
+    }
+
     pub fn search_fewest_actions_to_move(
         &mut self,
         player_state: &PlayerState,
         target_x: usize,
         target_y: usize,
     ) -> Vec<Action> {
-        self.que_vec.push((player_state.x, player_state.y));
-        self.flg[player_state.x][player_state.y].0 = 0;
-
-        while self.que_head < self.que_vec.len() {
-            let (x, y) = self.que_vec[self.que_head];
-            self.que_head += 1;
-
-            if (x, y) == (target_x, target_y) {
-                // eprintln!("{}", self.flg[x][y].0);
-                break;
-            }
-
-            let c = self.flg[x][y].0;
-            for d in 0..4 {
-                let (tx, ty) = apply_move((x, y), d);
-
-                if self.map[tx][ty] == Square::Block || self.flg[tx][ty].0 != !0 {
-                    continue;
-                }
-
-                self.flg[tx][ty] = (c + 1, d);
-                self.que_vec.push((tx, ty));
-            }
-        }
-
-        let actions = self.construct_actions(target_x, target_y);
+        self.add_goal(target_x, target_y, player_state.dir);
+        let actions = self.search(player_state);
         self.clean_up();
         actions
     }
@@ -85,6 +108,8 @@ impl<'a> BFS<'a> {
         x: usize,
         y: usize,
     ) -> Vec<Action> {
+
+
         unimplemented!();
     }
 }
