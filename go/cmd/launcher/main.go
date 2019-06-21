@@ -48,6 +48,9 @@ func main() {
 		panic("failed to guess user")
 	}()
 	user = strings.ToLower(user)
+	if user == "" {
+		user = "unknown"
+	}
 	if !regexp.MustCompile(`^[a-z][a-z0-9\-]{1,16}$`).MatchString(user) {
 		panic(fmt.Sprintf("inavlid user: %s", user))
 	}

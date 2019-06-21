@@ -4,15 +4,11 @@ automatic_scaling:
   max_concurrent_requests: 8
   min_pending_latency: 3s
 
-handlers:
-- url: /.*
-  script: auto
-  secure: always
-  redirect_http_response_code: 301
-
 env_variables:
+  SQL_PROTOCOL: unix
+  SQL_ADDRESS: /cloudsql/icfpc-primary:asia-northeast1:primary
   CLOUDSQL_CONNECTION_NAME: "icfpc-primary:asia-northeast1:primary"
   CLOUDSQL_USER: "unagi"
 
 includes:
-- secret.yaml
+- app-base.yaml

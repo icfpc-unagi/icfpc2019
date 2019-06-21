@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/imos/icfpc2019/go/util/dbutil"
+
 	_ "github.com/go-sql-driver/mysql"
 	"google.golang.org/appengine"
 )
@@ -46,6 +48,26 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	w.Write(buf.Bytes())
 }
 
+func sqlHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain")
+	ctx := appengine.NewContext(r)
+	db, err := dbutil.NewConnection(ctx)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("failed to connect to db: %s", err), 500)
+		return
+	}
+	out := struct {
+		Name string `json:"name"`
+	}{}
+	if err := db.Row(ctx, &out, "SELECT ? AS `name`", "hogehoge"); err != nil {
+		http.Error(w, fmt.Sprintf("failed to select: %s", err), 500)
+		return
+	}
+	w.Write([]byte(fmt.Sprintf("%v\n", out)))
+	w.Write([]byte(fmt.Sprintf("%v\n", db.MustCellString(ctx, "SELECT 1 + 1"))))
+	w.Write([]byte(fmt.Sprintf("%v\n", db.MustCellString(ctx, `SELECT "hoge"`))))
+}
+
 func main() {
 	var (
 		connectionName = os.Getenv("CLOUDSQL_CONNECTION_NAME")
@@ -72,5 +94,6 @@ func main() {
 
 	http.HandleFunc("/", handle)
 	http.HandleFunc("/sql", handler)
+	http.HandleFunc("/db", sqlHandler)
 	appengine.Main()
 }
