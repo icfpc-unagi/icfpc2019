@@ -139,6 +139,7 @@ fn print_task(task: &RasterizedTask) {
                                     Booster::Extension => 'B',
                                     Booster::Drill => 'L',
                                     Booster::Fast => 'F',
+                                    Booster::Teleport => 'R',
                                     Booster::X => 'X',
                                 }
                             } else {

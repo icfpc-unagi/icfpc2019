@@ -41,6 +41,7 @@ pub enum Booster {
     Extension,
     Fast,
     Drill,
+    Teleport,
     X,
 }
 
@@ -52,6 +53,7 @@ impl std::str::FromStr for Booster {
             "B" => Ok(Booster::Extension),
             "F" => Ok(Booster::Fast),
             "L" => Ok(Booster::Drill),
+            "R" => Ok(Booster::Teleport),
             "X" => Ok(Booster::X),
             _ => Err(()),
         }
