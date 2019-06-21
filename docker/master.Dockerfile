@@ -141,6 +141,10 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
     chmod +x /usr/local/bin/docker-compose && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Install nodejs.
+RUN apt-get update && apt-get install -y nodejs-dev npm && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 ################################################################################
 # Configurations
 ################################################################################
