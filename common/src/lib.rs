@@ -23,6 +23,20 @@ pub enum Booster {
     X,
 }
 
+impl std::str::FromStr for Booster {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Booster, ()> {
+        match s {
+            "B" => Ok(Booster::Extension),
+            "F" => Ok(Booster::Fast),
+            "L" => Ok(Booster::Drill),
+            "X" => Ok(Booster::X),
+            _ => Err(()),
+        }
+    }
+}
+
 pub fn apply_move((x, y): (usize, usize), dir: usize) -> (usize, usize) {
     match dir {
         0 => (x + 1, y),
@@ -103,6 +117,13 @@ fn parse_obstacles(s: &str) -> Vec<Vec<(usize, usize)>> {
     s.split(';').map(|t| parse_map(t)).collect()
 }
 
+fn parse_boosters(s: &str) -> Vec<(Booster, usize, usize)> {
+    s.split(';').map(|t| {
+        let p = parse_point(&t[1..]);
+        (t[..1].parse::<Booster>().unwrap(), p.0, p.1)
+    }).collect()
+}
+
 fn parse_task(task: &str) -> TaskSpecification {
     let ss: Vec<_> = task.split('#').collect();
     eprintln!("task: {:?}", ss);
@@ -111,13 +132,15 @@ fn parse_task(task: &str) -> TaskSpecification {
         frame: parse_map(ss[0]),
         initial_location: parse_point(ss[1]),
         obstacles: parse_obstacles(ss[2]),
-        boosters: vec![],
+        boosters: parse_boosters(ss[3]),
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Rasterize
 ////////////////////////////////////////////////////////////////////////////////
+
+type RasterizedTask = (Vec<Vec<Square>>, Vec<Vec<Option<Booster>>>, usize, usize);
 
 fn get_size(task: &TaskSpecification) -> (usize, usize) {
     (
@@ -153,7 +176,6 @@ fn accsum_to_squares(accsum: &mut Vec<Vec<i32>>) -> Vec<Vec<Square>> {
             accsum[x][y] += accsum[x][y - 1];
         }
     }
-    dbg!(&accsum);
 
     accsum.iter().map(|row| {
         row.iter().map(|c| {
@@ -166,68 +188,70 @@ fn accsum_to_squares(accsum: &mut Vec<Vec<i32>>) -> Vec<Vec<Square>> {
     }).collect()
 }
 
-fn debug_map(map: &Vec<Vec<Square>>) {
+fn print_task(task: &RasterizedTask) {
+    let map = &task.0;
+    let boosters = &task.1;
+    let ixy = (task.2, task.3);
     let xsize = map.len();
     let ysize = map[0].len();
 
     for y in (0..ysize).rev() {
         eprint!("{:02}:", y);
         for x in 0..xsize {
-            eprint!("{}", match map[x][y] {
-                Square::Empty => ' ',
-                Square::Block => '#',
-                Square::Filled => '.',
-            })
+            eprint!("{}",
+                if ixy == (x, y) {
+                    'I'
+                } else {
+                    match map[x][y] {
+                        Square::Empty => {
+                            if let Some(b) = boosters[x][y] {
+                                match b {
+                                    Booster::Extension => 'B',
+                                    Booster::Drill => 'L',
+                                    Booster::Fast => 'F',
+                                    Booster::X => 'X',
+                                }
+                            } else {
+                                ' '
+                            }
+                        },
+                        Square::Block => '#',
+                        Square::Filled => '.',
+                    }
+                }
+            );
         }
         eprintln!();
     }
 }
 
-pub fn read_task(path: &str) -> (Vec<Vec<Square>>, Vec<Vec<Option<Booster>>>, usize, usize) {
+pub fn read_task(path: &str) -> RasterizedTask {
     let s = std::fs::read_to_string(path).unwrap();
     let task = parse_task(&s);
-    eprintln!("{:?}", task);
 
     let (xsize, ysize) = get_size(&task);
-    eprintln!("{} {}", xsize, ysize);
 
     let mut accsum = vec![vec![0; ysize]; xsize];
     draw_contour(&mut accsum, &task.frame);
-    eprintln!("{:?}", accsum);
 
     for obstacle in task.obstacles {
         draw_contour(&mut accsum, &obstacle);
     }
 
     let squares = accsum_to_squares(&mut accsum);
-    eprintln!("{:?}", squares);
 
-    debug_map(&squares);
+    let mut boosters = vec![vec![None; ysize]; xsize];
+    for b in task.boosters {
+        boosters[b.1 + 1][b.2 + 1] = Some(b.0)
+    }
 
-    (
+    let ret = (
         squares,
-        vec![vec![None; ysize]; xsize],
+        boosters,
         task.initial_location.0 + 1,
         task.initial_location.1 + 1,
-    )
-
-    /*
-    let (h, w) = (10, 10);
-
-    let mut f = vec![vec![Square::Empty; w]; h];
-    for x in 0..w {
-        f[0][x] = Square::Block;
-        f[h - 1][x] = Square::Block
-    }
-    for y in 0..h {
-        f[y][0] = Square::Block;
-        f[y][w - 1] = Square::Block;
-    }
-    return (
-        f,
-        vec![vec![None; w]; h],
-        1,
-        1
     );
-    */
+
+    print_task(&ret);
+    ret
 }
