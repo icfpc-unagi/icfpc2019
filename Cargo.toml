@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "chokudai/icfpc2019",
     "common",
     "example/rust",
     "example/rust-hello",

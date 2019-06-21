@@ -1,11 +1,21 @@
-#[derive(Copy, Debug, Clone)]
+pub mod reach;
+
+#[macro_export]
+macro_rules! mat {
+	($($e:expr),*) => { Vec::from(vec![$($e),*]) };
+	($($e:expr,)*) => { Vec::from(vec![$($e),*]) };
+	($e:expr; $d:expr) => { Vec::from(vec![$e; $d]) };
+	($e:expr; $d:expr $(; $ds:expr)+) => { Vec::from(vec![mat![$e $(; $ds)*]; $d]) };
+}
+
+#[derive(Copy, Debug, Clone, PartialEq, Eq)]
 pub enum Square {
     Empty,
     Block,
     Filled,
 }
 
-#[derive(Copy, Debug, Clone)]
+#[derive(Copy, Debug, Clone, PartialEq, Eq)]
 pub enum Booster {
     Extension,
     Fast,
@@ -13,7 +23,43 @@ pub enum Booster {
     X,
 }
 
-#[derive(Debug, Clone)]
+pub fn apply_move((x, y): (usize, usize), dir: usize) -> (usize, usize) {
+    match dir {
+        0 => (x + 1, y),
+        1 => (x, y - 1),
+        2 => (x - 1, y),
+        3 => (x, y + 1),
+        _ => panic!("illegal dir: {}", dir)
+    }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Action {
+    Move(usize),
+    Nothing,
+    TurnR,
+    TurnL,
+    Extension(i32, i32),
+    Fast,
+    Drill
+}
+
+pub fn output(list: &Vec<Action>) -> String {
+    let mut out = String::new();
+    for mv in list {
+        match mv {
+            Action::Move(dir) => out += ["D", "S", "A", "W"][*dir],
+            Action::Nothing => out += "Z",
+            Action::TurnR => out += "E",
+            Action::TurnL => out += "Q",
+            Action::Extension(dx, dy) => out += &format!("B({},{})", dx, dy),
+            Action::Fast => out += "F",
+            Action::Drill => out += "L"
+        }
+    }
+    out
+}
+
 pub struct PlayerState {
     x: usize,  //・今いる座標
     y: usize,
@@ -177,15 +223,3 @@ pub fn read_task(path: &str) -> (Vec<Vec<Square>>, Vec<Vec<Option<Booster>>>, us
     );
     */
 }
-
-#[cfg(test)]
-mod tests {
-    use super::read_task;
-
-    #[test]
-    fn it_works() {
-        // assert_eq!(2 + 2, 4);
-        //read_map()
-    }
-}
-
