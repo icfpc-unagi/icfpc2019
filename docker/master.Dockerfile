@@ -145,6 +145,15 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
 RUN apt-get update && apt-get install -y nodejs-dev npm && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Install sshfs.
+RUN apt-get update && apt-get install -y jq sshfs && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install protoc-gen-go.
+RUN go get github.com/golang/protobuf/protoc-gen-go && \
+    go install github.com/golang/protobuf/protoc-gen-go
+ENV PATH=$PATH:/go/bin
+
 ADD ./solution-check /usr/local/bin/validate
 RUN chmod +x /usr/local/bin/validate
 
@@ -222,9 +231,6 @@ RUN touch /UNAGI_IMAGE
 ################################################################################
 # Experimental
 ################################################################################
-
-RUN apt-get update && apt-get install -y jq sshfs && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ENV CARGO_TARGET_DIR=/work/build
 

@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+// TODO(imos): Enable the followings accessible.
+// import "google/protobuf/descriptor.proto";
+// import "google/protobuf/duration.proto";
+// import "google/protobuf/timestamp.proto";
+
+package pb;
+
+message Api {
+  // API Request defition.
+  //
+  // NEXT ID TO USE: 2
+  message Request {
+    message Context {}
+    Context context = 1;
+
+    message InsertProblem {
+      string problem_name = 1;
+    }
+    InsertProblem insert_problem = 2;
+  }
+
+  // API Response defition.
+  //
+  // NEXT ID TO USE: 2
+  message Response {
+    message Context {
+      repeated string error_messages = 1;
+    }
+    Context context = 1;
+
+    message InsertProblem {
+      int64 problem_id = 1;
+    }
+    InsertProblem insert_problem = 2;
+  }
+}

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 
+	_ "github.com/imos/icfpc2019/go/dashboard/api"
 	"github.com/imos/icfpc2019/go/util/dbutil"
 
 	_ "github.com/go-sql-driver/mysql"
