@@ -35,8 +35,11 @@ impl MapState {
     pub fn size(&self) -> (usize, usize) {
         (self.xsize(), self.ysize())
     }
-    pub fn is_enterable(&self, (x, y): (usize, usize)) -> bool {
-        is_enterable(x, y, &self.map)
+    pub fn is_valid(&self, (x, y): (usize, usize)) -> bool {
+        x < self.xsize() && y < self.ysize()
+    }
+    pub fn is_enterable(&self, (x, y): (usize, usize), drilling: bool) -> bool {
+        self.is_valid((x, y)) && (drilling || self.map[x][y] != Square::Block)
     }
 }
 
@@ -45,5 +48,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test() {}
+    fn test() {
+        
+    }
 }

@@ -73,10 +73,6 @@ pub fn apply_move((x, y): (usize, usize), dir: usize) -> (usize, usize) {
     }
 }
 
-pub fn is_enterable(x: usize, y: usize, map: &Vec<Vec<Square>>) -> bool {
-    x < map.len() && y < map.len() && map[x][y] != Square::Block
-}
-
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Action {
     Move(usize),
