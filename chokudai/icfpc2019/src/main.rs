@@ -1,4 +1,6 @@
 use common::*;
+use common::reach::*;
+use common::bfs::*;
 
 pub struct State{
     pub p: PlayerState,     //プレイヤー情報
@@ -13,6 +15,7 @@ fn get_first_state(field: Vec<Vec<Square>>, item_field: Vec<Vec<Option<Booster>>
             x: fx,
             y: fy,
             dir: 0,
+            time: 0,
             unused_boosters: Vec::with_capacity(0),
             active_boosters: Vec::with_capacity(0),
             manipulators: vec![(0, 0), (1, 1), (1, 0), (1, -1)],
@@ -28,6 +31,7 @@ fn make_easy_target_list(S: &State, H: usize, W:usize) -> Vec<(usize, usize)>{
     let mut ans: Vec<(usize, usize)> = Vec::with_capacity(0);
 
     let mut start_point = (!0, !0);
+    
     'a: for x in 0..H{
         for y in 0..W {
             if S.field[x][y] == Square::Empty {
@@ -60,7 +64,7 @@ fn make_easy_target_list(S: &State, H: usize, W:usize) -> Vec<(usize, usize)>{
         }
         else{
             loop{
-                println!("({}, {}), {}", current_point.0, current_point.1, current_dir);
+                //println!("({}, {}), {}", current_point.0, current_point.1, current_dir);
                 
                 //loop check
                 if current_dir == first_dir && current_point == start_point {
@@ -111,10 +115,14 @@ fn main() {
     let H = field.len();
     let W = field[0].len();
 
-    let first_state = get_first_state(field, itemfield, H, W);
+    let first_state = get_first_state(field, itemfield, FH, FW);
+
     
     let mut final_action: Vec<Action> = Vec::with_capacity(0);
     let mut current_state = first_state;
+    
+    let t = read_task(&taskfile);
+    let mut bfs = BFS::new(&t.0);
 
     loop{
         let point_list = make_easy_target_list(&current_state, H, W);
@@ -124,7 +132,7 @@ fn main() {
         for i in 0..point_list.len() {
             let target_pos = point_list[i];
 
-            println!("{} {}", target_pos.0, target_pos.1);
+            //println!("{} {}", target_pos.0, target_pos.1);
 
             //塗り済みであるかの検出
             if current_state.field[target_pos.0][target_pos.1] != Square::Empty{
@@ -169,16 +177,40 @@ fn main() {
 
             let mut actions: Vec<Action> = Vec::with_capacity(0);
             if use_double_position.1 != !0 {
-                println!("double at ({}, {}) for ({}, {})", 
-                    (use_double_position.0).0 , (use_double_position.0).1,
-                    target_pos.0, target_pos.1);
+                //println!("double at ({}, {}) for ({}, {})", (use_double_position.0).0 , (use_double_position.0).1,target_pos.0, target_pos.1);
+                //println!("now : {} {}", current_state.p.x, current_state.p.y);
+                actions = bfs.search_fewest_actions_to_move(&current_state.p, (use_double_position.0).0, (use_double_position.0).1);
+                let now_dir = current_state.p.dir;
+                if (now_dir + 1) % 4 == use_double_position.1{
+                    actions.push(Action::TurnR);
+                }
+                else if (now_dir + 2) % 4 == use_double_position.1{
+                    actions.push(Action::TurnR);
+                    actions.push(Action::TurnR);
+                }
+                else if (now_dir + 3) % 4 == use_double_position.1{
+                    actions.push(Action::TurnL);
+                }
             }
             else{
-                println!("single at ({}, {})", target_pos.0, target_pos.1);
+                //println!("single at ({}, {})", target_pos.0, target_pos.1);
+                //println!("now : {} {}", current_state.p.x, current_state.p.y);
+                actions = bfs.search_fewest_actions_to_move(&current_state.p, target_pos.0, target_pos.1);
+
             }
-            
+
+            for act in actions
+            {
+                current_state.p.apply_action(act);
+                final_action.push(act);
+                for dxy in &current_state.p.manipulators{
+                    if is_visible(&(current_state.field), (current_state.p.x, current_state.p.y), *dxy){
+                        current_state.field[current_state.p.x + (*dxy).0 as usize][current_state.p.y + (*dxy).1 as usize] = Square::Filled;
+                    }
+                }
+            }
         }
-        break;
+        
     }
 
     let ans_string = actions_to_string(&final_action);
