@@ -1,4 +1,4 @@
-package dbutil
+package db
 
 import (
 	"context"
@@ -12,13 +12,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Database manages a database connection.
-type Database struct {
-	db *sqlx.DB
-}
+var db *sqlx.DB
 
-// NewConnection returns a connection to a database.
-func NewConnection(ctx context.Context) (*Database, error) {
+func getDatabase() *sqlx.DB {
+	if db != nil {
+		return db
+	}
+
 	password := os.Getenv("SQL_PASSWORD")
 	if password != "" {
 		password = ":" + password
@@ -28,21 +28,20 @@ func NewConnection(ctx context.Context) (*Database, error) {
 		getEnvOrDefault("SQL_PROTOCOL", "tcp"),
 		getEnvOrDefault("SQL_ADDRESS", "127.0.0.1:3306"),
 		getEnvOrDefault("SQL_DATABASE", getEnvOrDefault("SQL_USER", "root")))
-	db, err := sqlx.Open(getEnvOrDefault("SQL_DRIVER", "mysql"), dsn)
+	var err error
+	db, err = sqlx.Open(getEnvOrDefault("SQL_DRIVER", "mysql"), dsn)
 	if err != nil {
-		return nil, errors.Errorf(
-			"failed to open a new SQL connection: %s", err)
+		panic(fmt.Errorf("%+v", errors.Errorf(
+			"failed to open a new SQL connection: %s", err)))
 	}
-	return &Database{
-		db: db,
-	}, nil
+	return db
 }
 
 // Cell runs a query which should return one value.
-func (db *Database) Cell(
+func Cell(
 	ctx context.Context, dest interface{}, query string, args ...interface{},
 ) error {
-	rows, err := db.db.QueryContext(ctx, query, args...)
+	rows, err := getDatabase().QueryContext(ctx, query, args...)
 	if err != nil {
 		return errors.Errorf(
 			"failed to query: %s: %s", err, formatQuery(query, args))
@@ -70,21 +69,21 @@ func (db *Database) Cell(
 }
 
 // CellString returns a string.
-func (db *Database) CellString(
+func CellString(
 	ctx context.Context, query string, args ...interface{},
 ) (string, error) {
 	dest := ""
-	if err := db.Cell(ctx, &dest, query, args...); err != nil {
+	if err := Cell(ctx, &dest, query, args...); err != nil {
 		return "", err
 	}
 	return dest, nil
 }
 
 // MustCellString returns a string.
-func (db *Database) MustCellString(
+func MustCellString(
 	ctx context.Context, query string, args ...interface{},
 ) string {
-	v, err := db.CellString(ctx, query, args...)
+	v, err := CellString(ctx, query, args...)
 	if err != nil {
 		log.Errorf(ctx, "query failed: %v", err)
 	}
@@ -92,24 +91,26 @@ func (db *Database) MustCellString(
 }
 
 // Row runs a query which should return one row.
-func (db *Database) Row(
+func Row(
 	ctx context.Context, dest interface{}, query string, args ...interface{},
 ) error {
-	return errors.WithStack(db.db.GetContext(ctx, dest, query, args...))
+	return errors.WithStack(
+		getDatabase().GetContext(ctx, dest, query, args...))
 }
 
 // Select runs a query which may return multiple rows.
-func (db *Database) Select(
+func Select(
 	ctx context.Context, dest interface{}, query string, args ...interface{},
 ) error {
-	return errors.WithStack(db.db.SelectContext(ctx, dest, query, args...))
+	return errors.WithStack(
+		getDatabase().SelectContext(ctx, dest, query, args...))
 }
 
 // Execute rusn a query which do not return values.
-func (db *Database) Execute(
+func Execute(
 	ctx context.Context, query string, args ...interface{},
 ) (sql.Result, error) {
-	result, err := db.db.ExecContext(ctx, query, args...)
+	result, err := getDatabase().ExecContext(ctx, query, args...)
 	return result, errors.WithStack(err)
 }
 

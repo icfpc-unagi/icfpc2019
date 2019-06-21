@@ -12,7 +12,7 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 
-	"github.com/imos/icfpc2019/go/util/dbutil"
+	"github.com/imos/icfpc2019/go/util/db"
 	"github.com/imos/icfpc2019/go/util/pb"
 )
 
@@ -100,10 +100,6 @@ func insertProblemHandler(
 		return errors.New("problem_data is missing")
 	}
 
-	db, err := dbutil.NewConnection(ctx)
-	if err != nil {
-		return err
-	}
 	res, err := db.Execute(ctx,
 		"INSERT problems(problem_name) VALUES(?)", req.GetProblemName())
 	if err != nil {
@@ -114,7 +110,7 @@ func insertProblemHandler(
 		return errors.WithStack(err)
 	}
 	res, err = db.Execute(ctx,
-		"INSERT problem_data(problem_id, problem_data) VALUES(?, ?)",
+		"INSERT problem_data(problem_id, problem_data_blob) VALUES(?, ?)",
 		id, req.GetProblemData())
 	if err != nil {
 		return err
