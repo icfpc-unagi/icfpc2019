@@ -8,18 +8,19 @@ pub struct BFS {
     que_head: usize,
     pot: Vec<Vec<(usize, usize)>>,
     goals: Vec<(usize, usize)>,
-    is_goal: Vec<Vec<(usize)>>, // ここにこの向きで来ればゴール
+    is_goal: Vec<Vec<(usize)>>, // ここにこの向きで来ればゴール。ここではplayer_stateのdirは無視し、現在との相対的な方向を書く。
 }
 
-fn rotate((mut x, mut y): (i32, i32), mut dir: usize) {
+fn rotate((mut x, mut y): (i32, i32), mut dir: usize) -> (i32, i32) {
     // TODO: もう少しどっか広く使えそうな場所置く？
     // TODO: 速くできる
     while dir > 0 {
         let (px, py) = (x, y);
-        x = y;
-        y = -x;
-        dir -= 0;
+        x = py;
+        y = -px;
+        dir -= 1;
     }
+    (x, y)
 }
 
 impl BFS {
@@ -114,15 +115,29 @@ impl BFS {
     pub fn search_with_goals(
         &mut self,
         map: &Vec<Vec<Square>>,
-        player_state: &PlayerState
-    ) -> (Vec<Action>, usize, usize)  {
+        player_state: &PlayerState,
+    ) -> (Vec<Action>, usize, usize) {
+        // Search
         let mut is_goal = vec![];
         std::mem::swap(&mut is_goal, &mut self.is_goal);
         let f = |x: usize, y: usize| is_goal[x][y] != !0;
-        let ret = self.search(map, player_state, f);
+        let (mut actions, x, y) = self.search(map, player_state, f);
         std::mem::swap(&mut is_goal, &mut self.is_goal);
+        drop(is_goal);
+
+        // Rotate
+        if self.is_goal[x][y] == 3 {
+            actions.push(Action::TurnL);
+        } else {
+            let mut d = self.is_goal[x][y];
+            while d > 0 {
+                actions.push(Action::TurnR);
+                d -= 1;
+            }
+        }
+
         self.clean_up();
-        ret
+        (actions, x, y)
     }
 
     //
@@ -151,7 +166,8 @@ impl BFS {
         self.search_with_goals(map, player_state).0
     }
 
-    /*
+    // 現状の実相だと、1, 2ぐらいsuboptimalな可能性がある
+    // 真面目な実装にするためにはコストがかかるがそれがペイするならやる
     pub fn search_fewest_actions_to_wrap(
         &mut self,
         map: &Vec<Vec<Square>>,
@@ -162,17 +178,20 @@ impl BFS {
         for (mx, my) in player_state.manipulators.iter() {
             for d in 0..4 {
                 let (dx, dy) = rotate((*mx, *my), (d + 2) % 4);
-                let (tx, ty) = (target_x + dx, target_y + dy);
+                let (tx, ty) = (target_x + (dx as usize), target_y + (dy as usize));
+                // dbg!(&(dx, dy, tx, ty));
                 if self.xsize <= tx || self.ysize <= ty {
+                    continue;
+                }
+                if !is_visible(map, (target_x, target_y), (dx, dy)) {
                     continue;
                 }
                 self.add_goal(tx, ty, d);
             }
         }
 
-        // TODO: 回転
+        self.search_with_goals(map, player_state)
     }
-    */
 }
 
 #[cfg(test)]
@@ -180,11 +199,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_works() {
-        let tasks = [
-            load_task_001(),
-            load_task_002(),
-        ];
+    fn move_stress() {
+        let tasks = [load_task_001(), load_task_002()];
         for task in tasks.iter() {
             use rand::Rng;
             let mut rng = rand::thread_rng(); // デフォルトの乱数生成器を初期化します
@@ -215,6 +231,55 @@ mod tests {
                 }
                 assert_eq!(ps.x, tx);
                 assert_eq!(ps.y, ty);
+            }
+        }
+    }
+
+    #[test]
+    fn wrap_stress() {
+        let tasks = [load_task_001(), load_task_002()];
+        for task in tasks.iter() {
+            use rand::Rng;
+            let mut rng = rand::thread_rng(); // デフォルトの乱数生成器を初期化します
+
+            let map = &task.0;
+            let xsize = map.len();
+            let ysize = map[0].len();
+
+            let mut random_empty_cell = || loop {
+                let x: usize = rng.gen::<usize>() % xsize;
+                let y: usize = rng.gen::<usize>() % ysize;
+                if map[x][y] == Square::Empty {
+                    return (x, y);
+                }
+            };
+
+            let mut bfs = BFS::new(map.len(), map[0].len());
+            for _ in 0..100 {
+                let (sx, sy) = random_empty_cell();
+                let (tx, ty) = random_empty_cell();
+
+                let mut ps = PlayerState::new(sx, sy);
+                ps.manipulators.push((2, 5));  // MAJI YABAI DESU
+
+                let (actions, gx, gy) = bfs.search_fewest_actions_to_wrap(&map, &ps, tx, ty);
+
+                for a in actions.iter() {
+                    ps.apply_action(*a);
+                    assert_eq!(map[ps.x][ps.y], Square::Empty);
+                }
+                assert_eq!(ps.x, gx);
+                assert_eq!(ps.y, gy);
+
+                let mut f = false;
+                for m in ps.manipulators.iter() {
+                    if (ps.x + (m.0 as usize), ps.y + (m.1 as usize)) == (tx, ty) {
+                        dbg!(m);
+                        f = true;
+                        assert!(is_visible(map, (ps.x, ps.y), *m));
+                    }
+                }
+                assert_eq!(f, true);
             }
         }
     }

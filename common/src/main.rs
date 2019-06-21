@@ -7,12 +7,12 @@ fn main() {
     let a = PlayerState::new(t.2, t.3);
 
     let mut bfs = BFS::new(t.0.len(), t.0[0].len());
-    let actions = bfs.search_fewest_actions_to_move(&t.0, &a, 2, 2);
+    let actions = bfs.search_fewest_actions_to_wrap(&t.0, &a, 2, 2);
     dbg!(&actions);
 
-    let actions = bfs.search_fewest_actions_to_move(&t.0, &a, 3, 3);
+    let actions = bfs.search_fewest_actions_to_wrap(&t.0, &a, 3, 3);
     dbg!(&actions);
 
-    let actions = bfs.search_fewest_actions_to_move(&t.0, &a, 2, 2);
+    let actions = bfs.search_fewest_actions_to_wrap(&t.0, &a, 2, 2);
     dbg!(&actions);
 }

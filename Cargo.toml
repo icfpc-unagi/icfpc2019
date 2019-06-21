@@ -13,3 +13,6 @@ exclude = [".cache", "build"]
 
 [profile.dev]
 overflow-checks = false
+
+[profile.test]
+overflow-checks = false
