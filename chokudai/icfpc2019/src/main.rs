@@ -173,7 +173,7 @@ fn main() {
         for i in 0..point_list.len() {
             let target_pos = point_list[i];
 
-            //println!("{} {}", target_pos.0, target_pos.1);
+            //println!("check: {} {}", target_pos.0, target_pos.1);
 
             //塗り済みであるかの検出
             if current_state.field[target_pos.0][target_pos.1] != Square::Empty{
@@ -191,25 +191,33 @@ fn main() {
                         let mut d = !0;
                         if target_pos.0 != next_target_pos.0 {
                             if target_pos.0 < next_target_pos.0 {
-                                pos = (target_pos.0 - 1, target_pos.1 - 1);
-                                d = 0;
+                                if  current_state.field[target_pos.0 + 1][target_pos.1 - 1] == Square::Empty {
+                                    pos = (target_pos.0 - 1, target_pos.1 - 1);
+                                    d = 0;
+                                }
                             }
                             else {
-                                pos = (target_pos.0 + 1, target_pos.1 + 1);
-                                d = 2;
+                                if  current_state.field[target_pos.0 - 1][target_pos.1 + 1] == Square::Empty {
+                                     pos = (target_pos.0 + 1, target_pos.1 + 1);
+                                    d = 2;
+                                }
                             }
                         }
                         else {
                             if target_pos.1 < next_target_pos.1 {
-                                pos = (target_pos.0 + 1, target_pos.1 - 1);
-                                d = 3;
+                                if current_state.field[target_pos.0 + 1][target_pos.1 + 1] == Square::Empty {
+                                    pos = (target_pos.0 + 1, target_pos.1 - 1);
+                                    d = 3;
+                                }
                             }
                             else {
-                                pos = (target_pos.0 - 1, target_pos.1 + 1);
-                                d = 1;
+                                if current_state.field[target_pos.0 - 1][target_pos.1 - 1] == Square::Empty {
+                                    pos = (target_pos.0 - 1, target_pos.1 + 1);
+                                    d = 1;
+                                }
                             }
                         }
-                        if current_state.field[pos.0][pos.1] != Square::Block {
+                        if d != !0 && current_state.field[pos.0][pos.1] == Square::Empty {
                             use_double_position = (pos, d);
                         }
                     }
@@ -218,20 +226,30 @@ fn main() {
             
             
             let mut actions: Vec<Action> = Vec::with_capacity(0);
-            if use_double_position.1 == 9999 {
+            if use_double_position.1 != !0 {
                 //println!("double at ({}, {}, {}) for ({}, {})", (use_double_position.0).0 , (use_double_position.0).1, use_double_position.1,target_pos.0 , target_pos.1);
                 //println!("now : {} {} {}", current_state.p.x, current_state.p.y, current_state.p.dir);
-                actions = bfs.search_fewest_actions_to_move(&t.0, &current_state.p, (use_double_position.0).0, (use_double_position.0).1);
+                let a2 = bfs.search_fewest_actions_to_move(&t.0, &current_state.p, (use_double_position.0).0, (use_double_position.0).1);
                 let now_dir = current_state.p.dir;
+
+                for act in &a2{
+                    if *act == Action::TurnR || *act == Action:: TurnL{
+                        continue;
+                    }
+                    else{
+                        actions.push(*act);
+                    }
+                }
+
                 if (now_dir + 1) % 4 == use_double_position.1{
-                    actions.push(Action::TurnL);
+                    actions.push(Action::TurnR);
                 }
                 else if (now_dir + 2) % 4 == use_double_position.1{
                     actions.push(Action::TurnR);
                     actions.push(Action::TurnR);
                 }
                 else if (now_dir + 3) % 4 == use_double_position.1{
-                    actions.push(Action::TurnR);
+                    actions.push(Action::TurnL);
                 }
             }
             else{
@@ -240,8 +258,10 @@ fn main() {
 
                 //actions = bfs.search_fewest_actions_to_move(&t.0, &current_state.p, target_pos.0, target_pos.1);
                 let (a2, gx, gy) = bfs.search_fewest_actions_to_wrap(&t.0, &current_state.p, target_pos.0, target_pos.1);
-                actions = a2;
                 
+                //let tmp_string = actions_to_string(&a2);
+                actions = a2;
+                //println!("go: {}", tmp_string);
             }
 
             for act in actions
