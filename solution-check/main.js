@@ -1,5 +1,5 @@
 if (process.argv.length != 4) {
-    console.log("Usage: solution-checker task.desc solution.sol");
+    console.log("Usage: validate task.desc solution.sol");
     process.exit(1);
 }
 
