@@ -2,6 +2,7 @@ use common::*;
 use common::reach::*;
 use common::bfs::*;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct State{
     pub p: PlayerState,     //プレイヤー情報
     pub field: Vec<Vec<Square>>,    //壁情報
@@ -16,6 +17,7 @@ fn get_first_state(field: Vec<Vec<Square>>, item_field: Vec<Vec<Option<Booster>>
         item_field: item_field,
     }
 }
+
 
 ///回る順番を順番に
 fn make_easy_target_list(S: &State, H: usize, W:usize) -> Vec<(usize, usize)>{
@@ -128,20 +130,34 @@ fn get_diff(a:usize, b:usize) -> usize{
 
 fn main() {
     let taskfile = std::env::args().nth(1).expect("usage: args[1] = taskfile");
-    let (mut field, mut itemfield, mut FH, mut FW) = read_task(&taskfile);
-    let H = field.len();
-    let W = field[0].len();
+    let (first_field, first_itemfield, FH, FW) = read_task(&taskfile);
+    let H = first_field.len();
+    let W = first_field[0].len();
 
-    let first_state = get_first_state(field, itemfield, FH, FW);
+    let first_state = get_first_state(first_field, first_itemfield, FH, FW);
 
     
     let mut final_action: Vec<Action> = Vec::with_capacity(0);
-    let mut current_state = first_state;
+    
     
     let t = read_task(&taskfile);
     let mut bfs = BFS::new(H, W);
+    let mut current_state = first_state;//.clone();
 
     loop{
+        /*
+        let mut LastActionTable = vec![vec![!0; W]; H];
+        for act in &final_action
+        {
+            current_state.p.apply_action(*act);
+            for dxy in &current_state.p.manipulators{
+                if is_visible(&(current_state.field), (current_state.p.x, current_state.p.y), *dxy){
+                    current_state.field[current_state.p.x + (*dxy).0 as usize][current_state.p.y + (*dxy).1 as usize] = Square::Filled;
+                }
+            }
+        }
+        */
+
         let point_list = make_easy_target_list(&current_state, H, W);
         if point_list.len() == 0{
             break;
@@ -202,29 +218,30 @@ fn main() {
             
             
             let mut actions: Vec<Action> = Vec::with_capacity(0);
-            if use_double_position.1 != !0 {
-                println!("double at ({}, {}) for ({}, {})", (use_double_position.0).0 , (use_double_position.0).1,target_pos.0, target_pos.1);
-                println!("now : {} {}", current_state.p.x, current_state.p.y);
+            if use_double_position.1 == 9999 {
+                //println!("double at ({}, {}, {}) for ({}, {})", (use_double_position.0).0 , (use_double_position.0).1, use_double_position.1,target_pos.0 , target_pos.1);
+                //println!("now : {} {} {}", current_state.p.x, current_state.p.y, current_state.p.dir);
                 actions = bfs.search_fewest_actions_to_move(&t.0, &current_state.p, (use_double_position.0).0, (use_double_position.0).1);
                 let now_dir = current_state.p.dir;
                 if (now_dir + 1) % 4 == use_double_position.1{
-                    actions.push(Action::TurnR);
+                    actions.push(Action::TurnL);
                 }
                 else if (now_dir + 2) % 4 == use_double_position.1{
                     actions.push(Action::TurnR);
                     actions.push(Action::TurnR);
                 }
                 else if (now_dir + 3) % 4 == use_double_position.1{
-                    actions.push(Action::TurnL);
+                    actions.push(Action::TurnR);
                 }
             }
             else{
-                println!("single at ({}, {})", target_pos.0, target_pos.1);
-                println!("now : {} {}", current_state.p.x, current_state.p.y);
+                //println!("single at ({}, {})", target_pos.0, target_pos.1);
+                //println!("now : {} {}", current_state.p.x, current_state.p.y);
 
-                actions = bfs.search_fewest_actions_to_move(&t.0, &current_state.p, target_pos.0, target_pos.1);
-                //actions = bfs.search_fewest_actions_to_wrap(&current_state.p, target_pos.0, target_pos.1);
-
+                //actions = bfs.search_fewest_actions_to_move(&t.0, &current_state.p, target_pos.0, target_pos.1);
+                let (a2, gx, gy) = bfs.search_fewest_actions_to_wrap(&t.0, &current_state.p, target_pos.0, target_pos.1);
+                actions = a2;
+                
             }
 
             for act in actions
@@ -236,6 +253,8 @@ fn main() {
                         current_state.field[current_state.p.x + (*dxy).0 as usize][current_state.p.y + (*dxy).1 as usize] = Square::Filled;
                     }
                 }
+
+
             }
         }
         
