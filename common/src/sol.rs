@@ -17,9 +17,9 @@ pub fn parse_sol(s: &str) -> Vec<Action> {
         }
         v.push(match c {
             // Move
-            'W' => Action::Move(1),
+            'W' => Action::Move(3),
             'A' => Action::Move(2),
-            'S' => Action::Move(3),
+            'S' => Action::Move(1),
             'D' => Action::Move(0),
             // Do nothing
             'Z' => Action::Nothing,
@@ -37,6 +37,15 @@ pub fn parse_sol(s: &str) -> Vec<Action> {
             }
             'F' => Action::Fast,
             'L' => Action::Drill,
+            'R' => Action::Reset,
+            'T' => {
+                assert_eq!(Some('('), iter.next());
+                let x = consume_i32(&mut iter).unwrap();
+                assert_eq!(Some(','), iter.next());
+                let y = consume_i32(&mut iter).unwrap();
+                assert_eq!(Some(')'), iter.next());
+                Action::Teleport(x, y)
+            },
             // Panic
             _ => panic!("unexpected `{}`", c),
         })
@@ -64,7 +73,7 @@ mod tests {
 
     #[test]
     fn test() {
-        eprintln!("{:?}", parse_sol("WASD QE Z B(10,-1) F L"));
+        eprintln!("{:?}", parse_sol("WASD QE Z B(10,-1) F L R T(1,2)"));
     }
 
     #[test]

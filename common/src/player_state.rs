@@ -51,6 +51,8 @@ impl PlayerState {
             {
                 unimplemented!()
             }
+            Action::Reset => unimplemented!(),
+            Action::Teleport(x, y) => unimplemented!(),
         }
         // TODO: 発動中の効果の有効期限を減らしたりする
     }

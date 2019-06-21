@@ -78,7 +78,9 @@ pub enum Action {
     TurnL,
     Extension(i32, i32),
     Fast,
-    Drill
+    Drill,
+    Reset,
+    Teleport(i32,i32),
 }
 
 pub fn actions_to_string(list: &Vec<Action>) -> String {
@@ -91,7 +93,9 @@ pub fn actions_to_string(list: &Vec<Action>) -> String {
             Action::TurnL => out += "Q",
             Action::Extension(dx, dy) => out += &format!("B({},{})", dx, dy),
             Action::Fast => out += "F",
-            Action::Drill => out += "L"
+            Action::Drill => out += "L",
+            Action::Reset => out += "R",
+            Action::Teleport(x,y) => out += &format!("T({},{})", x,y),
         }
     }
     out
