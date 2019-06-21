@@ -88,3 +88,43 @@ impl<'a> BFS<'a> {
         unimplemented!();
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        use rand::Rng;
+        let mut rng = rand::thread_rng(); // デフォルトの乱数生成器を初期化します
+
+        let task = load_task_002();
+        let map = task.0;
+        let xsize = map.len();
+        let ysize = map[0].len();
+
+        let mut random_empty_cell = || loop {
+            let x: usize = rng.gen::<usize>() % xsize;
+            let y: usize = rng.gen::<usize>() % ysize;
+            if map[x][y] == Square::Empty {
+                return (x, y);
+            }
+        };
+
+        let mut bfs = BFS::new(&map);
+        for _ in 0..100 {
+            let (sx, sy) = random_empty_cell();
+            let (tx, ty) = random_empty_cell();
+
+            let mut ps = PlayerState::new_initial(sx, sy);
+            let actions = bfs.search_fewest_actions_to_move(&ps, tx, ty);
+
+            for a in actions.iter() {
+                ps.apply_action(*a);
+                assert_eq!(map[ps.x][ps.y], Square::Empty);
+            }
+            assert_eq!(ps.x, tx);
+            assert_eq!(ps.y, ty);
+        }
+    }
+}

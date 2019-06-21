@@ -5,3 +5,4 @@ authors = ["Takuya Akiba <t.akiba.65536@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+rand = "0.6"

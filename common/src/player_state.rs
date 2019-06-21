@@ -11,6 +11,17 @@ pub struct PlayerState {
 }
 
 impl PlayerState {
+    pub fn new_initial(x: usize, y: usize) -> PlayerState {
+        PlayerState {
+            x,
+            y,
+            dir: 0,
+            unused_boosters: vec![],
+            active_boosters: vec![],
+            manipulators: vec![(1, 0), (1, 1), (1, -1)],
+        }
+    }
+
     pub fn apply_action(&mut self, action: Action) {
         match action {
             Action::Move(dir) => {
