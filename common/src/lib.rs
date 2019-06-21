@@ -1,6 +1,7 @@
 pub mod reach;
 pub mod task;
 pub mod player_state;
+pub mod sol;
 
 pub use task::*;
 pub use player_state::*;
