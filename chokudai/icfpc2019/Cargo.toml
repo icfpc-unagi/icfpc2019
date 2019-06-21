@@ -1,0 +1,8 @@
+[package]
+name = "icfpc2019"
+version = "0.1.0"
+authors = ["chokudai"]
+edition = "2018"
+
+[dependencies]
+common = { path = "../../common" }
