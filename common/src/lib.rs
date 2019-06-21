@@ -99,6 +99,10 @@ fn parse_point(s: &str) -> (usize, usize) {
     parse_point_tokens(&ts[0], &ts[1])
 }
 
+fn parse_obstacles(s: &str) -> Vec<Vec<(usize, usize)>> {
+    s.split(';').map(|t| parse_map(t)).collect()
+}
+
 fn parse_task(task: &str) -> TaskSpecification {
     let ss: Vec<_> = task.split('#').collect();
     eprintln!("task: {:?}", ss);
@@ -106,7 +110,7 @@ fn parse_task(task: &str) -> TaskSpecification {
     TaskSpecification {
         frame: parse_map(ss[0]),
         initial_location: parse_point(ss[1]),
-        obstacles: vec![],
+        obstacles: parse_obstacles(ss[2]),
         boosters: vec![],
     }
 }
@@ -190,6 +194,10 @@ pub fn read_task(path: &str) -> (Vec<Vec<Square>>, Vec<Vec<Option<Booster>>>, us
     let mut accsum = vec![vec![0; ysize]; xsize];
     draw_contour(&mut accsum, &task.frame);
     eprintln!("{:?}", accsum);
+
+    for obstacle in task.obstacles {
+        draw_contour(&mut accsum, &obstacle);
+    }
 
     let squares = accsum_to_squares(&mut accsum);
     eprintln!("{:?}", squares);
