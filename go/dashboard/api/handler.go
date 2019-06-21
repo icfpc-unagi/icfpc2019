@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/appengine"
 
+	"github.com/imos/icfpc2019/go/util/dbutil"
 	"github.com/imos/icfpc2019/go/util/pb"
 )
 
@@ -76,5 +77,46 @@ func handler(w http.ResponseWriter, r *http.Request) error {
 
 func apiHandler(
 	ctx context.Context, req *pb.Api_Request, resp *pb.Api_Response) error {
+	if err := insertProblemHandler(ctx, req, resp); err != nil {
+		return err
+	}
+	return nil
+}
+
+func insertProblemHandler(
+	ctx context.Context, apiReq *pb.Api_Request, apiResp *pb.Api_Response,
+) error {
+	req := apiReq.GetInsertProblem()
+	if req == nil {
+		return nil
+	}
+
+	if req.GetProblemName() == "" {
+		return errors.New("problem_name is missing")
+	}
+	if req.GetProblemData() == nil || len(req.GetProblemData()) == 0 {
+		return errors.New("problem_data is missing")
+	}
+
+	db, err := dbutil.NewConnection(ctx)
+	if err != nil {
+		return err
+	}
+	res, err := db.Execute(ctx,
+		"INSERT problems(problem_name) VALUES(?)", req.GetProblemName())
+	if err != nil {
+		return err
+	}
+	id, err := res.LastInsertId()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	res, err = db.Execute(ctx,
+		"INSERT problem_data(problem_id, problem_data) VALUES(?, ?)",
+		id, req.GetProblemData())
+	if err != nil {
+		return err
+	}
+	apiResp.InsertProblem = &pb.Api_Response_InsertProblem{ProblemId: id}
 	return nil
 }
