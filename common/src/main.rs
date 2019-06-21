@@ -14,10 +14,10 @@ fn main() {
 
     let mut bfs = BFS::new(&t.0);
     let mut bfs2 = BFS::new(&t.0);
-    bfs.search_fewest_actions_to_reach(
+    bfs.search_fewest_actions_to_move(
         &a, 2, 2
     );
-    bfs2.search_fewest_actions_to_reach(
+    bfs2.search_fewest_actions_to_move(
         &a, 3, 3,
     );
     dbg!(&bfs);

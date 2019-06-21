@@ -3,7 +3,6 @@ use crate::*;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BFS<'a> {
     map: &'a Vec<Vec<Square>>,
-
 }
 
 impl<'a> BFS<'a> {
