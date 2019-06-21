@@ -2,9 +2,11 @@ pub mod reach;
 pub mod task;
 pub mod player_state;
 pub mod sol;
+pub mod bfs;
 
 pub use task::*;
 pub use player_state::*;
+pub use bfs::*;
 
 #[macro_export]
 macro_rules! mat {

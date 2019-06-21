@@ -2,12 +2,12 @@ use crate::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PlayerState {
-    x: usize, //・今いる座標
-    y: usize,
-    dir: usize,                           //・向いている向き
-    unused_boosters: Vec<Booster>,        //・持っている
-    active_boosters: Vec<(Booster, i32)>, //・発動中の効果、残りターン
-    manipulators: Vec<(i32, i32)>,        // マニピュレータたちの相対位置（方向0のときの）
+    pub x: usize, //・今いる座標
+    pub y: usize,
+    pub dir: usize,                           //・向いている向き
+    pub unused_boosters: Vec<Booster>,        //・持っている
+    pub active_boosters: Vec<(Booster, i32)>, //・発動中の効果、残りターン
+    pub manipulators: Vec<(i32, i32)>,        // マニピュレータたちの相対位置（方向0のときの）
 }
 
 impl PlayerState {
