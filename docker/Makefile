@@ -5,6 +5,7 @@ usage:
 ../build/docker:
 	-rm ../build/docker
 	unagi bash generate-docker-data.sh
+	cd ../solution-check && make && cp ../build/solution-check ../build/docker/
 .PHONY: ../build/docker
 
 build-%: %.Dockerfile ../build/docker
