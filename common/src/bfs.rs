@@ -111,6 +111,24 @@ impl BFS {
         (self.construct_actions(x, y), x, y)
     }
 
+    pub fn search_with_goals(
+        &mut self,
+        map: &Vec<Vec<Square>>,
+        player_state: &PlayerState
+    ) -> (Vec<Action>, usize, usize)  {
+        let mut is_goal = vec![];
+        std::mem::swap(&mut is_goal, &mut self.is_goal);
+        let f = |x: usize, y: usize| is_goal[x][y] != !0;
+        let ret = self.search(map, player_state, f);
+        std::mem::swap(&mut is_goal, &mut self.is_goal);
+        self.clean_up();
+        ret
+    }
+
+    //
+    // 外向け
+    //
+
     pub fn search_fewest_actions_to_satisfy<F: Fn(usize, usize) -> bool>(
         &mut self,
         map: &Vec<Vec<Square>>,
@@ -130,25 +148,17 @@ impl BFS {
         target_y: usize,
     ) -> Vec<Action> {
         self.add_goal(target_x, target_y, player_state.dir);
-        let mut is_goal = vec![];
-        std::mem::swap(&mut is_goal, &mut self.is_goal);
-        let f = |x: usize, y: usize| is_goal[x][y] != !0;
-        let (actions, _, _) = self.search(map, player_state, f);
-        std::mem::swap(&mut is_goal, &mut self.is_goal);
-        self.clean_up();
-        actions
+        self.search_with_goals(map, player_state).0
     }
 
+    /*
     pub fn search_fewest_actions_to_wrap(
         &mut self,
         map: &Vec<Vec<Square>>,
         player_state: &PlayerState,
         target_x: usize,
         target_y: usize,
-    ) -> Vec<Action> {
-        unimplemented!();
-
-        /*
+    ) -> (Vec<Action>, usize, usize) {
         for (mx, my) in player_state.manipulators.iter() {
             for d in 0..4 {
                 let (dx, dy) = rotate((*mx, *my), (d + 2) % 4);
@@ -160,9 +170,9 @@ impl BFS {
             }
         }
 
-        // TODO: ここで回転する
-        */
+        // TODO: 回転
     }
+    */
 }
 
 #[cfg(test)]
