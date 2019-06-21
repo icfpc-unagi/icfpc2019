@@ -8,7 +8,7 @@ pub enum Square {
     X,
 }
 
-pub fn read_map() -> (Vec<Vec<Square>>, i32, i32) {
+pub fn read_map() -> (Vec<Vec<Square>>, usize, usize) {
 
 }
 
