@@ -36,10 +36,14 @@ fn parse_obstacles(s: &str) -> Vec<Vec<(usize, usize)>> {
 }
 
 fn parse_boosters(s: &str) -> Vec<(Booster, usize, usize)> {
-    s.split(';').map(|t| {
-        let p = parse_point(&t[1..]);
-        (t[..1].parse::<Booster>().unwrap(), p.0, p.1)
-    }).collect()
+    if s == "" {
+        vec![]
+    } else {
+        s.split(';').map(|t| {
+            let p = parse_point(&t[1..]);
+            (t[..1].parse::<Booster>().unwrap(), p.0, p.1)
+        }).collect()
+    }
 }
 
 fn parse_task(task: &str) -> TaskSpecification {
