@@ -32,7 +32,6 @@ func insertProblem() error {
 	args := flag.Args()[1:]
 	for _, arg := range args {
 		data, err := ioutil.ReadFile(arg)
-		name := path.Base(arg)
 		if err != nil {
 			return errors.Errorf("failed to read file: %s: %s", arg, err)
 		}
@@ -47,4 +46,5 @@ func insertProblem() error {
 		}
 		fmt.Printf("%s\n", proto.MarshalTextString(resp))
 	}
+	return nil
 }
