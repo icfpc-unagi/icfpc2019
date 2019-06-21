@@ -73,6 +73,7 @@ fn deps(v: RPos) -> Vec<RPos> {
 }
 
 
+#[allow(dead_code)]
 fn gcd(a: i32, b: i32) -> i32 {
     if b == 0 {
         a
@@ -82,7 +83,7 @@ fn gcd(a: i32, b: i32) -> i32 {
 }
 
 
-
+#[allow(dead_code)]
 fn main() {
     println!("{:?}", deps((3, -5)));
 }
@@ -97,5 +98,13 @@ mod tests {
         assert_eq!(deps((2, 4)), [(0, 1), (1, 1), (1, 2), (1, 3), (2, 3), (2, 4)]);
         assert_eq!(deps((0, 0)), []);
         assert_eq!(deps((3, 1)), [(1, 0), (2, 1), (3, 1)]);
+        for dx in -1 ..= 1 {
+            for dy in -1 ..= 1 {
+                if (dx, dy) == (0, 0) {
+                    continue;
+                }
+                assert_eq!(deps((dx, dy)), [(dx, dy)]);
+            }
+        }
     }
 }
