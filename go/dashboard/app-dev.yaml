@@ -1,0 +1,8 @@
+runtime: go111
+automatic_scaling:
+  max_idle_instances: 1
+  max_concurrent_requests: 8
+  min_pending_latency: 3s
+
+includes:
+- app-base.yaml

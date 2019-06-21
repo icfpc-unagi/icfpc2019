@@ -3,6 +3,7 @@ SHELL := /bin/bash
 build:
 	echo 'env_variables:' > secret.yaml
 	echo "  CLOUDSQL_PASSWORD: \"$${UNAGI_PASSWORD}\"" >> secret.yaml
+	echo "  SQL_PASSWORD: \"$${UNAGI_PASSWORD}\"" >> secret.yaml
 .PHONY: build
 
 run: build
