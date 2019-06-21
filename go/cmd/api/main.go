@@ -23,7 +23,7 @@ func main() {
 		}
 		return errors.Errorf("no such command: %s", flag.Arg(0))
 	}(); err != nil {
-		panic(fmt.Sprintf("%v", err))
+		panic(fmt.Sprintf("%+v", err))
 	}
 }
 
@@ -42,7 +42,7 @@ func insertProblem() error {
 			},
 		})
 		if err != nil {
-			panic(fmt.Sprintf("failed to call API: %v", err))
+			panic(fmt.Sprintf("failed to call API: %+v", err))
 		}
 		fmt.Printf("%s\n", proto.MarshalTextString(resp))
 	}

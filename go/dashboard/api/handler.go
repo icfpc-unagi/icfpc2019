@@ -19,8 +19,8 @@ import (
 func init() {
 	http.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
 		if err := handler(w, r); err != nil {
-			log.Errorf(appengine.NewContext(r), "%v", err)
-			http.Error(w, fmt.Sprintf("%v", err), 500)
+			log.Errorf(appengine.NewContext(r), "%+v", err)
+			http.Error(w, fmt.Sprintf("%+v", err), 500)
 			return
 		}
 	})
