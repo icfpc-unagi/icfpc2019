@@ -83,4 +83,5 @@ pub struct PlayerState {
     dir: usize,  //・向いている向き
     unused_boosters: Vec<Square>,  //・持っている
     active_boosters: Vec<(Square, i32)>,  //・発動中の効果、残りターン
+    manipulators: Vec<(i32, i32)>,  // マニピュレータたちの相対位置
 }
