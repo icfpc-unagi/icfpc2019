@@ -26,6 +26,23 @@ impl<'a> BFS<'a> {
         self.que_head = 0;
     }
 
+    pub fn construct_actions(&mut self, mut x: usize, mut y: usize) -> Vec<Action> {
+        let mut actions = vec![];
+        loop {
+            let (c, d) = self.flg[x][y];
+            if c == 0 {
+                break;
+            }
+            actions.push(Action::Move(d));
+
+            let (tx, ty) = apply_move((x, y), (d + 2) % 4);
+            x = tx;
+            y = ty;
+        }
+        actions.reverse();
+        actions
+    }
+
     pub fn search_fewest_actions_to_move(
         &mut self,
         player_state: &PlayerState,
@@ -57,11 +74,9 @@ impl<'a> BFS<'a> {
             }
         }
 
-        // TODO: 復元
-
+        let actions = self.construct_actions(target_x, target_y);
         self.clean_up();
-
-        return vec![];
+        actions
     }
 
     pub fn search_fewest_actions_to_wrap(
