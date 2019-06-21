@@ -176,7 +176,7 @@ impl BFS {
         target_y: usize,
     ) -> (Vec<Action>, usize, usize) {
         for (mx, my) in player_state.manipulators.iter() {
-            for d in 0..4 {
+            for &d in [0, 1, 3, 2].iter() {
                 let (dx, dy) = rotate((*mx, *my), (d + 2) % 4);
                 let (tx, ty) = (target_x + (dx as usize), target_y + (dy as usize));
                 // dbg!(&(dx, dy, tx, ty));
@@ -184,6 +184,9 @@ impl BFS {
                     continue;
                 }
                 if !is_visible(map, (target_x, target_y), (dx, dy)) {
+                    continue;
+                }
+                if self.is_goal[tx][ty] != !0 {
                     continue;
                 }
                 self.add_goal(tx, ty, d);
