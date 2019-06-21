@@ -3,6 +3,7 @@ pub mod task;
 pub mod player_state;
 pub mod sol;
 pub mod bfs;
+pub mod map;
 
 pub use reach::*;
 pub use task::*;
@@ -69,6 +70,10 @@ pub fn apply_move((x, y): (usize, usize), dir: usize) -> (usize, usize) {
         3 => (x, y + 1),
         _ => panic!("illegal dir: {}", dir)
     }
+}
+
+pub fn is_enterable(x: usize, y: usize, map: &Vec<Vec<Square>>) -> bool {
+    x < map.len() && y < map.len() && map[x][y] != Square::Block
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
