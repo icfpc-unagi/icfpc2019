@@ -9,7 +9,7 @@ pub enum Square {
 }
 
 pub fn read_map() -> (Vec<Vec<Square>>, usize, usize) {
-
+    unimplemented!();
 }
 
 #[cfg(test)]
