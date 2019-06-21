@@ -1,5 +1,31 @@
+use crate::Square;
+
+
 type APos = (usize, usize);
 type RPos = (isize, isize);
+
+
+pub fn is_visible(map: &Vec<Vec<Square>>, current_pos: APos, relative_pos: RPos) -> bool {
+    // reachableかを返す。現在地がblockでないことは仮定してる
+    let rposs = deps(relative_pos);
+    for r in rposs {
+        let sq = *get_mat(&map, current_pos, r).unwrap_or(&Square::Block);
+        if sq == Square::Block {
+            return false;
+        }
+    }
+    return true;
+}
+
+
+fn get_mat<T>(mat: &Vec<Vec<T>>, a: APos, r: RPos) -> Option<&T> {
+    let (ax, ay) = a;
+    let (rx, ry) = r;
+    let x = (ax as isize + rx) as usize;
+    let y = (ay as isize + ry) as usize;
+    let vec = mat.get(x)?;
+    return vec.get(y);
+}
 
 
 fn deps(v: RPos) -> Vec<RPos> {
@@ -69,7 +95,7 @@ mod tests {
     fn it_works() {
         assert_eq!(deps((-2, 0)), [(-1, 0), (-2, 0)]);
         assert_eq!(deps((2, 4)), [(0, 1), (1, 1), (1, 2), (1, 3), (2, 3), (2, 4)]);
-        // assert_eq!(2 + 2, 4);
-        //read_map()
+        assert_eq!(deps((0, 0)), []);
+        assert_eq!(deps((3, 1)), [(1, 0), (2, 1), (3, 1)]);
     }
 }
