@@ -29,9 +29,9 @@ pub fn parse_sol(s: &str) -> Vec<Action> {
             // Boost
             'B' => {
                 assert_eq!(Some('('), iter.next());
-                let x = consume_i32(&mut iter).unwrap();
+                let x = consume_int(&mut iter).unwrap();
                 assert_eq!(Some(','), iter.next());
-                let y = consume_i32(&mut iter).unwrap();
+                let y = consume_int(&mut iter).unwrap();
                 assert_eq!(Some(')'), iter.next());
                 Action::Extension(x, y)
             }
@@ -40,9 +40,9 @@ pub fn parse_sol(s: &str) -> Vec<Action> {
             'R' => Action::Reset,
             'T' => {
                 assert_eq!(Some('('), iter.next());
-                let x = consume_i32(&mut iter).unwrap();
+                let x = consume_int(&mut iter).unwrap();
                 assert_eq!(Some(','), iter.next());
-                let y = consume_i32(&mut iter).unwrap();
+                let y = consume_int(&mut iter).unwrap();
                 assert_eq!(Some(')'), iter.next());
                 Action::Teleport(x, y)
             },
@@ -53,9 +53,9 @@ pub fn parse_sol(s: &str) -> Vec<Action> {
     v
 }
 
-fn consume_i32<Iter: Iterator<Item = char>>(
+fn consume_int<I: FromStr, Iter: Iterator<Item = char>>(
     p: &mut Peekable<Iter>,
-) -> Result<i32, <i32 as FromStr>::Err> {
+) -> Result<I, <I as FromStr>::Err> {
     let mut s = String::new();
     while let Some(&c) = p.peek() {
         if c != '-' && !c.is_ascii_digit() {

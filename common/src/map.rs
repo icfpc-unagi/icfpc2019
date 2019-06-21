@@ -1,13 +1,31 @@
 
 use crate::*;
+
+use task::RasterizedTask;
 use std::vec::*;
 
-pub struct Map {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MapState {
     pub map: Vec<Vec<Square>>,
     pub booster: Vec<Vec<Option<Booster>>>,
 }
 
-impl Map {
+impl MapState {
+  pub  fn from(t: &RasterizedTask) -> MapState {
+        MapState{
+            map: t.0.clone(),
+            booster: t.1.clone(),
+        }
+    }
+  pub  fn empty(xsize: usize, ysize: usize)->MapState {
+        MapState {
+            map: vec![vec![Square::Empty;ysize];xsize],
+            booster: vec![vec![None;ysize]; xsize],
+        }
+    }
+}
+
+impl MapState {
     pub fn xsize(&self) -> usize {
         self.map.len()
     }
@@ -17,7 +35,7 @@ impl Map {
     pub fn size(&self) -> (usize, usize) {
         (self.xsize(), self.ysize())
     }
-    pub fn is_enterable(&self, x: usize, y: usize) -> bool {
+    pub fn is_enterable(&self, (x, y): (usize, usize)) -> bool {
         is_enterable(x, y, &self.map)
     }
 }

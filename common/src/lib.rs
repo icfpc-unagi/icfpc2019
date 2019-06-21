@@ -4,6 +4,7 @@ pub mod player_state;
 pub mod sol;
 pub mod bfs;
 pub mod map;
+pub mod sim;
 
 pub use reach::*;
 pub use task::*;
@@ -86,23 +87,29 @@ pub enum Action {
     Fast,
     Drill,
     Reset,
-    Teleport(i32,i32),
+    Teleport(usize, usize),
+}
+
+impl std::fmt::Display for Action {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Action::Move(dir) => f.write_str(["D", "S", "A", "W"][*dir]),
+            Action::Nothing => f.write_str("Z"),
+            Action::TurnR => f.write_str("E"),
+            Action::TurnL => f.write_str("Q"),
+            Action::Extension(dx, dy) => f.write_fmt(format_args!("B({},{})", dx, dy)),
+            Action::Fast => f.write_str("F"),
+            Action::Drill => f.write_str("L"),
+            Action::Reset => f.write_str("R"),
+            Action::Teleport(x, y) => f.write_fmt(format_args!("T({},{})", x, y)),
+        }
+    }
 }
 
 pub fn actions_to_string(list: &Vec<Action>) -> String {
     let mut out = String::new();
     for mv in list {
-        match mv {
-            Action::Move(dir) => out += ["D", "S", "A", "W"][*dir],
-            Action::Nothing => out += "Z",
-            Action::TurnR => out += "E",
-            Action::TurnL => out += "Q",
-            Action::Extension(dx, dy) => out += &format!("B({},{})", dx, dy),
-            Action::Fast => out += "F",
-            Action::Drill => out += "L",
-            Action::Reset => out += "R",
-            Action::Teleport(x,y) => out += &format!("T({},{})", x,y),
-        }
+        out += &mv.to_string();
     }
     out
 }

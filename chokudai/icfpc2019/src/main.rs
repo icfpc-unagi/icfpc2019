@@ -11,15 +11,7 @@ pub struct State{
 ///初期Stateを作るための関数
 fn get_first_state(field: Vec<Vec<Square>>, item_field: Vec<Vec<Option<Booster>>>, fx: usize, fy: usize) -> State{
     State{
-        p: PlayerState{
-            x: fx,
-            y: fy,
-            dir: 0,
-            time: 0,
-            unused_boosters: Vec::with_capacity(0),
-            active_boosters: Vec::with_capacity(0),
-            manipulators: vec![(0, 0), (1, 1), (1, 0), (1, -1)],
-        },
+        p: PlayerState::new(fx, fy),
         field: field,
         item_field: item_field,
     }
