@@ -3,7 +3,6 @@ pub mod task;
 pub mod player_state;
 pub mod sol;
 pub mod bfs;
-pub mod map;
 pub mod sim;
 
 pub use reach::*;
