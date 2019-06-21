@@ -1,4 +1,4 @@
-use crate::{Square, Booster};
+use crate::{Booster, Square};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Parse
@@ -21,9 +21,9 @@ fn parse_point_tokens(x: &str, y: &str) -> (usize, usize) {
 fn parse_map(s: &str) -> Vec<(usize, usize)> {
     let ts: Vec<_> = s.split(',').collect();
 
-    (0..ts.len() / 2).map(|i| {
-        parse_point_tokens(&ts[i *  2], &ts[i * 2 + 1])
-    }).collect()
+    (0..ts.len() / 2)
+        .map(|i| parse_point_tokens(&ts[i * 2], &ts[i * 2 + 1]))
+        .collect()
 }
 
 fn parse_point(s: &str) -> (usize, usize) {
@@ -39,10 +39,12 @@ fn parse_boosters(s: &str) -> Vec<(Booster, usize, usize)> {
     if s == "" {
         vec![]
     } else {
-        s.split(';').map(|t| {
-            let p = parse_point(&t[1..]);
-            (t[..1].parse::<Booster>().unwrap(), p.0, p.1)
-        }).collect()
+        s.split(';')
+            .map(|t| {
+                let p = parse_point(&t[1..]);
+                (t[..1].parse::<Booster>().unwrap(), p.0, p.1)
+            })
+            .collect()
     }
 }
 
@@ -74,7 +76,7 @@ fn get_size(task: &TaskSpecification) -> (usize, usize) {
 fn draw_contour(accsum: &mut Vec<Vec<i32>>, contour: &Vec<(usize, usize)>) {
     for i in 0..contour.len() {
         let p1 = contour[i];
-        let p2 = contour[(i + 1) %  contour.len()];
+        let p2 = contour[(i + 1) % contour.len()];
 
         if p1.1 == p2.1 {
             let y = p1.1;
@@ -99,15 +101,20 @@ fn accsum_to_squares(accsum: &mut Vec<Vec<i32>>) -> Vec<Vec<Square>> {
         }
     }
 
-    accsum.iter().map(|row| {
-        row.iter().map(|c| {
-            if c % 2 == 0 {
-                Square::Block
-            } else {
-                Square::Empty
-            }
-        }).collect()
-    }).collect()
+    accsum
+        .iter()
+        .map(|row| {
+            row.iter()
+                .map(|c| {
+                    if c % 2 == 0 {
+                        Square::Block
+                    } else {
+                        Square::Empty
+                    }
+                })
+                .collect()
+        })
+        .collect()
 }
 
 fn print_task(task: &RasterizedTask) {
@@ -120,27 +127,28 @@ fn print_task(task: &RasterizedTask) {
     for y in (0..ysize).rev() {
         eprint!("{:02}:", y);
         for x in 0..xsize {
-            eprint!("{}",
-                    if ixy == (x, y) {
-                        'I'
-                    } else {
-                        match map[x][y] {
-                            Square::Empty => {
-                                if let Some(b) = boosters[x][y] {
-                                    match b {
-                                        Booster::Extension => 'B',
-                                        Booster::Drill => 'L',
-                                        Booster::Fast => 'F',
-                                        Booster::X => 'X',
-                                    }
-                                } else {
-                                    ' '
+            eprint!(
+                "{}",
+                if ixy == (x, y) {
+                    'I'
+                } else {
+                    match map[x][y] {
+                        Square::Empty => {
+                            if let Some(b) = boosters[x][y] {
+                                match b {
+                                    Booster::Extension => 'B',
+                                    Booster::Drill => 'L',
+                                    Booster::Fast => 'F',
+                                    Booster::X => 'X',
                                 }
-                            },
-                            Square::Block => '#',
-                            Square::Filled => '.',
+                            } else {
+                                ' '
+                            }
                         }
+                        Square::Block => '#',
+                        Square::Filled => '.',
                     }
+                }
             );
         }
         eprintln!();

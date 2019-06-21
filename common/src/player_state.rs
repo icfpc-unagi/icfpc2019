@@ -2,12 +2,12 @@ use crate::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PlayerState {
-    x: usize,  //・今いる座標
+    x: usize, //・今いる座標
     y: usize,
-    dir: usize,  //・向いている向き
-    unused_boosters: Vec<Booster>,  //・持っている
-    active_boosters: Vec<(Booster, i32)>,  //・発動中の効果、残りターン
-    manipulators: Vec<(i32, i32)>,  // マニピュレータたちの相対位置（方向0のときの）
+    dir: usize,                           //・向いている向き
+    unused_boosters: Vec<Booster>,        //・持っている
+    active_boosters: Vec<(Booster, i32)>, //・発動中の効果、残りターン
+    manipulators: Vec<(i32, i32)>,        // マニピュレータたちの相対位置（方向0のときの）
 }
 
 impl PlayerState {
@@ -19,8 +19,7 @@ impl PlayerState {
                 self.x = x;
                 self.y = y;
             }
-            Action::Nothing =>
-                (),
+            Action::Nothing => (),
             Action::TurnR => {
                 self.dir += 1;
                 self.dir %= 4;
@@ -41,14 +40,17 @@ impl PlayerState {
                     m.1 = p.0;
                 }
             }
-            Action::Extension(dx, dy) =>
-                self.manipulators.push((dx, dy)),
+            Action::Extension(dx, dy) => self.manipulators.push((dx, dy)),
             Action::Fast =>
             // TODO: unused_boostersからfastを除いてactive_boostersに追加
-                unimplemented!(),
+            {
+                unimplemented!()
+            }
             Action::Drill =>
             // TODO: マップに対する作用は一体？？？
-                unimplemented!(),
+            {
+                unimplemented!()
+            }
         }
         // TODO: 発動中の効果の有効期限を減らしたりする
     }
@@ -71,28 +73,19 @@ mod tests {
 
         let mut b = a.clone();
         b.apply_action(Action::Move(0));
-        assert_eq!(b, PlayerState{x: 11, .. a.clone()});
+        assert_eq!(b, PlayerState { x: 11, ..a.clone() });
         // dbg!(b);
 
         let mut b = a.clone();
         b.apply_action(Action::TurnR);
-        assert_eq!(b, PlayerState{
-            dir: 1,
-            manipulators: vec![(
-                                   0,
-                                   -1,
-                               ),
-                               (
-                                   1,
-                                   -1,
-                               ),
-                               (
-                                   -1,
-                                   -1,
-                               ),],
-            .. a.clone()
-        });
+        assert_eq!(
+            b,
+            PlayerState {
+                dir: 1,
+                manipulators: vec![(0, -1,), (1, -1,), (-1, -1,),],
+                ..a.clone()
+            }
+        );
         // dbg!(b);
     }
 }
-
