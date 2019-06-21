@@ -164,7 +164,9 @@ pub fn read_task(path: &str) -> RasterizedTask {
 
     let mut boosters = vec![vec![None; ysize]; xsize];
     for b in task.boosters {
-        boosters[b.1 + 1][b.2 + 1] = Some(b.0)
+        let (x, y) = (b.1 + 1, b.2 + 1);
+        assert_eq!(boosters[x][y], None);
+        boosters[x][y] = Some(b.0);
     }
 
     let ret = (
