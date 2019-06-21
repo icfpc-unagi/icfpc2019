@@ -29,9 +29,9 @@ impl BFS {
             ysize,
             que_vec: vec![],
             que_head: 0,
-            pot: vec![vec![(!0, !0); xsize]; ysize],
+            pot: vec![vec![(!0, !0); ysize]; xsize],
             goals: vec![],
-            is_goal: vec![vec![!0; xsize]; ysize],
+            is_goal: vec![vec![!0; ysize]; xsize],
         }
     }
 
@@ -181,36 +181,41 @@ mod tests {
 
     #[test]
     fn it_works() {
-        use rand::Rng;
-        let mut rng = rand::thread_rng(); // デフォルトの乱数生成器を初期化します
+        let tasks = [
+            load_task_001(),
+            load_task_002(),
+        ];
+        for task in tasks.iter() {
+            use rand::Rng;
+            let mut rng = rand::thread_rng(); // デフォルトの乱数生成器を初期化します
 
-        let task = load_task_002();
-        let map = task.0;
-        let xsize = map.len();
-        let ysize = map[0].len();
+            let map = &task.0;
+            let xsize = map.len();
+            let ysize = map[0].len();
 
-        let mut random_empty_cell = || loop {
-            let x: usize = rng.gen::<usize>() % xsize;
-            let y: usize = rng.gen::<usize>() % ysize;
-            if map[x][y] == Square::Empty {
-                return (x, y);
+            let mut random_empty_cell = || loop {
+                let x: usize = rng.gen::<usize>() % xsize;
+                let y: usize = rng.gen::<usize>() % ysize;
+                if map[x][y] == Square::Empty {
+                    return (x, y);
+                }
+            };
+
+            let mut bfs = BFS::new(map.len(), map[0].len());
+            for _ in 0..100 {
+                let (sx, sy) = random_empty_cell();
+                let (tx, ty) = random_empty_cell();
+
+                let mut ps = PlayerState::new(sx, sy);
+                let actions = bfs.search_fewest_actions_to_move(&map, &ps, tx, ty);
+
+                for a in actions.iter() {
+                    ps.apply_action(*a);
+                    assert_eq!(map[ps.x][ps.y], Square::Empty);
+                }
+                assert_eq!(ps.x, tx);
+                assert_eq!(ps.y, ty);
             }
-        };
-
-        let mut bfs = BFS::new(map.len(), map[0].len());
-        for _ in 0..100 {
-            let (sx, sy) = random_empty_cell();
-            let (tx, ty) = random_empty_cell();
-
-            let mut ps = PlayerState::new(sx, sy);
-            let actions = bfs.search_fewest_actions_to_move(&map, &ps, tx, ty);
-
-            for a in actions.iter() {
-                ps.apply_action(*a);
-                assert_eq!(map[ps.x][ps.y], Square::Empty);
-            }
-            assert_eq!(ps.x, tx);
-            assert_eq!(ps.y, ty);
         }
     }
 }
