@@ -1,3 +1,6 @@
+pub mod reach;
+
+
 #[derive(Copy, Debug, Clone)]
 pub enum Square {
     Empty,
