@@ -35,8 +35,9 @@ func Call(ctx context.Context, req *pb.Api_Request) (*pb.Api_Response, error) {
 		defer httpResp.Body.Close()
 		resp := &pb.Api_Response{}
 		if httpResp.StatusCode != 200 {
+			respBuf, _ := ioutil.ReadAll(httpResp.Body)
 			return nil, errors.Errorf(
-				"invalid response code: %d", httpResp.StatusCode)
+				"invalid response code: %d: %s", httpResp.StatusCode, respBuf)
 		} else if respBuf, err := ioutil.ReadAll(httpResp.Body); err != nil {
 			return nil, errors.Errorf("failed to read response: %s", err)
 		} else if ct := httpResp.Header.Get(

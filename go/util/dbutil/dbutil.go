@@ -95,21 +95,22 @@ func (db *Database) MustCellString(
 func (db *Database) Row(
 	ctx context.Context, dest interface{}, query string, args ...interface{},
 ) error {
-	return db.db.GetContext(ctx, dest, query, args...)
+	return errors.WithStack(db.db.GetContext(ctx, dest, query, args...))
 }
 
 // Select runs a query which may return multiple rows.
 func (db *Database) Select(
 	ctx context.Context, dest interface{}, query string, args ...interface{},
 ) error {
-	return db.db.SelectContext(ctx, dest, query, args...)
+	return errors.WithStack(db.db.SelectContext(ctx, dest, query, args...))
 }
 
 // Execute rusn a query which do not return values.
 func (db *Database) Execute(
 	ctx context.Context, query string, args ...interface{},
 ) (sql.Result, error) {
-	return db.db.ExecContext(ctx, query, args...)
+	result, err := db.db.ExecContext(ctx, query, args...)
+	return result, errors.WithStack(err)
 }
 
 func formatQuery(query string, args []interface{}) string {

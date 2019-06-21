@@ -10,6 +10,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	"google.golang.org/appengine"
+	"google.golang.org/appengine/log"
 
 	"github.com/imos/icfpc2019/go/util/dbutil"
 	"github.com/imos/icfpc2019/go/util/pb"
@@ -18,6 +19,7 @@ import (
 func init() {
 	http.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
 		if err := handler(w, r); err != nil {
+			log.Errorf(appengine.NewContext(r), "%v", err)
 			http.Error(w, fmt.Sprintf("%v", err), 500)
 			return
 		}
