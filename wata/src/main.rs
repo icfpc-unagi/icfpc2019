@@ -76,7 +76,8 @@ fn greedy(map: &Vec<Vec<Square>>, _boosters: &Vec<Vec<Option<Booster>>>, (sx, sy
 }
 
 fn main() {
-    let (map, boosters, sx, sy) = read_task(&std::env::args().nth(1).unwrap());
+    let taskfile = std::env::args().nth(1).expect("usage: args[1] = taskfile");
+    let (map, boosters, sx, sy) = read_task(&taskfile);
     let moves = greedy(&map, &boosters, (sx, sy));
     let moves = actions_to_string(&moves);
     eprintln!("turns: {}", moves.len());

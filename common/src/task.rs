@@ -144,7 +144,7 @@ fn print_task(task: &RasterizedTask) {
 }
 
 pub fn read_task(path: &str) -> RasterizedTask {
-    let s = std::fs::read_to_string(path).unwrap();
+    let s = std::fs::read_to_string(path).expect("cannot read task file");
     let task = parse_task(&s);
 
     let (xsize, ysize) = get_size(&task);
