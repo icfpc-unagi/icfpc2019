@@ -101,7 +101,7 @@ fn parse_point(s: &str) -> (usize, usize) {
 
 fn parse_task(task: &str) -> TaskSpecification {
     let ss: Vec<_> = task.split('#').collect();
-    println!("task: {:?}", ss);
+    eprintln!("task: {:?}", ss);
 
     TaskSpecification {
         frame: parse_map(ss[0]),
@@ -149,7 +149,7 @@ fn accsum_to_squares(accsum: &mut Vec<Vec<i32>>) -> Vec<Vec<Square>> {
             accsum[x][y] += accsum[x][y - 1];
         }
     }
-    println!("{:?}", accsum);
+    dbg!(&accsum);
 
     accsum.iter().map(|row| {
         row.iter().map(|c| {
@@ -167,32 +167,32 @@ fn debug_map(map: &Vec<Vec<Square>>) {
     let ysize = map[0].len();
 
     for y in (0..ysize).rev() {
-        print!("{:02}:", y);
+        eprint!("{:02}:", y);
         for x in 0..xsize {
-            print!("{}", match map[x][y] {
+            eprint!("{}", match map[x][y] {
                 Square::Empty => ' ',
                 Square::Block => '#',
                 Square::Filled => '.',
             })
         }
-        println!();
+        eprintln!();
     }
 }
 
 pub fn read_task(path: &str) -> (Vec<Vec<Square>>, Vec<Vec<Option<Booster>>>, usize, usize) {
     let s = std::fs::read_to_string(path).unwrap();
     let task = parse_task(&s);
-    println!("{:?}", task);
+    eprintln!("{:?}", task);
 
     let (xsize, ysize) = get_size(&task);
-    println!("{} {}", xsize, ysize);
+    eprintln!("{} {}", xsize, ysize);
 
     let mut accsum = vec![vec![0; ysize]; xsize];
     draw_contour(&mut accsum, &task.frame);
-    println!("{:?}", accsum);
+    eprintln!("{:?}", accsum);
 
     let squares = accsum_to_squares(&mut accsum);
-    println!("{:?}", squares);
+    eprintln!("{:?}", squares);
 
     debug_map(&squares);
 
