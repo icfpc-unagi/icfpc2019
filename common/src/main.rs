@@ -3,7 +3,6 @@ use common::*;
 fn main() {
     let t = read_task("/Users/akiba/Downloads/part-1-initial/prob-001.desc");
 
-    /*
     let a = PlayerState {
         x: 3,
         y: 3,
@@ -18,6 +17,8 @@ fn main() {
     bfs.search_fewest_actions_to_reach(
         &a, 2, 2
     );
+    bfs2.search_fewest_actions_to_reach(
+        &a, 3, 3,
+    );
     dbg!(&bfs);
-    */
 }
