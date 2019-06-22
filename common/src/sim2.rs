@@ -30,6 +30,8 @@ impl LocalState {
     // Returns updated squares
     pub fn fill(&self, map: &mut SquareMap) -> Vec<(usize, usize)> {
         let mut filled = vec![];
+        // (0, 0) はいつでも visible という実装なので drill にも対応
+        // manipulators[0] == (0, 0) にも依存。
         for &manipulator in &self.manipulators {
             if is_visible(map, self.pos(), manipulator) {
                 let x = (self.x as i32 + manipulator.0) as usize;
@@ -150,10 +152,6 @@ pub fn apply_multi_action(
                     if within_mine(pos, size) && (drilling || map[pos.0][pos.1] != Square::Block) {
                         worker.x = pos.0;
                         worker.y = pos.1;
-                        if map[pos.0][pos.1] != Square::Filled {
-                            map[pos.0][pos.1] = Square::Filled;
-                            filled.push(pos);
-                        }
                     }
                 }
             }
