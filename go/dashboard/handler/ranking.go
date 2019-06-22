@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	registerHandler("/ranking", rankingHandler)
+	registerHandler("/ranking/", rankingHandler)
 }
 
 func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
