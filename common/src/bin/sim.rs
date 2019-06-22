@@ -10,7 +10,7 @@ fn main() {
   let args = std::env::args().collect::<Vec<_>>();
   let mut opts = Options::new();
   opts
-    .optflag("s", "silent", "silence verbose logs")
+    .optflag("v", "verbose", "verbose logs")
     .optopt("g", "png", "output png", "file path")
     .parsing_style(ParsingStyle::FloatingFrees);
   let matches = opts.parse(&args[1..]).unwrap_or_else(|e| panic!(e));
@@ -22,7 +22,7 @@ fn main() {
     std::process::exit(1);
   }
 
-  let silent = matches.opt_present("s");
+  let verbose = matches.opt_present("v");
   let png = matches.opt_str("g").and_then(|path| {
     std::fs::File::create(&path)
       .map_err(|e| eprintln!("failed to open {}: {}", &path, e))
@@ -54,7 +54,7 @@ fn main() {
       time_filled[f.0][f.1] = time;
     }
     time += 1;
-    if !silent {
+    if verbose {
       eprintln!("Time: {}", time);
       eprintln!("Actions: {:?}", actions);
       eprintln!("{:?}", workers);
