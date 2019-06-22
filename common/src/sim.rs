@@ -3,6 +3,7 @@ use crate::*;
 use reach::*;
 use std::collections::*;
 use std::vec::*;
+use std::mem;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct WorkerState {
@@ -57,13 +58,25 @@ pub struct Update {
 }
 
 
-// TODO(tos): sim2に実装をうつす
-
 // Map への影響も考慮して動く
 // - 動くたびに Fill する
 // - Drill 中は Block も Fill にする
 // - Fast 中に壁にぶつかると 1 step で止まる
 pub fn apply_action(
+    action: Action,
+    worker: &mut WorkerState,
+    map: &mut SquareMap,
+    booster: &mut BoosterMap,
+) -> Update {
+    let mut workers = mem::replace(worker, WorkerState::default()).into();
+    let upd = apply_multi_action(&[action], &mut workers, map, booster);
+    mem::replace(worker, workers.into());
+    upd
+}
+
+
+// もとの実装（テスト用に残してる）
+pub fn apply_action_old(
     action: Action,
     worker: &mut WorkerState,
     map: &mut SquareMap,
