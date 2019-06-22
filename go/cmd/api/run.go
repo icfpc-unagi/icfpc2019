@@ -65,6 +65,12 @@ func runOnce(solution *pb.Api_Response_AcquireSolution) error {
 	if result.SolutionScore == 0 {
 		result.SolutionScore = 100000000
 	}
+	if len(result.GetSolutionDataError()) > 100000 {
+		result.SolutionDataError = append(
+			result.SolutionDataError[0:50000],
+			result.SolutionDataError[len(
+				result.GetSolutionDataError())-50000:]...)
+	}
 	if _, err := apiutil.Call(ctx, &pb.Api_Request{
 		UpdateSolution: result,
 	}); err != nil {
