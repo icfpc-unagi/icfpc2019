@@ -8,6 +8,7 @@ pub mod sim2;
 pub mod tsp;
 pub mod bootstrap;
 pub mod subtask;
+pub mod bootstrap_clone;
 
 pub use reach::*;
 pub use task::*;
@@ -19,6 +20,7 @@ pub use sol::*;
 pub use tsp::*;
 pub use bootstrap::*;
 pub use subtask::*;
+pub use bootstrap_clone::*;
 
 #[macro_export]
 macro_rules! mat {

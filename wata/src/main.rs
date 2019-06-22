@@ -211,7 +211,7 @@ fn optimize(map: &Vec<Vec<Square>>, target: &Vec<Vec<bool>>, boosters: &Vec<Vec<
     }
     let mut bfs = BFS::new(n, m);
     while num_empty > 0 {
-        let (mut moves, _) = at_most_k_step(&map, &target, &boosters, &state, 3);
+        let (mut moves, _) = at_most_k_step(&map, &target, &boosters, &state, 5);
         if moves.len() == 0 {
             moves = bfs.search_fewest_actions_to_satisfy(&map, &state, |x, y| {
                 if target[x][y] && map[x][y] == Square::Empty {
@@ -243,7 +243,7 @@ fn solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx, sy):
     let mut boosters = boosters.clone();
     let n = map.len();
     let m = map[0].len();
-    let ps = k_means(&map, 20);
+    let ps = k_means(&map, 1);
     let ids = bfs_multi(&map, &ps).into_iter().map(|d| d.into_iter().map(|(_, a, _)| a).collect()).collect::<Vec<Vec<_>>>();
     let tsp = tsp(&map, &ps, ids[sx][sy]);
     let mut state = PlayerState::new2(sx, sy, &mut map);
@@ -266,10 +266,40 @@ fn solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx, sy):
     actions
 }
 
+fn clone_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx, sy): (usize, usize)) -> Vec<Vec<Action>> {
+    let n = map.len();
+    let m = map[0].len();
+    let mut count_x = 0;
+    let mut count_clone = 0;
+    for i in 0..n {
+        for j in 0..m {
+            if boosters[i][j] == Some(Booster::CloneWorker) {
+                count_clone += 1;
+            } else if boosters[i][j] == Some(Booster::X) {
+                count_x += 1;
+            }
+        }
+    }
+    if count_x == 0 {
+        count_clone = 0;
+    }
+    dbg!((count_x, count_clone));
+    let mut ret = vec![];
+    for c in 0..=count_clone {
+        let pas = bootstrap_clone(&(map.clone(), boosters.clone(), sx, sy), count_clone);
+        let mut acts = vec![];
+        for (_, act) in pas {
+            acts.push(act);
+        }
+    }
+    ret
+}
+
 fn main() {
     let taskfile = std::env::args().nth(1).expect("usage: args[1] = taskfile");
     let (map, boosters, sx, sy) = read_task(&taskfile);
-    let moves = vec![solve(&map, &boosters, (sx, sy))];
+    // let moves = vec![solve(&map, &boosters, (sx, sy))];
+    let moves = clone_solve(&map, &boosters, (sx, sy));
     let moves = solution_to_string(&moves);
     eprintln!("turns: {}", moves.len());
     println!("{}", moves);
