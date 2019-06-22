@@ -36,6 +36,7 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 			solution_data_blob
 		FROM
 			(SELECT
+				problem_id,
 				MIN(solution_id) AS solution_id
 			FROM
 				(SELECT
@@ -44,10 +45,13 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 				FROM solutions
 				WHERE solution_score IS NOT NULL
 				GROUP BY problem_id) AS t
-				NATURAL JOIN solutions) AS t
+				NATURAL JOIN solutions
+			GROUP BY problem_id) AS t
+			NATURAL JOIN solutions
 			NATURAL JOIN problems
 			NATURAL JOIN programs
-			NATURAL JOIN solution_data`)
+			NATURAL JOIN solution_data
+		ORDER BY problem_name`)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("failed to query: %+v", err), 500)
 		return
