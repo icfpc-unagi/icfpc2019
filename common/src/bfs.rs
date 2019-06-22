@@ -164,7 +164,7 @@ impl BFS {
         target_x: usize,
         target_y: usize,
     ) -> Vec<Action> {
-        self.add_goal(target_x, target_y, player_state.dir);
+        self.add_goal(target_x, target_y, 0);
         self.search_with_goals(map, player_state).0
     }
 
