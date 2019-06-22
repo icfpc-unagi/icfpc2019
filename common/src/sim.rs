@@ -117,8 +117,8 @@ pub fn apply_action(
                 )
             }
             swap_remove_one_from_vec(&mut worker.unused_boosters, &Booster::Teleport);
-            worker.x = x;
-            worker.y = y;
+            worker.x = x + 1;
+            worker.y = y + 1;
         }
     }
     if worker.fast_remaining > 0 {
