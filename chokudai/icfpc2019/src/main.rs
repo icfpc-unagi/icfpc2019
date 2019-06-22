@@ -19,7 +19,7 @@ fn main() {
     //途中で塗られたものを使用しないバージョン
     //let second_state = get_first_state(default_field, (initialMove.0).1, (initialMove.2).x, (initialMove.2).y);
     
-    let mut final_action = make_action_by_state(&first_state, true);
+    let mut final_action = make_action_by_state(&first_state, 1);
     //let mut final_action = make_action_by_state(&second_state, true);
     
     //let pre_string = actions_to_string(&initialMove.1);

@@ -128,7 +128,7 @@ pub fn get_diff(a:usize, b:usize) -> usize{
     b - a
 }
 
-pub fn make_action_by_state(first_state: &State, UseOptimization: bool) -> Vec<Action>
+pub fn make_action_by_state(first_state: &State, UseOptimization: usize) -> Vec<Action>
 {
     let H = first_state.field.len();
     let W = first_state.field[0].len();
@@ -215,89 +215,97 @@ pub fn make_action_by_state(first_state: &State, UseOptimization: bool) -> Vec<A
                 continue;
             }
 
-            //２連塗チェック
-            let mut use_double_position = ((!0, !0), !0);
-            
-            if i != point_list.len() - 1 && UseOptimization{
-                let next_target_pos = point_list[i+1];
-                if current_state.field[next_target_pos.0][next_target_pos.1] == Square::Empty{
-                    let diff = get_diff(target_pos.0, next_target_pos.0) + get_diff(target_pos.1, next_target_pos.1);
-                    if diff == 1 {
-                        let mut pos = (!0, !0);
-                        let mut d = !0;
-                        if target_pos.0 != next_target_pos.0 {
-                            if target_pos.0 < next_target_pos.0 {
-                                if  current_state.field[target_pos.0 + 1][target_pos.1 - 1] == Square::Empty {
-                                    pos = (target_pos.0 - 1, target_pos.1 - 1);
-                                    d = 0;
-                                }
-                            }
-                            else {
-                                if  current_state.field[target_pos.0 - 1][target_pos.1 + 1] == Square::Empty {
-                                     pos = (target_pos.0 + 1, target_pos.1 + 1);
-                                    d = 2;
-                                }
-                            }
-                        }
-                        else {
-                            if target_pos.1 < next_target_pos.1 {
-                                if current_state.field[target_pos.0 + 1][target_pos.1 + 1] == Square::Empty {
-                                    pos = (target_pos.0 + 1, target_pos.1 - 1);
-                                    d = 3;
-                                }
-                            }
-                            else {
-                                if current_state.field[target_pos.0 - 1][target_pos.1 - 1] == Square::Empty {
-                                    pos = (target_pos.0 - 1, target_pos.1 + 1);
-                                    d = 1;
-                                }
-                            }
-                        }
-                        if d != !0 && current_state.field[pos.0][pos.1] == Square::Empty {
-                            use_double_position = (pos, d);
-                        }
-                    }
-                }
-            }
-            
-            
             let mut actions: Vec<Action> = Vec::with_capacity(0);
-            if use_double_position.1 != !0 {
-                //println!("double at ({}, {}, {}) for ({}, {})", (use_double_position.0).0 , (use_double_position.0).1, use_double_position.1,target_pos.0 , target_pos.1);
-                //println!("now : {} {} {}", current_state.p.x, current_state.p.y, current_state.p.dir);
-                let a2 = bfs.search_fewest_actions_to_move(&current_state.field, &current_state.p, (use_double_position.0).0, (use_double_position.0).1);
-                let now_dir = current_state.p.dir;
 
-                for act in &a2{
-                    if *act == Action::TurnR || *act == Action:: TurnL{
-                        continue;
-                    }
-                    else{
-                        actions.push(*act);
-                    }
-                }
-
-                if (now_dir + 1) % 4 == use_double_position.1{
-                    actions.push(Action::TurnR);
-                }
-                else if (now_dir + 2) % 4 == use_double_position.1{
-                    actions.push(Action::TurnR);
-                    actions.push(Action::TurnR);
-                }
-                else if (now_dir + 3) % 4 == use_double_position.1{
-                    actions.push(Action::TurnL);
-                }
-            }
-            else{
-                //println!("single at ({}, {})", target_pos.0, target_pos.1);
-                //println!("now : {} {}", current_state.p.x, current_state.p.y);
-
-                //actions = bfs.search_fewest_actions_to_move(&t.0, &current_state.p, target_pos.0, target_pos.1);
+            if UseOptimization == 0 {
                 let (a2, gx, gy) = bfs.search_fewest_actions_to_wrap(&current_state.field, &current_state.p, target_pos.0, target_pos.1);
-                
-                //let tmp_string = actions_to_string(&a2);
+                    
                 actions = a2;
-                //println!("go: {}", tmp_string);
+            }
+            else if UseOptimization == 1{
+                //２連塗チェック
+                let mut use_double_position = ((!0, !0), !0);
+                
+                if i != point_list.len() - 1 {
+                    let next_target_pos = point_list[i+1];
+                    if current_state.field[next_target_pos.0][next_target_pos.1] == Square::Empty{
+                        let diff = get_diff(target_pos.0, next_target_pos.0) + get_diff(target_pos.1, next_target_pos.1);
+                        if diff == 1 {
+                            let mut pos = (!0, !0);
+                            let mut d = !0;
+                            if target_pos.0 != next_target_pos.0 {
+                                if target_pos.0 < next_target_pos.0 {
+                                    if  current_state.field[target_pos.0 + 1][target_pos.1 - 1] == Square::Empty {
+                                        pos = (target_pos.0 - 1, target_pos.1 - 1);
+                                        d = 0;
+                                    }
+                                }
+                                else {
+                                    if  current_state.field[target_pos.0 - 1][target_pos.1 + 1] == Square::Empty {
+                                        pos = (target_pos.0 + 1, target_pos.1 + 1);
+                                        d = 2;
+                                    }
+                                }
+                            }
+                            else {
+                                if target_pos.1 < next_target_pos.1 {
+                                    if current_state.field[target_pos.0 + 1][target_pos.1 + 1] == Square::Empty {
+                                        pos = (target_pos.0 + 1, target_pos.1 - 1);
+                                        d = 3;
+                                    }
+                                }
+                                else {
+                                    if current_state.field[target_pos.0 - 1][target_pos.1 - 1] == Square::Empty {
+                                        pos = (target_pos.0 - 1, target_pos.1 + 1);
+                                        d = 1;
+                                    }
+                                }
+                            }
+                            if d != !0 && current_state.field[pos.0][pos.1] == Square::Empty {
+                                use_double_position = (pos, d);
+                            }
+                        }
+                    }
+                }
+                
+                
+                if use_double_position.1 != !0 {
+                    //println!("double at ({}, {}, {}) for ({}, {})", (use_double_position.0).0 , (use_double_position.0).1, use_double_position.1,target_pos.0 , target_pos.1);
+                    //println!("now : {} {} {}", current_state.p.x, current_state.p.y, current_state.p.dir);
+                    let a2 = bfs.search_fewest_actions_to_move(&current_state.field, &current_state.p, (use_double_position.0).0, (use_double_position.0).1);
+                    let now_dir = current_state.p.dir;
+
+                    for act in &a2{
+                        if *act == Action::TurnR || *act == Action:: TurnL{
+                            continue;
+                        }
+                        else{
+                            actions.push(*act);
+                        }
+                    }
+
+                    if (now_dir + 1) % 4 == use_double_position.1{
+                        actions.push(Action::TurnR);
+                    }
+                    else if (now_dir + 2) % 4 == use_double_position.1{
+                        actions.push(Action::TurnR);
+                        actions.push(Action::TurnR);
+                    }
+                    else if (now_dir + 3) % 4 == use_double_position.1{
+                        actions.push(Action::TurnL);
+                    }
+                }
+                else{
+                    //println!("single at ({}, {})", target_pos.0, target_pos.1);
+                    //println!("now : {} {}", current_state.p.x, current_state.p.y);
+
+                    //actions = bfs.search_fewest_actions_to_move(&t.0, &current_state.p, target_pos.0, target_pos.1);
+                    let (a2, gx, gy) = bfs.search_fewest_actions_to_wrap(&current_state.field, &current_state.p, target_pos.0, target_pos.1);
+                    
+                    //let tmp_string = actions_to_string(&a2);
+                    actions = a2;
+                    //println!("go: {}", tmp_string);
+                }
             }
 
             for act in actions
