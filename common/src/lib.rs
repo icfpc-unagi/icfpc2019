@@ -9,6 +9,8 @@ pub use reach::*;
 pub use task::*;
 pub use player_state::*;
 pub use bfs::*;
+pub use sim::*;
+pub use sol::*;
 
 #[macro_export]
 macro_rules! mat {

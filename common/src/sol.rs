@@ -4,11 +4,11 @@ use std::iter::*;
 use std::str::*;
 
 pub fn read_sol(path: &str) -> Vec<Action> {
-    parse_sol(&std::fs::read_to_string(path).expect("path {}"))
+    parse_sol(&std::fs::read_to_string(path).expect(&format!("cannot read {}", path)))
 }
 
 pub fn parse_sol(s: &str) -> Vec<Action> {
-    eprintln!("read: {}", s);
+    eprintln!("solution: {}", s);
     let mut iter = s.chars().peekable();
     let mut v = vec![];
     while let Some(c) = iter.next() {
@@ -64,7 +64,7 @@ fn consume_int<I: FromStr, Iter: Iterator<Item = char>>(
         s.push(c);
         p.next();
     }
-    dbg!(s).parse()
+    s.parse()
 }
 
 #[cfg(test)]

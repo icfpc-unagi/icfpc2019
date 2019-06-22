@@ -117,7 +117,7 @@ fn accsum_to_squares(accsum: &mut Vec<Vec<i32>>) -> Vec<Vec<Square>> {
         .collect()
 }
 
-fn print_task(task: &RasterizedTask) {
+pub fn print_task(task: &RasterizedTask) {
     let map = &task.0;
     let boosters = &task.1;
     let ixy = (task.2, task.3);
