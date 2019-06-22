@@ -75,15 +75,7 @@ fn main() -> std::io::Result<()> {
         let mut n_vertex = 0;
         for x in 0..(n-1) {
             for y in 0..(n-1) {
-                let mut cnt = 0;
-                for dx in 0..2 {
-                    for dy in 0..2 {
-                        if map[x+dx][y+dy] == Out {
-                            cnt += 1;
-                        }
-                    }
-                }
-                if cnt % 2 == 1 {
+                if is_corner(&map, x, y) {
                     n_vertex += 1;
                 }
             }
@@ -107,11 +99,33 @@ fn main() -> std::io::Result<()> {
             if cnt != 1 {
                 continue;
             }
+            for dx in 0..2 { for dy in 0..2 {
+                if is_corner(&map, x-dx, y-dy) {
+                    n_vertex -= 1;
+                }
+            }}
             map[x][y] = Out;
+            for dx in 0..2 { for dy in 0..2 {
+                if is_corner(&map, x-dx, y-dy) {
+                    n_vertex += 1;
+                }
+            }}
             // todo(tos)
         }
     }
     Ok(())
+}
+
+fn is_corner(map: &Vec<Vec<Cell>>, x: usize, y: usize) -> bool {
+    let mut cnt = 0;
+    for dx in 0..2 {
+        for dy in 0..2 {
+            if map[x+dx][y+dy] == Out {
+                cnt += 1;
+            }
+        }
+    }
+    cnt % 2 == 1
 }
 
 // fn gen_polygon(tsize: usize, isqs:)
