@@ -5,7 +5,15 @@ if (process.argv.length != 4) {
 
 var fs = require('fs');
 var taskData = fs.readFileSync(process.argv[2]).toString();
+if (taskData.length == 0) {
+    console.log("Error! task data is empty.");
+    process.exit(1);
+}
 var solutionData = fs.readFileSync(process.argv[3]).toString();
+if (solutionData.length == 0) {
+    console.log("Error! solution data is empty.");
+    process.exit(1);
+}
 
 var jsdom = require('jsdom');
 var fs = require('fs');

@@ -37,7 +37,7 @@ func run(args ...string) error {
 		}
 		solution := resp.GetAcquireSolution()
 		if solution.GetSolutionId() == 0 {
-			fmt.Fprintf(os.Stderr, "no solution to run")
+			fmt.Fprintf(os.Stderr, "no solution to run\n")
 			return nil
 		}
 		wg.Add(1)
