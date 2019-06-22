@@ -65,8 +65,92 @@ pub fn apply_multi_action(
 ) -> Update {
     let WorkersState { locals, shared } = workers;
     assert_eq!(actions.len(), locals.len());
-    // shared.unused_boosters.push(Booster::X);
+
+    let size = (map.len(), map[0].len());
+    let mut filled = vec![];
     for (action, worker) in actions.iter().zip(locals.iter()) {
+        match action {
+            Action::Move(dir) => {
+                let drilling = worker.drill_remaining > 0;
+                let pos = apply_move(worker.pos(), dir);
+                if within_mine(pos, size) && (drilling || map[pos.0][pos.1] != Square::Block) {
+                    worker.x = pos.0;
+                    worker.y = pos.1;
+                    if let Some(b) = booster[pos.0][pos.1].take() {
+                        worker.unused_boosters.push(b);
+                    }
+                } else {
+                    panic!("bad move to {:?}", pos);
+                }
+                if worker.fast_remaining > 0 {
+                    filled.append(&mut worker.fill(map)); // in the middle of fast steps
+                    let pos = apply_move(worker.pos(), dir);
+                    if within_mine(pos, size) && (drilling || map[pos.0][pos.1] != Square::Block) {
+                        worker.x = pos.0;
+                        worker.y = pos.1;
+                        if map[pos.0][pos.1] != Square::Filled {
+                            map[pos.0][pos.1] = Square::Filled;
+                            filled.push(pos);
+                        }
+                        if let Some(b) = booster[pos.0][pos.1].take() {
+                            worker.unused_boosters.push(b);
+                        }
+                    }
+                }
+            }
+            Action::Nothing => (),
+            Action::TurnR => {
+                worker.dir += 1;
+                worker.dir %= 4;
+                for m in worker.manipulators.iter_mut() {
+                    let p = *m;
+                    m.0 = p.1;
+                    m.1 = -p.0;
+                }
+            }
+            Action::TurnL => {
+                worker.dir += 3;
+                worker.dir %= 4;
+                for m in worker.manipulators.iter_mut() {
+                    let p = *m;
+                    m.0 = -p.1;
+                    m.1 = p.0;
+                }
+            }
+            Action::Extension(dx, dy) => worker.manipulators.push((dx, dy)),
+            Action::Fast => {
+                swap_remove_one_from_vec(&mut worker.unused_boosters, &Booster::Fast)
+                    .expect("no Fast remaining");
+                worker.fast_remaining = 51;
+            }
+            Action::Drill => {
+                swap_remove_one_from_vec(&mut worker.unused_boosters, &Booster::Drill)
+                    .expect("no Drill remaining");
+                worker.drill_remaining = 31;
+            }
+            Action::Reset => {
+                worker.beacons.insert(worker.pos());
+            }
+            Action::Teleport(x, y) => {
+                let to = (x + 1, y + 1);
+                if !worker.beacons.contains(&to) {
+                    panic!(
+                        "teleporting to invalid beacon {:?} out of {:?}",
+                        to, worker.beacons
+                    )
+                }
+                swap_remove_one_from_vec(&mut worker.unused_boosters, &Booster::Teleport);
+                worker.x = x + 1;
+                worker.y = y + 1;
+            }
+        }
+        filled.append(&mut worker.fill(map));
+        if worker.fast_remaining > 0 {
+            worker.fast_remaining -= 1;
+        }
+        if worker.drill_remaining > 0 {
+            worker.drill_remaining -= 1;
+        }
     }
-    unimplemented!()
+    Update { filled }
 }
