@@ -5,6 +5,7 @@ import (
 	"context"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/pkg/errors"
@@ -14,10 +15,14 @@ import (
 )
 
 func Call(ctx context.Context, req *pb.Api_Request) (*pb.Api_Response, error) {
+	apiEndpoint := os.Getenv("API_ENDPOINT")
+	if apiEndpoint == "" {
+		apiEndpoint = "https://dashboard.sx9.jp/api/"
+	}
 	if reqBuf, err := proto.Marshal(req); err != nil {
 		return nil, err
 	} else if httpReq, err := http.NewRequest(
-		http.MethodPost, "https://dashboard.sx9.jp/api/",
+		http.MethodPost, apiEndpoint,
 		bytes.NewReader(reqBuf)); err != nil {
 		return nil, err
 	} else {

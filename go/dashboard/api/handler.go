@@ -82,6 +82,15 @@ func apiHandler(
 	if err := insertProblemHandler(ctx, req, resp); err != nil {
 		return err
 	}
+	if err := insertProgramHandler(ctx, req, resp); err != nil {
+		return err
+	}
+	if err := acquireSolutionHandler(ctx, req, resp); err != nil {
+		return err
+	}
+	if err := updateSolutionHandler(ctx, req, resp); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -117,4 +126,52 @@ func insertProblemHandler(
 	}
 	apiResp.InsertProblem = &pb.Api_Response_InsertProblem{ProblemId: id}
 	return nil
+}
+
+func insertProgramHandler(
+	ctx context.Context, apiReq *pb.Api_Request, apiResp *pb.Api_Response,
+) error {
+	req := apiReq.GetInsertProgram()
+	resp := &pb.Api_Response_InsertProgram{}
+	if req == nil {
+		return nil
+	}
+
+	tx, err := db.DB().BeginTxx(ctx, nil)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if err := func() error {
+		result, err := tx.ExecContext(
+			ctx, "INSERT programs(program_name, program_code) VALUES(?, ?)",
+			req.GetProgramName(), req.GetProgramCode())
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		id, err := result.LastInsertId()
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		resp.ProgramId = id
+		result, err = tx.ExecContext(
+			ctx,
+			`INSERT IGNORE INTO
+				solutions(program_id, problem_id, solution_lock)
+				SELECT
+					? AS program_id,
+					problem_id,
+					NOW() - INTERVAL (RAND() + 1) * 24 * 60 * 60 SECOND
+						AS solution_lock
+				FROM problems`,
+			id)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		return nil
+	}(); err != nil {
+		tx.Rollback()
+		return err
+	}
+	apiResp.InsertProgram = resp
+	return tx.Commit()
 }

@@ -20,6 +20,8 @@ func main() {
 		switch flag.Arg(0) {
 		case "insert-problem":
 			return insertProblem()
+		case "run":
+			return run(flag.Args()[1:]...)
 		}
 		return errors.Errorf("no such command: %s", flag.Arg(0))
 	}(); err != nil {

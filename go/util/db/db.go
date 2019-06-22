@@ -37,6 +37,10 @@ func getDatabase() *sqlx.DB {
 	return db
 }
 
+func DB() *sqlx.DB {
+	return getDatabase()
+}
+
 // Cell runs a query which should return one value.
 func Cell(
 	ctx context.Context, dest interface{}, query string, args ...interface{},

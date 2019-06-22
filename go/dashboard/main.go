@@ -9,6 +9,7 @@ import (
 	"google.golang.org/appengine"
 
 	_ "github.com/imos/icfpc2019/go/dashboard/api"
+	_ "github.com/imos/icfpc2019/go/dashboard/handler"
 	"github.com/imos/icfpc2019/go/util/db"
 )
 
