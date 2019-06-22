@@ -1,0 +1,4 @@
+werkzeug
+json-rpc
+jsonrpc-requests
+cachetools
