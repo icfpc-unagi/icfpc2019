@@ -32,7 +32,7 @@ fn main() {
         eprintln!("{}", second_state.p.manipulators.len());
 
         //let mut final_action = make_action_by_state(&first_state, 1);
-        let mut final_action = make_action_by_state(&second_state, 1);
+        let mut final_action = make_action_by_state(&second_state, 2);
         
         let pre_string = actions_to_string(&initialMove.1);
         let ans_string = actions_to_string(&final_action);

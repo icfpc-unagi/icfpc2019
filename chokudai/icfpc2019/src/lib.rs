@@ -26,6 +26,9 @@ pub fn make_easy_target_list(S: &State, H: usize, W:usize, T: &Vec<Vec<usize>>) 
     let mut dist = 999999;
     let mut lastAction = 0;
 
+    use rand:: Rng;
+    let mut rng = rand::thread_rng();
+
     //'a: for x in 0..H{
     //    for y in 0..W {
     //        if S.field[x][y] == Square::Empty {
@@ -51,7 +54,12 @@ pub fn make_easy_target_list(S: &State, H: usize, W:usize, T: &Vec<Vec<usize>>) 
                         start_point = (x, y);
                         dist = tdist;
                         lastAction = T[nx][ny];
-                        break;
+                        
+                    }
+                    if T[nx][ny] != !0 && rng.gen::<usize>() % 2 == 1{
+                        start_point = (x, y);
+                        dist = tdist;
+                        lastAction = T[nx][ny];
                     }
                 }
             }
@@ -227,7 +235,7 @@ pub fn make_action_by_state(first_state: &State, UseOptimization: usize) -> Vec<
                     
                 actions = a2;
             }
-            else if UseOptimization == 1{
+            else if UseOptimization == 1 ||UseOptimization == 2{
                 //２連塗チェック
                 let mut use_double_position = ((!0, !0), !0);
                 
