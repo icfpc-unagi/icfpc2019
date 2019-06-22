@@ -24,7 +24,9 @@ func updateSolutionHandler(
 	if err := func() error {
 		_, err := db.Execute(ctx, `
 			UPDATE solutions
-			SET solution_score = ?
+			SET
+				solution_score = NULLIF(?, 0),
+				solution_lock = NULL
 			WHERE solution_id = ?
 			LIMIT 1`,
 			req.GetSolutionScore(),

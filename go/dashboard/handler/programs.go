@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/imos/icfpc2019/go/util/db"
@@ -28,9 +29,12 @@ func programsHandler(ctx context.Context, r *http.Request) (HTML, error) {
 			`<thead><tr><td>Name</td><td>Code</td><td>Created</td></thead>` +
 			`<tbody>`)
 	for _, program := range programs {
-		output += "<tr><td>" +
+		url := `"` + Escape(
+			fmt.Sprintf("/program?program_id=%d", program.ProgramID)) + `"`
+		output += "<tr data-href=" + url + "><td>" +
+			"<a href=" + url + ">" +
 			Escape(program.ProgramName) +
-			"</td><td><code>" +
+			"</a></td><td><code>" +
 			Escape(program.ProgramCode) +
 			"</code></td><td>" +
 			Escape(program.ProgramCreated) +

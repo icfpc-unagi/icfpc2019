@@ -44,7 +44,9 @@ async function sleep(t) {
 }
 
 async function main() {
+    await sleep(100);
     submit_task.onchange();
+    await sleep(100);
     while (true) {
         if (document.getElementById("output").innerHTML ==
             "Done uploading task description") {
@@ -52,7 +54,9 @@ async function main() {
         }
         await sleep(50);
     }
+    await sleep(100);
     submit_solution.onchange();
+    await sleep(100);
     while (true) {
         if (document.getElementById("output").innerHTML ==
             "Done uploading solution") {
@@ -60,7 +64,9 @@ async function main() {
         }
         await sleep(50);
     }
+    await sleep(100);
     document.getElementById("execute_solution").click();
+    await sleep(100);
     while (true) {
         if (document.getElementById("output").innerHTML !=
             "Pre-processing and validating the task...") {
@@ -68,6 +74,7 @@ async function main() {
         }
         await sleep(50);
     }
+    await sleep(100);
     process.stdout.write(document.getElementById("output").innerHTML + "\n");
 }
 
