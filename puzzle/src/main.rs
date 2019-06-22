@@ -1,6 +1,8 @@
 // use std::fs::File;
 // use std::io::prelude::*;
 
+use rand::Rng;
+
 use common::{parse_map, apply_move};
 
 #[derive(Copy, Debug, Clone, PartialEq, Eq)]
@@ -25,6 +27,8 @@ fn main() -> std::io::Result<()> {
     assert_eq!(ss.len(), 3);
     let nums: Vec<_> = ss[0].split(',').map(|n| n.parse::<i32>().unwrap()).collect();
     let tsize = nums[2] as usize;
+    let vmin = nums[3] as usize;
+    let vmax = nums[4] as usize;
     let isqs = parse_map(&ss[1]);
     let osqs = parse_map(&ss[2]);
     dbg!(&nums);
@@ -64,7 +68,47 @@ fn main() -> std::io::Result<()> {
                 map[px][py] = Out;
             }
             dbg!(path);
-            break;
+        }
+    }
+    {
+        // vertex wo fuyasu
+        let mut n_vertex = 0;
+        for x in 0..(n-1) {
+            for y in 0..(n-1) {
+                let mut cnt = 0;
+                for dx in 0..2 {
+                    for dy in 0..2 {
+                        if map[x+dx][y+dy] == Out {
+                            cnt += 1;
+                        }
+                    }
+                }
+                if cnt % 2 == 1 {
+                    n_vertex += 1;
+                }
+            }
+        }
+        assert!(n_vertex <= vmax);
+        while n_vertex < vmin {
+            dbg!((n_vertex, vmin));
+            let mut rng = rand::thread_rng(); // デフォルトの乱数生成器を初期化します
+            let x: usize = rng.gen::<usize>() % (n-2) + 1;
+            let y: usize = rng.gen::<usize>() % (n-2) + 1;
+            if map[x][y] != Unk {
+                continue;
+            }
+            let mut cnt = 0;
+            for d in 0..4 {
+                let (tx, ty) = apply_move((x, y), d);
+                if map[tx][ty] == Out {
+                    cnt += 1;
+                }
+            }
+            if cnt != 1 {
+                continue;
+            }
+            map[x][y] = Out;
+            // todo(tos)
         }
     }
     Ok(())
