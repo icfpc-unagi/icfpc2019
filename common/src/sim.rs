@@ -247,4 +247,47 @@ mod tests {
         );
         assert_ne!(map[6][4], Square::Block);
     }
+
+    #[test]
+
+    fn test_example_part1() {
+        sim_golden(
+            "../data/part-1-examples/example-01.desc",
+            "../data/part-1-examples/example-01-1.sol",
+        );
+        sim_golden(
+            "../data/part-1-examples/example-01.desc",
+            "../data/part-1-examples/example-01-2.sol",
+        );
+        sim_golden(
+            "../data/part-1-examples/example-01.desc",
+            "../data/part-1-examples/example-01-3.sol",
+        );
+    }
+    #[test]
+
+    fn test_example_part2() {
+        sim_golden(
+            "../data/part-2-teleports-examples/example-02.desc",
+            "../data/part-2-teleports-examples/example-02-1.sol",
+        );
+    }
+    // 実装したらいれる
+    // #[test]
+
+    // fn test_example_part3() {
+    //     sim_golden(
+    //         "../data/part-3-clones-examples/example-03.desc",
+    //         "../data/part-3-clones-examples/example-03-1.sol",
+    //     );
+    // }
+
+    fn sim_golden(task_path: &str, sol_path: &str) {
+        let (mut map, mut booster, init_x, init_y) = read_task(task_path);
+        let sol = read_sol(sol_path);
+        let mut worker = WorkerState::new(init_x, init_y);
+        for action in sol {
+            apply_action(action, &mut worker, &mut map, &mut booster);
+        }
+    }
 }
