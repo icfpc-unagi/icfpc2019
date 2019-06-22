@@ -386,9 +386,9 @@ pub fn make_action_by_state(first_state: &State, UseOptimization: usize) -> Vec<
                     //eprintln!("now : {} {} {}", current_state.p.x, current_state.p.y, current_state.p.dir);
                     let mut a2 = bfs.search_fewest_actions_to_move(&current_state.field, &current_state.p, (use_double_position.0).0, (use_double_position.0).1);
                     let mut now_dir = current_state.p.dir;
-                    let (a3, gx, gy) = bfs.search_fewest_actions_to_wrap(&current_state.field, &current_state.p, target_pos.0, target_pos.1);
+                    //let (a3, gx, gy) = bfs.search_fewest_actions_to_wrap(&current_state.field, &current_state.p, target_pos.0, target_pos.1);
                     
-                    if a2.len() < a3.len() + 20 {
+                    //if a2.len() < a3.len() + 20 {
                         
                         let mut stockR = 0;
                         let mut stockL = 0;
@@ -408,13 +408,14 @@ pub fn make_action_by_state(first_state: &State, UseOptimization: usize) -> Vec<
                         }
 
                         actions = make_move(&a2, stockR, stockL, now_dir);
-
+                    /*
                     }
                     else{
                         
                         actions = make_move(&a3, 0, 0, now_dir);
                         //actions = a3;
                     }
+                    */
                 }
                 else{
                     //eprintln!("single at ({}, {})", target_pos.0, target_pos.1);
@@ -586,9 +587,9 @@ fn shortening(first_state: &State, acts: &Vec<Action>, start:usize, end:usize) -
         }
     }
 
-    println!("RemoveRange : {}", end - start);
-    println!("EmptyCell : {}", empty_cells);
-    println!("range : ({}, {}) to ({}, {})", min_x, min_y, max_x, max_y);
+    eprintln!("RemoveRange : {}", end - start);
+    eprintln!("EmptyCell : {}", empty_cells);
+    eprintln!("range : ({}, {}) to ({}, {})", min_x, min_y, max_x, max_y);
 
     let x_move = max_x - min_x + (max_x - std::cmp::max(start_position.x, end_position.x) + (std::cmp::min(start_position.x, end_position.x) - min_x));
     let y_move = max_y - min_y + (max_y - std::cmp::max(start_position.y, end_position.y) + (std::cmp::min(start_position.y, end_position.y) - min_y));
@@ -602,7 +603,8 @@ fn shortening(first_state: &State, acts: &Vec<Action>, start:usize, end:usize) -
         }
     }
 
-    println!("needToMove : {}", need_to_move);
+    eprintln!("needToMove : {}", need_to_move);
+    eprintln!("");
 
     (false, Vec::with_capacity(0))
 }
