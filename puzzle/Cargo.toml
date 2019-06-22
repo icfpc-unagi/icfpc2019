@@ -5,4 +5,5 @@ authors = ["Toshiki Kataoka <tos.lunar@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+rand = "0.6"
 common = { path = "../common" }
