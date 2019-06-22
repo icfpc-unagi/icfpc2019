@@ -2,17 +2,17 @@ use common::*;
 
 #[derive(Clone, Debug)]
 pub struct PazzleInput {
-	tsize: usize,
-	vmin: usize,
-	vmax: usize,
-	mnum: usize,
-	fnum: usize,
-	dnum: usize,
-	rnum: usize,
-	cnum: usize,
-	xnum: usize,
-	isqs: Vec<(usize, usize)>,
-	osqs: Vec<(usize, usize)>,
+	pub tsize: usize,
+	pub vmin: usize,
+	pub vmax: usize,
+	pub mnum: usize,
+	pub fnum: usize,
+	pub dnum: usize,
+	pub rnum: usize,
+	pub cnum: usize,
+	pub xnum: usize,
+	pub isqs: Vec<(usize, usize)>,
+	pub osqs: Vec<(usize, usize)>,
 }
 
 pub fn read(path: &str) -> std::io::Result<PazzleInput> {

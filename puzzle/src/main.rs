@@ -4,6 +4,7 @@
 use rand::Rng;
 
 use common::{parse_map, apply_move};
+use common::task2::*;
 
 #[derive(Copy, Debug, Clone, PartialEq, Eq)]
 enum Cell {
@@ -16,7 +17,8 @@ use Cell::*;
 
 fn main() -> std::io::Result<()> {
     // println!("Hello, world!");
-    let path = std::env::args().nth(1).expect("usage: args[1] = condfile");
+    let path = std::env::args().nth(1).expect("usage: args[1] = condfile(input)");
+    // let opath = std::env::args().nth(2).expect("usage: args[2] = descfile(output)");
     /*
     let mut file = File::open(path);
     let mut s = String::new();
@@ -127,7 +129,17 @@ fn main() -> std::io::Result<()> {
         }
         eprintln!();
     }
-    // assert!(puzzle::check(&pinput, &bool_map));
+    assert!(puzzle::check(&pinput, &bool_map));
+    let taskspec = raster_map_to_task_specification(
+        &bool_map,
+        pinput.mnum,
+        pinput.fnum,
+        pinput.dnum,
+        pinput.rnum,
+        pinput.cnum,
+        pinput.xnum,
+        );
+    println!("{}", taskspec);
     Ok(())
 }
 
