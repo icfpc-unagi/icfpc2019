@@ -103,9 +103,10 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 			break
 		}
 		output += `<td colspan="2" align="center">` +
-			Escape(fmt.Sprintf("%d-th", i)) + "<br>" +
+			Escape(fmt.Sprintf("%d-th", i)) +
+			`<br><a href="/program?program_id=` + Escape(fmt.Sprintf("%d", programID)) + `">` +
 			Escape(programNameByID[programID]) +
-			"</td>"
+			"</a></td>"
 	}
 	output += `</thead><tbody>`
 	renderScore := func(s *Score, best bool) HTML {
