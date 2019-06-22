@@ -1,5 +1,5 @@
-// use std::fs::File;
-// use std::io::prelude::*;
+use std::fs::File;
+use std::io::prelude::*;
 
 use rand::Rng;
 
@@ -18,15 +18,15 @@ use Cell::*;
 fn main() -> std::io::Result<()> {
     let mut rng = rand::thread_rng(); // デフォルトの乱数生成器を初期化します
     // println!("Hello, world!");
-    let path = std::env::args().nth(1).expect("usage: args[1] = condfile(input)");
-    let pinput = puzzle::read(&path)?;
-    // let opath = std::env::args().nth(2).expect("usage: args[2] = descfile(output)");
+    let ipath = std::env::args().nth(1).expect("usage: args[1] = condfile(input)");
+    let pinput = puzzle::read(&ipath)?;
+    let opath = std::env::args().nth(2).expect("usage: args[2] = descfile(output)");
     /*
     let mut file = File::open(path);
     let mut s = String::new();
     file.read_to_string(&mut s)?;
     */
-    let s = std::fs::read_to_string(path.clone()).expect("cannot read cond file");
+    let s = std::fs::read_to_string(ipath.clone()).expect("cannot read cond file");
     let s = s.trim();
     let ss: Vec<_> = s.split('#').collect();
     assert_eq!(ss.len(), 3);
@@ -147,7 +147,9 @@ fn main() -> std::io::Result<()> {
         pinput.cnum,
         pinput.xnum,
         );
-    print!("{}", taskspec);
+    // print!("{}", taskspec);
+    let mut f = File::create(opath).expect("Unable to create file");
+    f.write_all(taskspec.as_bytes()).expect("Unable to write data");
     Ok(())
 }
 
