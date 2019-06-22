@@ -198,7 +198,7 @@ mod tests {
             b,
             WorkerState {
                 dir: 1,
-                manipulators: vec![(0, -1,), (1, -1,), (-1, -1,),],
+                manipulators: vec![(0, 0), (0, -1,), (1, -1,), (-1, -1,),],
                 ..a.clone()
             }
         );
