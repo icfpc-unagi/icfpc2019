@@ -97,40 +97,6 @@ func apiHandler(
 	return nil
 }
 
-func insertProblemHandler(
-	ctx context.Context, apiReq *pb.Api_Request, apiResp *pb.Api_Response,
-) error {
-	req := apiReq.GetInsertProblem()
-	if req == nil {
-		return nil
-	}
-
-	if req.GetProblemName() == "" {
-		return errors.New("problem_name is missing")
-	}
-	if req.GetProblemData() == nil || len(req.GetProblemData()) == 0 {
-		return errors.New("problem_data is missing")
-	}
-
-	res, err := db.Execute(ctx,
-		"INSERT problems(problem_name) VALUES(?)", req.GetProblemName())
-	if err != nil {
-		return err
-	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	res, err = db.Execute(ctx,
-		"INSERT problem_data(problem_id, problem_data_blob) VALUES(?, ?)",
-		id, req.GetProblemData())
-	if err != nil {
-		return err
-	}
-	apiResp.InsertProblem = &pb.Api_Response_InsertProblem{ProblemId: id}
-	return nil
-}
-
 func insertProgramHandler(
 	ctx context.Context, apiReq *pb.Api_Request, apiResp *pb.Api_Response,
 ) error {

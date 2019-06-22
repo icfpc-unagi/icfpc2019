@@ -157,6 +157,9 @@ ENV PATH=$PATH:/go/bin
 ADD ./solution-check /usr/local/bin/validate
 RUN chmod +x /usr/local/bin/validate
 
+# Install dependency for lambda-cli.
+RUN python3 -m pip install werkzeug json-rpc jsonrpc-requests cachetools
+
 ################################################################################
 # Configurations
 ################################################################################
