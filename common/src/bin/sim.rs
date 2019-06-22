@@ -36,25 +36,31 @@ fn main() {
   let (mut map, mut booster, init_x, init_y) = read_task(task_path);
   let xsize = map.len();
   let ysize = map[0].len();
-  let sol = read_sol1(sol_path);
-  let mut worker = WorkerState::new2(init_x, init_y, &mut map);
+  let sol = &read_sol(sol_path);
+  let mut workers = WorkersState::new_t0(init_x, init_y, &mut map);
   let mut time = 0;
 
   // Play
   let hr = &repeat('-').take(xsize + 5).collect::<String>();
   let mut time_filled = vec![vec![0usize; ysize]; xsize];
-  for action in sol {
-    let update = apply_action(action, &mut worker, &mut map, &mut booster);
+  let mut action_iters = vec![sol[0].iter()];
+  while action_iters.iter().any(|it| it.clone().next().is_some()) {
+    let actions = action_iters.iter_mut().map(|it| it.next().copied().unwrap_or(Action::Nothing)).collect::<Vec<_>>();
+    let update = apply_multi_action(&actions, &mut workers, &mut map, &mut booster);
+    for i in action_iters.len()..action_iters.len()+update.num_cloned {
+      action_iters.push(sol[i].iter());
+    }
     for f in &update.filled {
       time_filled[f.0][f.1] = time;
     }
     time += 1;
     if !silent {
       eprintln!("Time: {}", time);
-      eprintln!("Action: {}", action);
-      eprintln!("{:?}", worker);
+      eprintln!("Actions: {:?}", actions);
+      eprintln!("{:?}", workers);
       eprintln!("{:?}", update);
-      print_task(&(map.clone(), booster.clone(), worker.x, worker.y));
+      // TODO: print workers
+      print_task(&(map.clone(), booster.clone(), 9999, 9999));
       eprintln!("{}", hr);
     }
   }
@@ -93,7 +99,8 @@ fn main() {
   // Validate fulfillness
   if map.iter().any(|v| v.iter().any(|&s| s == Square::Empty)) {
     eprintln!("Not fulfilled!");
-    print_task(&(map.clone(), booster.clone(), worker.x, worker.y));
+
+    print_task(&(map.clone(), booster.clone(), 99999, 99999));
     std::process::exit(1);
   }
   println!("{}", time);
