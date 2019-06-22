@@ -127,13 +127,13 @@ pub fn apply_multi_action(
     for i in 0..n {
         let action = actions[i];
         let mut worker = locals.get_mut(i).unwrap();
+        let pos = worker.pos();
+        if let Some(b) = booster[pos.0][pos.1].take() {
+            shared.unused_boosters.push(b);
+        }
         match action {
             Action::Move(dir) => {
                 let drilling = worker.drill_remaining > 0;
-                let pos = worker.pos();
-                if let Some(b) = booster[pos.0][pos.1].take() {
-                    shared.unused_boosters.push(b);
-                }
                 let pos = apply_move(pos, dir);
                 if within_mine(pos, size) && (drilling || map[pos.0][pos.1] != Square::Block) {
                     worker.x = pos.0;
@@ -143,7 +143,6 @@ pub fn apply_multi_action(
                 }
                 if worker.fast_remaining > 0 {
                     filled.append(&mut worker.fill(map)); // in the middle of fast steps
-                    let pos = worker.pos();
                     if let Some(b) = booster[pos.0][pos.1].take() {
                         shared.unused_boosters.push(b);
                     }
