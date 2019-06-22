@@ -1,12 +1,14 @@
 use crate::*;
 
-// startから開始して、targetをぜんぶ回収して、is_goalを満たすマスまで移動する
-pub fn tsp<F: Fn(usize, usize) -> bool>(
+pub fn tsp_k<F: Fn(usize, usize) -> bool>(
     map: &Vec<Vec<Square>>,
     start: (usize, usize),
     targets: &Vec<(usize, usize)>,
     is_goal_func: F,
+    n_required_targets: usize,
 ) -> (Vec<Action>, usize, usize) {
+    assert!(n_required_targets <= targets.len());
+
     let (xsize, ysize) = get_xysize(map);
     let mut bfs = BFS::new(xsize, ysize);
 
@@ -76,9 +78,11 @@ pub fn tsp<F: Fn(usize, usize) -> bool>(
     }
 
     // 頂点順を復元
-    let mut b = (1 << n) - 1;
-    let mut v = (0..n)
-        .min_by_key(|v| dp[*v][b].0 + cost_to_goal[*v])
+    let (mut v, mut b) = (0..(1 << n))
+        .filter(|&b| (b as usize).count_ones() as usize >= n_required_targets)
+        .map(|b| (0..n).map(move |v| (v, b)))
+        .flatten()
+        .min_by_key(|(v, b)| dp[*v][*b].0 + cost_to_goal[*v])
         .unwrap();
     let mut ord = vec![];
 
@@ -95,7 +99,7 @@ pub fn tsp<F: Fn(usize, usize) -> bool>(
         }
     }
     ord.reverse();
-    assert_eq!(ord.len(), n);
+    assert!(ord.len() >= n_required_targets);
 
     // actionを復元
     let mut actions = vec![];
@@ -114,7 +118,7 @@ pub fn tsp<F: Fn(usize, usize) -> bool>(
             targets[v].1,
         ))
     }
-    let v = ord[n - 1];
+    let v = ord[ord.len() - 1];
     let (a, x, y) = bfs.search_fewest_actions_to_satisfy(
         map,
         &WorkerState::new(targets[v].0, targets[v].1),
@@ -125,37 +129,94 @@ pub fn tsp<F: Fn(usize, usize) -> bool>(
     return (actions, x, y);
 }
 
+// startから開始して、targetをぜんぶ回収して、is_goalを満たすマスまで移動する
+pub fn tsp<F: Fn(usize, usize) -> bool>(
+    map: &Vec<Vec<Square>>,
+    start: (usize, usize),
+    targets: &Vec<(usize, usize)>,
+    is_goal_func: F,
+) -> (Vec<Action>, usize, usize) {
+    tsp_k(map, start, targets, is_goal_func, targets.len())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use rand::Rng;
 
     #[test]
-    fn it_works() {
+    fn test_tsp() {
         use rand::Rng;
         let mut rng = rand::thread_rng(); // デフォルトの乱数生成器を初期化します
 
-        let tasks = [load_task_001(), load_task_002()];
-        for task in tasks.iter() {
-            for _ in 0..100 {
-                let mut map = task.0.clone();
-                let (xsize, ysize) = get_xysize(&map);
+        let task = load_task_002();
+        for _ in 0..30 {
+            let mut map = task.0.clone();
+            let (xsize, ysize) = get_xysize(&map);
 
-                let random_empty_cell = |rng: &mut rand::rngs::ThreadRng| loop {
-                    let x: usize = rng.gen::<usize>() % xsize;
-                    let y: usize = rng.gen::<usize>() % ysize;
-                    if map[x][y] == Square::Empty {
-                        return (x, y);
+            let random_empty_cell = |rng: &mut rand::rngs::ThreadRng| loop {
+                let x: usize = rng.gen::<usize>() % xsize;
+                let y: usize = rng.gen::<usize>() % ysize;
+                if map[x][y] == Square::Empty {
+                    return (x, y);
+                }
+            };
+
+            let n_targets = rng.gen::<usize>() % 10;
+            let start = random_empty_cell(&mut rng);
+            let targets = (0..n_targets)
+                .map(|_| random_empty_cell(&mut rng))
+                .collect();
+
+            let (mut actions, goal_x, goal_y) = tsp(&map, start, &targets, |_x, _y| true);
+
+            // 検証
+            let mut touched = vec![false; n_targets];
+            let mut ps = PlayerState::new(start.0, start.1);
+            actions.push(Action::Nothing);
+
+            for action in actions.iter() {
+                for i in 0..n_targets {
+                    if (ps.x, ps.y) == targets[i] {
+                        touched[i] = true;
                     }
-                };
+                }
+                apply_action(*action, &mut ps, &mut map, &mut task.1.clone());
+            }
 
-                let n_targets = rng.gen::<usize>() % 10;
-                let start = random_empty_cell(&mut rng);
-                let targets = (0..n_targets)
-                    .map(|_| random_empty_cell(&mut rng))
-                    .collect();
+            assert_eq!((ps.x, ps.y), (goal_x, goal_y));
+            assert_eq!(touched, vec![true; n_targets]);
+        }
+    }
 
-                let (mut actions, goal_x, goal_y) = tsp(&map, start, &targets, |_x, _y| true);
+    #[test]
+    fn test_tsp_k() {
+        use rand::Rng;
+        let mut rng = rand::thread_rng(); // デフォルトの乱数生成器を初期化します
+
+        let task = load_task_002();
+        for _ in 0..30 {
+            let n_targets = rng.gen::<usize>() % 10;
+
+            let (xsize, ysize) = get_xysize(&task.0);
+            let random_empty_cell = |rng: &mut rand::rngs::ThreadRng| loop {
+                let x: usize = rng.gen::<usize>() % xsize;
+                let y: usize = rng.gen::<usize>() % ysize;
+                if task.0[x][y] == Square::Empty {
+                    return (x, y);
+                }
+            };
+            let start = random_empty_cell(&mut rng);
+            let targets = (0..n_targets)
+                .map(|_| random_empty_cell(&mut rng))
+                .collect();
+
+            let mut costs = vec![0; n_targets + 1];
+            for k in 0..(n_targets + 1) {
+                let mut map = task.0.clone();
+
+                let (mut actions, goal_x, goal_y) =
+                    tsp_k(&map, start, &targets, |_x, _y| true, k);
 
                 // 検証
                 let mut touched = vec![false; n_targets];
@@ -172,8 +233,11 @@ mod tests {
                 }
 
                 assert_eq!((ps.x, ps.y), (goal_x, goal_y));
-                assert_eq!(touched, vec![true; n_targets]);
+                assert!(touched.iter().filter(|t| **t).count() >= k);
+                costs[k] = actions.len();
             }
+
+            dbg!(costs);
         }
     }
 }
