@@ -300,9 +300,10 @@ fn clone_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx
                     target[i][j] = ids[i][j] == a;
                 }
             }
-            let ((x, y), t, mut act) = pas[a].clone();
+            let ((x, y), mut t, mut act) = pas[a].clone();
             let mut bfs = BFS::new(n, m);
             let (mv, mut sx, mut sy) = bfs.search_fewest_actions_to_satisfy(&map, &PlayerState::new(x, y), |x, y| target[x][y]);
+            t += mv.len();
             act.extend(mv);
             let (map, boosters, (dx, dy)) = create_subtask(&map, &boosters, &target);
             sx -= dx;
@@ -315,7 +316,7 @@ fn clone_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx
                     best_move = mv;
                 }
             }
-            let t = t + best_move.len();
+            t += best_move.len();
             act.extend(best_move);
             max_t.setmax(t);
             acts.push(act);
@@ -324,6 +325,7 @@ fn clone_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx
             ret = acts;
         }
     }
+    eprintln!("turn: {}", min_t);
     ret
 }
 
@@ -333,6 +335,5 @@ fn main() {
     // let moves = vec![solve(&map, &boosters, (sx, sy))];
     let moves = clone_solve(&map, &boosters, (sx, sy));
     let moves = solution_to_string(&moves);
-    eprintln!("turns: {}", moves.len());
     println!("{}", moves);
 }
