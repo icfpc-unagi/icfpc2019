@@ -58,6 +58,7 @@ pub fn parse_sol(s: &str) -> Vec<Vec<Action>> {
                 assert_eq!(Some(')'), iter.next());
                 Action::Teleport(x, y)
             },
+            'C' => Action::CloneWorker,
             // Panic
             _ => panic!("unexpected `{}`", c),
         })
@@ -87,6 +88,10 @@ mod tests {
     #[test]
     fn test() {
         eprintln!("{:?}", parse_sol("WASD QE Z B(10,-1) F L R T(1,2)"));
+    }
+
+    fn test2() {
+        eprintln!("{:?}", parse_sol("WASD QEC#Z B(10,-1) F L R T(1,2)"));
     }
 
     #[test]
