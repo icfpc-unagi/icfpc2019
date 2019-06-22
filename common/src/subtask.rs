@@ -40,7 +40,7 @@ pub fn create_subtask(
     (
         sub(square_map, Square::Block, flag, xmin, xmax, ymin, ymax),
         sub(booster_map, None, flag, xmin, xmax, ymin, ymax),
-        (xmin, ymin)
+        (xmin - 1, ymin - 1)  // 枠があるので-1
     )
 }
 
