@@ -1,9 +1,9 @@
 use crate::*;
 
 // 更新されたタスク、ここまでのアクション列、プレイヤーの状態
-type BootstrapResult = (RasterizedTask, Vec<Action>, PlayerState);
+pub type BootstrapResult = (RasterizedTask, Vec<Action>, PlayerState);
 
-fn bootstrap_expand(task: &RasterizedTask) -> BootstrapResult {
+pub fn bootstrap_expand(task: &RasterizedTask) -> BootstrapResult {
     let (square_map, booster_map, start_x, start_y) = task;
     let start = (*start_x, *start_y);
     let (xsize, ysize) = get_xysize(square_map);
