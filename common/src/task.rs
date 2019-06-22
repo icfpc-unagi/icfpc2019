@@ -66,6 +66,11 @@ fn parse_task_specification(task: &str) -> TaskSpecification {
 
 pub type SquareMap = Vec<Vec<Square>>;
 pub type BoosterMap = Vec<Vec<Option<Booster>>>;
+
+pub fn get_xysize<T>(map: Vec<Vec<T>>) -> (usize, usize) {
+    return (map.len(), map[0].len())
+}
+
 pub type RasterizedTask = (SquareMap, BoosterMap, usize, usize);
 
 fn get_size(task: &TaskSpecification) -> (usize, usize) {

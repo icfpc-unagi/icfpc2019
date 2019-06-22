@@ -4,6 +4,7 @@ pub mod player_state;
 pub mod sol;
 pub mod bfs;
 pub mod sim;
+pub mod tsp;
 
 pub use reach::*;
 pub use task::*;
@@ -11,6 +12,7 @@ pub use player_state::*;
 pub use bfs::*;
 pub use sim::*;
 pub use sol::*;
+pub use tsp::*;
 
 #[macro_export]
 macro_rules! mat {
