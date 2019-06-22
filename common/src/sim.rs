@@ -98,12 +98,12 @@ pub fn apply_action(
         Action::Fast => {
             swap_remove_one_from_vec(&mut worker.unused_boosters, &Booster::Fast)
                 .expect("no Fast remaining");
-            worker.fast_remaining = 50;
+            worker.fast_remaining = 51;
         }
         Action::Drill => {
             swap_remove_one_from_vec(&mut worker.unused_boosters, &Booster::Drill)
                 .expect("no Drill remaining");
-            worker.drill_remaining = 30;
+            worker.drill_remaining = 31;
         }
         Action::Reset => {
             worker.beacons.insert(worker.pos());
