@@ -26,12 +26,25 @@ impl WorkerState {
             ..Default::default()
         }
     }
-    pub fn fill(&self, map: &mut Vec<Vec<Square>>) {
-        for &manipurator in &self.manipulators {
-            if is_visible(map, self.pos(), manipurator) {
-                map[self.x][self.y] = Square::Filled;
+    pub fn new2(x: usize, y: usize, map: &mut Vec<Vec<Square>>) -> WorkerState {
+        let w = WorkerState::new(x, y);
+        w.fill(map);
+        w
+    }
+    // Returns updated squares
+    pub fn fill(&self, map: &mut Vec<Vec<Square>>) -> Vec<(usize, usize)> {
+        let mut filled = vec![];
+        for &manipulator in &self.manipulators {
+            if is_visible(map, self.pos(), manipulator) {
+                let x = (self.x as i32 + manipulator.0) as usize;
+                let y = (self.y as i32 + manipulator.1) as usize;
+                if map[x][y] != Square::Filled {
+                    map[x][y] = Square::Filled;
+                    filled.push((x, y));
+                }
             }
         }
+        filled
     }
     pub fn pos(&self) -> (usize, usize) {
         (self.x, self.y)
@@ -39,7 +52,7 @@ impl WorkerState {
 }
 
 pub struct Update {
-    filled: Vec<(usize, usize)>,
+    pub filled: Vec<(usize, usize)>,
 }
 
 // Map への影響も考慮して動く
@@ -72,6 +85,7 @@ pub fn apply_action(
                 panic!("bad move to {:?}", pos);
             }
             if worker.fast_remaining > 0 {
+                worker.fill(map); // in the middle of fast steps
                 let pos = apply_move(worker.pos(), dir);
                 if within_mine(pos, size) && (drilling || map[pos.0][pos.1] != Square::Block) {
                     worker.x = pos.0;
@@ -132,15 +146,14 @@ pub fn apply_action(
             worker.y = y + 1;
         }
     }
+    worker.fill(map);
     if worker.fast_remaining > 0 {
         worker.fast_remaining -= 1;
     }
     if worker.drill_remaining > 0 {
         worker.drill_remaining -= 1;
     }
-    Update{
-        filled,
-    }
+    Update { filled }
 }
 
 pub fn within_mine((x, y): (usize, usize), (w, h): (usize, usize)) -> bool {
