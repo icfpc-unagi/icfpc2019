@@ -63,7 +63,7 @@ pub struct WorkersState {
 
 impl WorkersState {
     pub fn new_t0(x: usize, y: usize, map: &mut SquareMap) -> WorkersState {
-        // WorkerState::new2
+        // WorkerState::new3
         let locals = vec![LocalState::new(x, y)];
         locals[0].fill(map);
         WorkersState {

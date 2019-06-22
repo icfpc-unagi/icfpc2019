@@ -28,9 +28,18 @@ impl WorkerState {
             ..Default::default()
         }
     }
+    #[deprecated(note="This function has a bug. Use new3 instead.")]
     pub fn new2(x: usize, y: usize, map: &mut SquareMap) -> WorkerState {
         let w = WorkerState::new(x, y);
         w.fill(map);
+        w
+    }
+    pub fn new3(x: usize, y: usize, map: &mut SquareMap, booster: &mut BoosterMap) -> WorkerState {
+        let mut w = WorkerState::new(x, y);
+        w.fill(map);
+        if let Some(b) = booster[x][y].take() {
+            w.unused_boosters.push(b);
+        }
         w
     }
     // Returns updated squares
@@ -306,7 +315,7 @@ mod tests {
     fn sim_golden(task_path: &str, sol_path: &str) {
         let (mut map, mut booster, init_x, init_y) = read_task(task_path);
         let sol = read_sol1(sol_path);
-        let mut worker = WorkerState::new2(init_x, init_y, &mut map);
+        let mut worker = WorkerState::new3(init_x, init_y, &mut map, &mut booster);
         for action in sol {
             apply_action(action, &mut worker, &mut map, &mut booster);
         }
