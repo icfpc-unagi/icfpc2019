@@ -70,7 +70,7 @@ pub fn bootstrap_expand<F: Fn(&PlayerState) -> Option<Action>>(
     let (x, y) = (player_state.x, player_state.y);
     (
         (square_map, booster_map, x, y),
-        actions,
+        actions2,
         player_state.clone(),
     )
 }
