@@ -28,11 +28,12 @@ fn main() {
 
   let hr = &repeat('-').take(xsize + 5).collect::<String>();
   for action in sol {
-    apply_action(action, &mut worker, &mut map, &mut booster);
+    let update = apply_action(action, &mut worker, &mut map, &mut booster);
     time += 1;
     if !matches.opt_present("s") {
       eprintln!("Action: {}", action);
       eprintln!("{:?}", worker);
+      eprintln!("{:?}", update);
       print_task(&(map.clone(), booster.clone(), worker.x, worker.y));
       eprintln!("{}", hr);
     }
