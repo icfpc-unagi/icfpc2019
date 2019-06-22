@@ -25,6 +25,7 @@ fn main() -> std::io::Result<()> {
     file.read_to_string(&mut s)?;
     */
     let s = std::fs::read_to_string(path.clone()).expect("cannot read cond file");
+    let s = s.trim();
     let ss: Vec<_> = s.split('#').collect();
     assert_eq!(ss.len(), 3);
     let nums: Vec<_> = ss[0].split(',').map(|n| n.parse::<i32>().unwrap()).collect();
@@ -139,7 +140,7 @@ fn main() -> std::io::Result<()> {
         pinput.cnum,
         pinput.xnum,
         );
-    println!("{}", taskspec);
+    print!("{}", taskspec);
     Ok(())
 }
 
