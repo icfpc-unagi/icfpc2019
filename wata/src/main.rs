@@ -106,7 +106,7 @@ fn bfs_multi(map: &Vec<Vec<Square>>, ps: &[(usize, usize)]) -> Vec<Vec<(usize, u
     ds
 }
 
-fn tsp(map: &Vec<Vec<Square>>, ps: &Vec<(usize, usize)>, s: usize) -> Vec<usize> {
+pub fn tsp(map: &Vec<Vec<Square>>, ps: &Vec<(usize, usize)>, s: usize) -> Vec<usize> {
     let k = ps.len();
     let mut g = mat![0; k; k];
     for i in 0..k {
@@ -148,7 +148,7 @@ fn tsp(map: &Vec<Vec<Square>>, ps: &Vec<(usize, usize)>, s: usize) -> Vec<usize>
     us
 }
 
-fn at_most_k_step(map: &Vec<Vec<Square>>, target: &Vec<Vec<bool>>, boosters: &Vec<Vec<Option<Booster>>>, state: &PlayerState, k: usize) -> (Vec<Action>, usize) {
+pub fn at_most_k_step(map: &Vec<Vec<Square>>, target: &Vec<Vec<bool>>, boosters: &Vec<Vec<Option<Booster>>>, state: &PlayerState, k: usize) -> (Vec<Action>, usize) {
     if k == 0 {
         (vec![], 0)
     } else {
@@ -180,7 +180,7 @@ fn at_most_k_step(map: &Vec<Vec<Square>>, target: &Vec<Vec<bool>>, boosters: &Ve
     }
 }
 
-fn optimize(map: &Vec<Vec<Square>>, target: &Vec<Vec<bool>>, boosters: &Vec<Vec<Option<Booster>>>, state: &PlayerState, goal: Option<(usize, usize)>) -> Vec<Action> {
+pub fn optimize(map: &Vec<Vec<Square>>, target: &Vec<Vec<bool>>, boosters: &Vec<Vec<Option<Booster>>>, state: &PlayerState, goal: Option<(usize, usize)>) -> Vec<Action> {
     assert!(goal.is_none());
     let n = map.len();
     let m = map[0].len();
@@ -239,7 +239,7 @@ fn optimize(map: &Vec<Vec<Square>>, target: &Vec<Vec<bool>>, boosters: &Vec<Vec<
     actions
 }
 
-fn solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx, sy): (usize, usize)) -> Vec<Action> {
+pub fn solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx, sy): (usize, usize)) -> Vec<Action> {
     let mut map = map.clone();
     let mut boosters = boosters.clone();
     let n = map.len();
@@ -371,11 +371,76 @@ fn clone_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx
     ret
 }
 
+pub fn split_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx, sy): (usize, usize)) -> Vec<Vec<Action>> {
+    let n = map.len();
+    let m = map[0].len();
+    let mut count_x = 0;
+    let mut count_clone = 0;
+    for i in 0..n {
+        for j in 0..m {
+            if boosters[i][j] == Some(Booster::CloneWorker) {
+                count_clone += 1;
+            } else if boosters[i][j] == Some(Booster::X) {
+                count_x += 1;
+            }
+        }
+    }
+    if count_x == 0 {
+        count_clone = 0;
+    }
+    dbg!((count_x, count_clone));
+    let mut ret = vec![];
+    let mut min_t = !0;
+    for c in 0..=count_clone {
+        let pas = bootstrap_clone(&(map.clone(), boosters.clone(), sx, sy), count_clone);
+        let mut best = vec![];
+        let (sx0, sy0) = pas[0].0;
+        for op in 0..2 {
+            let mv = chokudai_main((map.clone(), boosters.clone(), sx0, sy0), op);
+            if op == 0 || best.len() > mv.len() {
+                best = mv;
+            }
+        }
+        let mut max_t = 0;
+        let mut moves = vec![];
+        for i in 0..=c {
+            let from = best.len() * i / (c + 1);
+            let to = best.len() * (i + 1) / (c + 1);
+            let mut state = PlayerState::new(sx0, sy0);
+            let mut map = map.clone();
+            let mut boosters = boosters.clone();
+            for a in 0..from {
+                apply_action(best[a], &mut state, &mut map, &mut boosters);
+            }
+            let ((sx, sy), mut t, mut pre_mv) = pas[i].clone();
+            let mut bfs = BFS::new(n, m);
+            let mut mv = bfs.search_fewest_actions_to_move(&map, &PlayerState::new(sx, sy), state.x, state.y);
+            if state.dir == 1 {
+                mv.push(Action::TurnR);
+            } else if state.dir == 2 {
+                mv.push(Action::TurnR);
+                mv.push(Action::TurnR);
+            } else if state.dir == 3 {
+                mv.push(Action::TurnL);
+            }
+            mv.extend(best[from..to].into_iter());
+            t += mv.len();
+            pre_mv.extend(mv);
+            max_t.setmax(t);
+            moves.push(pre_mv);
+        }
+        if min_t.setmin(max_t) {
+            ret = moves;
+        }
+    }
+    eprintln!("turn: {}", min_t);
+    ret
+}
+
 fn main() {
     let taskfile = std::env::args().nth(1).expect("usage: args[1] = taskfile");
     let (map, boosters, sx, sy) = read_task(&taskfile);
-    // let moves = vec![solve(&map, &boosters, (sx, sy))];
-    let moves = clone_solve(&map, &boosters, (sx, sy));
+    let moves = split_solve(&map, &boosters, (sx, sy));
     let moves = solution_to_string(&moves);
     println!("{}", moves);
 }
