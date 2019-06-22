@@ -11,10 +11,10 @@ impl PlayerState {
     }
 }
 
-enum ExpandStrategy {
-    migimae = 1,
-    migi = 2,
-    mae = 3,
+pub enum ExpandStrategy {
+    Migimae = 1,
+    Migi = 2,
+    Mae = 3,
 }
 
 pub fn bootstrap_expand<F: Fn(&PlayerState) -> Option<Action>>(
@@ -120,9 +120,9 @@ pub fn bootstrap_expand_with_strategy(
     strategy: ExpandStrategy,
 ) -> BootstrapResult {
     match strategy {
-        Migimae => bootstrap_expand_1_migimae(task, max_expands),
-        Migi => bootstrap_expand_2_migi(task, max_expands),
-        Mae => bootstrap_expand_3_mae(task, max_expands),
+        ExpandStrategy::Migimae => bootstrap_expand_1_migimae(task, max_expands),
+        ExpandStrategy::Migi => bootstrap_expand_2_migi(task, max_expands),
+        ExpandStrategy::Mae => bootstrap_expand_3_mae(task, max_expands),
     }
 }
 
