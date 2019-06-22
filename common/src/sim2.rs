@@ -238,14 +238,13 @@ mod tests {
         let solution = read_sol(sol_path);
         let mut state = WorkersState::new_t0(init_x, init_y, &mut map);
 
-        let mut global_t = 0;
         let mut local_ts = vec![0];
         loop {
             let mut actions: Vec<Option<&Action>> = vec![];
             for i in 0..local_ts.len() {
                 actions.push(solution[i].get(local_ts[i]));
             }
-            if actions.iter().filter(|a| a.is_some()).next().is_none() {
+            if actions.iter().all(|a| a.is_none()) {
                 break;
             }
             let actions = actions.into_iter().map(|a| *a.unwrap_or(&Action::Nothing)).collect::<Vec<_>>();
