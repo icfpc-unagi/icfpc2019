@@ -190,7 +190,7 @@ pub fn parse_task(task_specification: &str) -> RasterizedTask {
 
 pub fn read_task(path: &str) -> RasterizedTask {
     let s = std::fs::read_to_string(path).expect("cannot read task file");
-    parse_task(&s)
+    parse_task(&s.trim_end())
 }
 
 ////////////////////////////////////////////////////////////////////////////////
