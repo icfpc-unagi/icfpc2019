@@ -51,6 +51,7 @@ impl WorkerState {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct Update {
     pub filled: Vec<(usize, usize)>,
 }
