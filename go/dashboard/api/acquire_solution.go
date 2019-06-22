@@ -26,9 +26,9 @@ func acquireSolutionHandler(
 		return errors.WithStack(err)
 	}
 	if err := func() error {
+		acquireSolutionLock.Lock()
+		defer acquireSolutionLock.Unlock()
 		acquired, err := func() (bool, error) {
-			acquireSolutionLock.Lock()
-			defer acquireSolutionLock.Unlock()
 			result, err := db.Execute(ctx, `
 				UPDATE solutions
 				SET

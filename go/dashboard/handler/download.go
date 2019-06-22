@@ -15,6 +15,7 @@ import (
 
 func init() {
 	http.HandleFunc("/download", downloadHandler)
+	http.HandleFunc("/ytueijprkwrkaqzh/download", downloadHandler)
 }
 
 func downloadHandler(w http.ResponseWriter, r *http.Request) {
