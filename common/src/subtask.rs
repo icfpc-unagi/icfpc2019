@@ -24,7 +24,7 @@ pub fn create_subtask(
     square_map: &SquareMap,
     booster_map: &BoosterMap,
     flag: &Vec<Vec<bool>>,
-) -> (SquareMap, BoosterMap) {
+) -> (SquareMap, BoosterMap, (usize, usize)) {
     let (xsize, ysize) = get_xysize(square_map);
 
     let xite = (0..xsize).filter(|&x| (0..ysize).any(|y| flag[x][y]));
@@ -40,6 +40,7 @@ pub fn create_subtask(
     (
         sub(square_map, Square::Block, flag, xmin, xmax, ymin, ymax),
         sub(booster_map, None, flag, xmin, xmax, ymin, ymax),
+        (xmin, ymin)
     )
 }
 
@@ -60,8 +61,9 @@ mod tests {
             }
         }
 
-        let (s, b) = create_subtask(&task.0, &task.1, &flag);
+        let (s, b, xy) = create_subtask(&task.0, &task.1, &flag);
 
+        dbg!(xy);
         print_task(&(s, b, 1, 1));
     }
 }
