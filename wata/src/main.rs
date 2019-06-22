@@ -1,4 +1,5 @@
 use common::*;
+use chokudai;
 
 fn print_partition(map: &Vec<Vec<Square>>, ps: &Vec<(usize, usize)>) {
     let n = map.len();
@@ -285,11 +286,41 @@ fn clone_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx
     }
     dbg!((count_x, count_clone));
     let mut ret = vec![];
+    let mut min_t = !0;
     for c in 0..=count_clone {
         let pas = bootstrap_clone(&(map.clone(), boosters.clone(), sx, sy), count_clone);
+        let ps = k_means(&map, c + 1);
+        let ids = bfs_multi(&map, &ps).into_iter().map(|d| d.into_iter().map(|(_, a, _)| a).collect()).collect::<Vec<Vec<_>>>();
+        let mut max_t = 0;
         let mut acts = vec![];
-        for (_, _, act) in pas {
+        for a in 0..=c {
+            let mut target = mat![false; n; m];
+            for i in 0..n {
+                for j in 0..m {
+                    target[i][j] = ids[i][j] == a;
+                }
+            }
+            let ((x, y), t, mut act) = pas[a].clone();
+            let mut bfs = BFS::new(n, m);
+            let (mv, mut sx, mut sy) = bfs.search_fewest_actions_to_satisfy(&map, &PlayerState::new(x, y), |x, y| target[x][y]);
+            act.extend(mv);
+            let (map, boosters, (dx, dy)) = create_subtask(&map, &boosters, &target);
+            sx -= dx;
+            sy -= dy;
+            let mut best_move = vec![];
+            for op in 0..2 {
+                let ch_state = chokudai::get_first_state(map.clone(), boosters.clone(), sx, sy);
+                let mv = chokudai::make_action_by_state(&ch_state, op);
+                if op == 0 || best_move.len() > mv.len() {
+                    best_move = mv;
+                }
+            }
+            act.extend(best_move);
+            max_t.setmax(t + act.len());
             acts.push(act);
+        }
+        if min_t.setmin(max_t) {
+            ret = acts;
         }
     }
     ret
