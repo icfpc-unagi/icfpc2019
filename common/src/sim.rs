@@ -84,8 +84,8 @@ pub fn apply_action(
 }
 
 
-// もとの実装（テスト用に残してる）
-pub fn apply_action_old(
+// もとの実装
+fn apply_action_old(
     action: Action,
     worker: &mut WorkerState,
     map: &mut SquareMap,
