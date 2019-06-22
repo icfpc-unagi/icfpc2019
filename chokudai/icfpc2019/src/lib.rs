@@ -137,6 +137,76 @@ pub fn get_diff(a:usize, b:usize) -> usize{
     b - a
 }
 
+
+pub fn make_move(a2 :&Vec<Action>, R: usize, L: usize, d: usize) -> Vec<Action>{
+    let mut stockR = R;
+    let mut stockL = L;
+    let mut now_dir = d;
+
+    let mut actions: Vec<Action> = Vec::with_capacity(0);
+
+    
+    for act in a2{
+        if *act == Action::TurnR{
+            stockR += 1;
+        }
+        if *act == Action::TurnL{
+            stockL += 1;
+        }
+    }
+
+    for act in a2{
+        match &act{
+            Action::Move(d) =>{
+                if *d == (now_dir + 1) % 4 {
+                    if stockR >= 1 {
+                        stockR -= 1;
+                        actions.push(Action::TurnR);
+                        now_dir = (now_dir + 1) % 4;
+                    }
+                }
+                else if *d == (now_dir + 3) % 4{
+                    if stockL >= 1 {
+                        stockL -= 1;
+                        actions.push(Action::TurnL);
+                        now_dir = (now_dir + 3) % 4;
+                    }
+                    else if stockR == 2 || stockL == 2 {
+                        stockR = 0;
+                        stockL = 1;
+                        actions.push(Action::TurnL);
+                        now_dir = (now_dir + 3) % 4;
+                    }
+                }
+                else if *d == (now_dir + 2) % 4{
+                    if stockR >= 2{
+                        stockR -= 2;
+                        actions.push(Action::TurnR);
+                        actions.push(Action::TurnR);
+                        now_dir = (now_dir + 2) % 4;
+                    }
+                }
+                
+
+                actions.push(*act);
+            },
+            _ =>{
+
+            }
+        }
+    }
+
+    while stockR > 0 {
+        actions.push(Action::TurnR);
+        stockR -= 1;
+    }
+    while stockL > 0 {
+        actions.push(Action::TurnL);
+        stockL -= 1;
+    }
+    actions
+}
+
 const optimization_num: usize = 2; //0..OptimizationNum
 
 pub fn make_action_by_state(first_state: &State, UseOptimization: usize) -> Vec<Action>
@@ -282,30 +352,39 @@ pub fn make_action_by_state(first_state: &State, UseOptimization: usize) -> Vec<
                 }
                 
                 
-                if use_double_position.1 != !0 {
+                if use_double_position.1 != !0 && point_list.len() >= 4 {
                     //println!("double at ({}, {}, {}) for ({}, {})", (use_double_position.0).0 , (use_double_position.0).1, use_double_position.1,target_pos.0 , target_pos.1);
                     //println!("now : {} {} {}", current_state.p.x, current_state.p.y, current_state.p.dir);
-                    let a2 = bfs.search_fewest_actions_to_move(&current_state.field, &current_state.p, (use_double_position.0).0, (use_double_position.0).1);
-                    let now_dir = current_state.p.dir;
+                    let mut a2 = bfs.search_fewest_actions_to_move(&current_state.field, &current_state.p, (use_double_position.0).0, (use_double_position.0).1);
+                    let mut now_dir = current_state.p.dir;
+                    let (a3, gx, gy) = bfs.search_fewest_actions_to_wrap(&current_state.field, &current_state.p, target_pos.0, target_pos.1);
+                    
+                    if a2.len() < a3.len() + 20 {
+                        
+                        let mut stockR = 0;
+                        let mut stockL = 0;
 
-                    for act in &a2{
-                        if *act == Action::TurnR || *act == Action:: TurnL{
-                            continue;
+                        if (now_dir + 1) % 4 == use_double_position.1{
+                            stockR = 1;
+                            //actions.push(Action::TurnR);
                         }
-                        else{
-                            actions.push(*act);
+                        else if (now_dir + 2) % 4 == use_double_position.1{
+                            //actions.push(Action::TurnR);
+                            //actions.push(Action::TurnR);
+                            stockR = 2;
                         }
-                    }
+                        else if (now_dir + 3) % 4 == use_double_position.1{
+                            stockL = 1;
+                            //actions.push(Action::TurnL);
+                        }
 
-                    if (now_dir + 1) % 4 == use_double_position.1{
-                        actions.push(Action::TurnR);
+                        actions = make_move(&a2, stockR, stockL, now_dir);
+
                     }
-                    else if (now_dir + 2) % 4 == use_double_position.1{
-                        actions.push(Action::TurnR);
-                        actions.push(Action::TurnR);
-                    }
-                    else if (now_dir + 3) % 4 == use_double_position.1{
-                        actions.push(Action::TurnL);
+                    else{
+                        
+                        actions = make_move(&a3, 0, 0, now_dir);
+                        //actions = a3;
                     }
                 }
                 else{
@@ -315,17 +394,25 @@ pub fn make_action_by_state(first_state: &State, UseOptimization: usize) -> Vec<
                     //actions = bfs.search_fewest_actions_to_move(&t.0, &current_state.p, target_pos.0, target_pos.1);
                     let (a2, gx, gy) = bfs.search_fewest_actions_to_wrap(&current_state.field, &current_state.p, target_pos.0, target_pos.1);
                     
+                    actions = make_move(&a2, 0, 0, current_state.p.dir);
+
                     //let tmp_string = actions_to_string(&a2);
-                    actions = a2;
+                    //actions = a2;
                     //println!("go: {}", tmp_string);
                 }
             }
 
-            for act in actions
+            'actloop: for act in actions
             {
                 // apply_action で field と item_field も更新する
-                apply_action(act, &mut current_state.p, &mut current_state.field, &mut current_state.item_field);
+                let ret = apply_action(act, &mut current_state.p, &mut current_state.field, &mut current_state.item_field);
                 temp_action.push(act);
+                
+                for (tx, ty) in ret.filled{
+                    if tx == target_pos.0 && ty == target_pos.1{
+                        break 'actloop;
+                    }
+                }
             }
         }
 
