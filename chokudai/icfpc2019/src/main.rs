@@ -1,21 +1,29 @@
-use common::*;
+
 use chokudai::*;
-use std::cmp::*;
+use common::*;
 
 fn main() {
     let taskfile = std::env::args().nth(1).expect("usage: args[1] = taskfile");
+    let initialType = std::env::args().nth(2).unwrap_or("migimae".to_owned());
+
     let t = read_task(&taskfile);
 
     let mut best_string = "".to_string();
     let mut best_size = 99999999;
 
-    let mut loop_cnt = 0;
+    let loop_first = 0;
+    let mut loop_cnt = loop_first;
 
-    loop{
-        let initialMove = bootstrap_expand_1_migimae(&t, loop_cnt);
-        //let initialMove = bootstrap_expand_2_migi(&t, loop_cnt);
-        if loop_cnt + 4 > (initialMove.2).manipulators.len() {
-            println!("{}", (initialMove.2).manipulators.len());
+    loop {
+        let mut initialMove;
+        if initialType == "migimae" {
+            initialMove = bootstrap_expand_1_migimae(&t, loop_cnt);
+        } else {
+            initialMove = bootstrap_expand_2_migi(&t, loop_cnt);
+        }
+
+        if loop_cnt + 4 > (initialMove.2).manipulators.len() && loop_cnt != loop_first {
+            //println!("{}", (initialMove.2).manipulators.len());
             break;
         }
         loop_cnt += 1;
@@ -26,31 +34,36 @@ fn main() {
         let default_field = first_field.clone();
 
         //let first_state = get_first_state(first_field, first_itemfield, FX, FY);
-        
+
         //途中で塗られたものを使用するバージョン
         //let mut second_state = get_first_state((initialMove.0).0, (initialMove.0).1, (initialMove.2).x, (initialMove.2).y);
         //途中で塗られたものを使用しないバージョン
-        let mut second_state = get_first_state(default_field, (initialMove.0).1, (initialMove.2).x, (initialMove.2).y);
+        let mut second_state = get_first_state(
+            default_field,
+            (initialMove.0).1,
+            (initialMove.2).x,
+            (initialMove.2).y,
+        );
         //eprintln!("{}", second_state.p.manipulators.len());
         second_state.p.manipulators = (initialMove.2).manipulators;
         //eprintln!("{}", second_state.p.manipulators.len());
 
         //let mut final_action = make_action_by_state(&first_state, 1);
         let mut final_action = make_action_by_state(&second_state, 1);
-        loop{
+        loop {
             let (flag, act) = shortening_actions(&second_state, &final_action, 0);
             if !flag {
                 break;
             }
             final_action = act;
         }
-        
+
         let pre_string = actions_to_string(&initialMove.1);
         let ans_string = actions_to_string(&final_action);
 
-        let size =  (initialMove.1).len() + final_action.len();
+        let size = (initialMove.1).len() + final_action.len();
         eprintln!("add: {} size: {}", loop_cnt - 1, size);
-        if best_size > size{
+        if best_size > size {
             best_string = pre_string + &ans_string;
             best_size = size;
         }
