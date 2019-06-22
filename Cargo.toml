@@ -8,6 +8,7 @@ members = [
     "tools",
     "utils",
     "wata",
+    "puzzle",
 ]
 exclude = [".cache", "build"]
 

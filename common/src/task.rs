@@ -18,7 +18,7 @@ fn parse_point_tokens(x: &str, y: &str) -> (usize, usize) {
     (x.parse::<usize>().unwrap(), y.parse::<usize>().unwrap())
 }
 
-fn parse_map(s: &str) -> Vec<(usize, usize)> {
+pub fn parse_map(s: &str) -> Vec<(usize, usize)> {
     let ts: Vec<_> = s.split(',').collect();
 
     (0..ts.len() / 2)
