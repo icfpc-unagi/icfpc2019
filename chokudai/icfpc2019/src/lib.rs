@@ -81,6 +81,7 @@ pub fn make_easy_target_list(S: &State, H: usize, W:usize, T: &Vec<Vec<usize>>) 
         }
         else{
             let mut loop_cnt = 0;
+            let maxloop = 2500;
             while loop_cnt < 1000{
                 loop_cnt += 1;
                 //println!("({}, {}), {}", current_point.0, current_point.1, current_dir);
@@ -176,6 +177,8 @@ pub fn make_action_by_state(first_state: &State, UseOptimization: usize) -> Vec<
 
 
         let (mut last_act, point_list) = make_easy_target_list(&current_state, H, W, &LastActionTable);
+        
+        eprintln!("List : {}", point_list.len());
         if(point_list.len() == 0){
             break;
         }
@@ -191,7 +194,7 @@ pub fn make_action_by_state(first_state: &State, UseOptimization: usize) -> Vec<
 
         for dxy in &current_state.p.manipulators{
             if is_visible(&(current_state.field), (current_state.p.x, current_state.p.y), *dxy){
-                current_state.field[current_state.p.x + (*dxy).0 as usize][current_state.p.y + (*dxy).1 as usize] = Square::Filled;
+                //current_state.field[current_state.p.x + (*dxy).0 as usize][current_state.p.y + (*dxy).1 as usize] = Square::Filled;
             }
         }
 
