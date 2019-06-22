@@ -22,7 +22,7 @@ fn main() -> std::io::Result<()> {
     let mut s = String::new();
     file.read_to_string(&mut s)?;
     */
-    let s = std::fs::read_to_string(path).expect("cannot read cond file");
+    let s = std::fs::read_to_string(path.clone()).expect("cannot read cond file");
     let ss: Vec<_> = s.split('#').collect();
     assert_eq!(ss.len(), 3);
     let nums: Vec<_> = ss[0].split(',').map(|n| n.parse::<i32>().unwrap()).collect();
@@ -113,6 +113,21 @@ fn main() -> std::io::Result<()> {
             // todo(tos)
         }
     }
+    let mut bool_map = vec![vec![false; n]; n];
+    for x in 0..n {
+        for y in 0..n {
+            bool_map[x][y] = (map[x][y] != Out);
+        }
+    }
+
+    let pinput = puzzle::read(&path)?;
+    for x in 0..n {
+        for y in 0..n {
+            eprint!("{}", if bool_map[x][y] { '.' } else { '#' });
+        }
+        eprintln!();
+    }
+    // assert!(puzzle::check(&pinput, &bool_map));
     Ok(())
 }
 
