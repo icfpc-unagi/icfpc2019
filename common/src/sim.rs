@@ -109,7 +109,7 @@ pub fn apply_action(
             worker.beacons.insert(worker.pos());
         }
         Action::Teleport(x, y) => {
-            let to = (x, y);
+            let to = (x + 1, y + 1);
             if !worker.beacons.contains(&to) {
                 panic!(
                     "teleporting to invalid beacon {:?} out of {:?}",
