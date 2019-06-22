@@ -231,8 +231,10 @@ mod tests {
                 let mut ps = WorkerState::new(sx, sy);
                 let actions = bfs.search_fewest_actions_to_move(&map, &ps, tx, ty);
 
+                let mut m = map.clone();
+                let mut b = booster.clone();
                 for a in actions.iter() {
-                    apply_action(*a, &mut ps, &mut map, &mut booster);
+                    apply_action(*a, &mut ps, &mut m, &mut b);
                     assert_eq!(map[ps.x][ps.y], Square::Empty);
                 }
                 assert_eq!(ps.x, tx);
@@ -271,8 +273,10 @@ mod tests {
 
                 let (actions, gx, gy) = bfs.search_fewest_actions_to_wrap(&map, &ps, tx, ty);
 
+                let mut m = map.clone();
+                let mut b = booster.clone();
                 for a in actions.iter() {
-                    apply_action(*a, &mut ps, &mut map, &mut booster);
+                    apply_action(*a, &mut ps, &mut m, &mut b);
                     assert_eq!(map[ps.x][ps.y], Square::Empty);
                 }
                 assert_eq!(ps.x, gx);
