@@ -288,7 +288,7 @@ fn clone_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx
     for c in 0..=count_clone {
         let pas = bootstrap_clone(&(map.clone(), boosters.clone(), sx, sy), count_clone);
         let mut acts = vec![];
-        for (_, act) in pas {
+        for (_, _, act) in pas {
             acts.push(act);
         }
     }
