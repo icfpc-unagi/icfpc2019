@@ -90,17 +90,22 @@ pub fn make_easy_target_list(S: &State, H: usize, W:usize, T: &Vec<Vec<usize>>) 
         else{
             let mut loop_cnt = 0;
             let maxloop = 2500;
+            let mut loopbit = 1 << first_dir;
+
             while loop_cnt < maxloop{
                 loop_cnt += 1;
                 //println!("({}, {}), {}", current_point.0, current_point.1, current_dir);
                 
                 //loop check
-                if current_dir == first_dir && current_point == start_point {
+                if current_point == start_point {
                     if first{
                         first = false;
                     }
-                    else{
+                    else if ((loopbit >> current_dir) & 1) == 1{
                         break;
+                    }
+                    else {
+                        loopbit |= (1 << current_dir);
                     }
                 }
 
