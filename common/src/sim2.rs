@@ -225,7 +225,6 @@ pub fn apply_multi_action(
 mod tests {
     use super::*;
 
-    /*
     #[test]
     fn test_example_part3() {
         sim_golden(
@@ -236,14 +235,31 @@ mod tests {
 
     fn sim_golden(task_path: &str, sol_path: &str) {
         let (mut map, mut booster, init_x, init_y) = read_task(task_path);
-        let sol = read_sol(sol_path);
+        let solution = read_sol(sol_path);
         let mut state = WorkersState::new_t0(init_x, init_y, &mut map);
-        for action in sol {
-            apply_action(action, &mut worker, &mut map, &mut booster);
+
+        let mut global_t = 0;
+        let mut local_ts = vec![0];
+        loop {
+            let mut actions: Vec<Option<&Action>> = vec![];
+            for i in 0..local_ts.len() {
+                actions.push(solution[i].get(local_ts[i]));
+            }
+            if actions.iter().filter(|a| a.is_some()).next().is_none() {
+                break;
+            }
+            let actions = actions.into_iter().map(|a| *a.unwrap_or(&Action::Nothing)).collect::<Vec<_>>();
+            let upd = apply_multi_action(&actions, &mut state, &mut map, &mut booster);
+
+            for mut t in local_ts.iter_mut() {
+                *t += 1;
+            }
+            for _ in 0..upd.num_cloned {
+                local_ts.push(0);
+            }
+            eprintln!("{:?}", state);
         }
-        eprintln!("{:?}", worker);
         // print_task(&(map.clone(), booster.clone(), worker.x, worker.y));
         assert!(map.iter().all(|v| v.iter().all(|&s| s != Square::Empty)));
     }
-    */
 }
