@@ -3,16 +3,28 @@ use crate::Action;
 use std::iter::*;
 use std::str::*;
 
-pub fn read_sol(path: &str) -> Vec<Action> {
+pub fn read_sol(path: &str) -> Vec<Vec<Action>> {
     parse_sol(&std::fs::read_to_string(path).expect(&format!("cannot read {}", path)))
 }
 
-pub fn parse_sol(s: &str) -> Vec<Action> {
+pub fn read_sol1(path: &str) -> Vec<Action> {
+    let mut sol = read_sol(path);
+    assert_eq!(sol.len(), 1);
+    sol.pop().unwrap()
+}
+
+pub fn parse_sol(s: &str) -> Vec<Vec<Action>> {
     eprintln!("solution: {}", s);
     let mut iter = s.chars().peekable();
+    let mut vs = vec![];
     let mut v = vec![];
     while let Some(c) = iter.next() {
         if c.is_whitespace() {
+            continue;
+        }
+        if c == '#' {
+            vs.push(v);
+            v = vec![];
             continue;
         }
         v.push(match c {
@@ -50,7 +62,8 @@ pub fn parse_sol(s: &str) -> Vec<Action> {
             _ => panic!("unexpected `{}`", c),
         })
     }
-    v
+    vs.push(v);
+    vs
 }
 
 fn consume_int<I: FromStr, Iter: Iterator<Item = char>>(

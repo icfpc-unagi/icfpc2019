@@ -1,4 +1,5 @@
 use crate::*;
+use crate::sol;
 
 use reach::*;
 use std::collections::*;
@@ -51,12 +52,6 @@ impl WorkerState {
         (self.x, self.y)
     }
 }
-
-#[derive(Clone, Debug)]
-pub struct Update {
-    pub filled: Vec<(usize, usize)>,
-}
-
 
 // Map への影響も考慮して動く
 // - 動くたびに Fill する
@@ -169,7 +164,7 @@ pub fn apply_action_old(
     if worker.drill_remaining > 0 {
         worker.drill_remaining -= 1;
     }
-    Update { filled }
+    Update { filled, ..Update::default() }
 }
 
 pub fn within_mine((x, y): (usize, usize), (w, h): (usize, usize)) -> bool {
@@ -304,7 +299,7 @@ mod tests {
 
     fn sim_golden(task_path: &str, sol_path: &str) {
         let (mut map, mut booster, init_x, init_y) = read_task(task_path);
-        let sol = read_sol(sol_path);
+        let sol = read_sol1(sol_path);
         let mut worker = WorkerState::new2(init_x, init_y, &mut map);
         for action in sol {
             apply_action(action, &mut worker, &mut map, &mut booster);

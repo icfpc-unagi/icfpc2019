@@ -59,6 +59,18 @@ pub struct WorkersState {
     pub shared: SharedState,
 }
 
+impl WorkersState {
+    pub fn new_t0(x: usize, y: usize, map: &mut SquareMap) -> WorkersState {
+        // WorkerState::new2
+        let locals = vec![LocalState::new(x, y)];
+        locals[0].fill(map);
+        WorkersState {
+            locals,
+            shared: SharedState::default(),
+        }
+    }
+}
+
 // from v1
 impl From<WorkerState> for WorkersState {
     fn from(state: WorkerState) -> WorkersState {
@@ -90,6 +102,12 @@ impl From<WorkersState> for WorkerState {
             x, y, dir, manipulators, unused_boosters, fast_remaining, drill_remaining, beacons
         }
     }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct Update {
+    pub filled: Vec<(usize, usize)>,
+    pub num_cloned: usize,
 }
 
 pub fn apply_multi_action(
@@ -197,6 +215,35 @@ pub fn apply_multi_action(
             worker.drill_remaining -= 1;
         }
     }
+    let num_cloned = new_workers.len();
     locals.append(&mut new_workers);
-    Update { filled }
+    Update { filled, num_cloned }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /*
+    #[test]
+    fn test_example_part3() {
+        sim_golden(
+            "../data/part-3-clones-examples/example-03.desc",
+            "../data/part-3-clones-examples/example-03-1.sol",
+        );
+    }
+
+    fn sim_golden(task_path: &str, sol_path: &str) {
+        let (mut map, mut booster, init_x, init_y) = read_task(task_path);
+        let sol = read_sol(sol_path);
+        let mut state = WorkersState::new_t0(init_x, init_y, &mut map);
+        for action in sol {
+            apply_action(action, &mut worker, &mut map, &mut booster);
+        }
+        eprintln!("{:?}", worker);
+        // print_task(&(map.clone(), booster.clone(), worker.x, worker.y));
+        assert!(map.iter().all(|v| v.iter().all(|&s| s != Square::Empty)));
+    }
+    */
 }

@@ -12,7 +12,7 @@ pub use reach::*;
 pub use task::*;
 pub use player_state::*;
 pub use bfs::*;
-pub use sim::{WorkerState, apply_action, Update};
+pub use sim::{WorkerState, apply_action};
 pub use sim2::*;
 pub use sol::*;
 pub use tsp::*;

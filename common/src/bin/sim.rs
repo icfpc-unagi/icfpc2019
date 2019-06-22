@@ -22,7 +22,7 @@ fn main() {
   let (mut map, mut booster, init_x, init_y) = read_task(task_path);
   let xsize = map.len();
   // let ysize = map[0].len();
-  let sol = read_sol(sol_path);
+  let sol = read_sol1(sol_path);
   let mut worker = WorkerState::new2(init_x, init_y, &mut map);
   let mut time = 0;
 
