@@ -1,11 +1,11 @@
-use crate::*;
-use crate::sol;
 
+use crate::sol;
+use crate::*;
 use reach::*;
 use std::collections::*;
-use std::vec::*;
-use std::mem;
 
+use std::mem;
+use std::vec::*;
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct WorkerState {
     pub x: usize,                         //・今いる座標
@@ -127,7 +127,11 @@ pub fn apply_action_old(
                 m.1 = p.0;
             }
         }
-        Action::Extension(dx, dy) => worker.manipulators.push((dx, dy)),
+        Action::Extension(dx, dy) => {
+            swap_remove_one_from_vec(&mut worker.unused_boosters, &Booster::Extension)
+                .expect("no Extension remaining");
+            worker.manipulators.push((dx, dy));
+        }
         Action::Fast => {
             swap_remove_one_from_vec(&mut worker.unused_boosters, &Booster::Fast)
                 .expect("no Fast remaining");
@@ -139,6 +143,7 @@ pub fn apply_action_old(
             worker.drill_remaining = 31;
         }
         Action::Reset => {
+            swap_remove_one_from_vec(&mut worker.unused_boosters, &Booster::Teleport);
             worker.beacons.insert(worker.pos());
         }
         Action::Teleport(x, y) => {
@@ -149,13 +154,10 @@ pub fn apply_action_old(
                     to, worker.beacons
                 )
             }
-            swap_remove_one_from_vec(&mut worker.unused_boosters, &Booster::Teleport);
             worker.x = x + 1;
             worker.y = y + 1;
         }
-        Action::CloneWorker => {
-            unimplemented!()
-        }
+        Action::CloneWorker => unimplemented!(),
     }
     filled.append(&mut worker.fill(map));
     if worker.fast_remaining > 0 {
@@ -164,7 +166,10 @@ pub fn apply_action_old(
     if worker.drill_remaining > 0 {
         worker.drill_remaining -= 1;
     }
-    Update { filled, ..Update::default() }
+    Update {
+        filled,
+        ..Update::default()
+    }
 }
 
 pub fn within_mine((x, y): (usize, usize), (w, h): (usize, usize)) -> bool {

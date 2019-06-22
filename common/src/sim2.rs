@@ -175,7 +175,11 @@ pub fn apply_multi_action(
                     m.1 = p.0;
                 }
             }
-            Action::Extension(dx, dy) => worker.manipulators.push((dx, dy)),
+            Action::Extension(dx, dy) => {
+                swap_remove_one_from_vec(&mut shared.unused_boosters, &Booster::Extension)
+                    .expect("no Extension remaining");
+                worker.manipulators.push((dx, dy));
+            },
             Action::Fast => {
                 swap_remove_one_from_vec(&mut shared.unused_boosters, &Booster::Fast)
                     .expect("no Fast remaining");
@@ -187,6 +191,7 @@ pub fn apply_multi_action(
                 worker.drill_remaining = 31;
             }
             Action::Reset => {
+                swap_remove_one_from_vec(&mut shared.unused_boosters, &Booster::Teleport);
                 shared.beacons.insert(worker.pos());
             }
             Action::Teleport(x, y) => {
@@ -197,7 +202,6 @@ pub fn apply_multi_action(
                         to, shared.beacons
                     )
                 }
-                swap_remove_one_from_vec(&mut shared.unused_boosters, &Booster::Teleport);
                 worker.x = x + 1;
                 worker.y = y + 1;
             }
