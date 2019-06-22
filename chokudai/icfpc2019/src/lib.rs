@@ -319,10 +319,11 @@ pub fn make_action_by_state(first_state: &State, UseOptimization: usize) -> Vec<
         for i in 0..point_list.len() {
             let target_pos = point_list[i];
 
-            //println!("check: {} {}", target_pos.0, target_pos.1);
+            println!("check: {} {}", target_pos.0, target_pos.1);
 
             //塗り済みであるかの検出
             if current_state.field[target_pos.0][target_pos.1] != Square::Empty{
+                println!("skip");
                 continue;
             }
 
@@ -381,8 +382,8 @@ pub fn make_action_by_state(first_state: &State, UseOptimization: usize) -> Vec<
                 
                 
                 if use_double_position.1 != !0 && point_list.len() >= 4 {
-                    //println!("double at ({}, {}, {}) for ({}, {})", (use_double_position.0).0 , (use_double_position.0).1, use_double_position.1,target_pos.0 , target_pos.1);
-                    //println!("now : {} {} {}", current_state.p.x, current_state.p.y, current_state.p.dir);
+                    println!("double at ({}, {}, {}) for ({}, {})", (use_double_position.0).0 , (use_double_position.0).1, use_double_position.1,target_pos.0 , target_pos.1);
+                    println!("now : {} {} {}", current_state.p.x, current_state.p.y, current_state.p.dir);
                     let mut a2 = bfs.search_fewest_actions_to_move(&current_state.field, &current_state.p, (use_double_position.0).0, (use_double_position.0).1);
                     let mut now_dir = current_state.p.dir;
                     let (a3, gx, gy) = bfs.search_fewest_actions_to_wrap(&current_state.field, &current_state.p, target_pos.0, target_pos.1);
@@ -416,8 +417,8 @@ pub fn make_action_by_state(first_state: &State, UseOptimization: usize) -> Vec<
                     }
                 }
                 else{
-                    //println!("single at ({}, {})", target_pos.0, target_pos.1);
-                    //println!("now : {} {}", current_state.p.x, current_state.p.y);
+                    println!("single at ({}, {})", target_pos.0, target_pos.1);
+                    println!("now : {} {}", current_state.p.x, current_state.p.y);
 
                     //actions = bfs.search_fewest_actions_to_move(&t.0, &current_state.p, target_pos.0, target_pos.1);
                     let (a2, gx, gy) = bfs.search_fewest_actions_to_wrap(&current_state.field, &current_state.p, target_pos.0, target_pos.1);

@@ -12,9 +12,10 @@ fn main() {
     let mut loop_cnt = 0;
 
     loop{
-        //let initialMove = bootstrap_expand_1_migimae(&t, loop_cnt);
-        let initialMove = bootstrap_expand_2_migi(&t, loop_cnt);
+        let initialMove = bootstrap_expand_1_migimae(&t, loop_cnt);
+        //let initialMove = bootstrap_expand_2_migi(&t, loop_cnt);
         if loop_cnt + 4 > (initialMove.2).manipulators.len() {
+            println!("{}", (initialMove.2).manipulators.len());
             break;
         }
         loop_cnt += 1;
@@ -24,7 +25,7 @@ fn main() {
         let W = first_field[0].len();
         let default_field = first_field.clone();
 
-        let first_state = get_first_state(first_field, first_itemfield, FX, FY);
+        //let first_state = get_first_state(first_field, first_itemfield, FX, FY);
         
         //途中で塗られたものを使用するバージョン
         //let mut second_state = get_first_state((initialMove.0).0, (initialMove.0).1, (initialMove.2).x, (initialMove.2).y);
