@@ -19,24 +19,9 @@ fn main() -> std::io::Result<()> {
     let mut rng = rand::thread_rng(); // デフォルトの乱数生成器を初期化します
     // println!("Hello, world!");
     let ipath = std::env::args().nth(1).expect("usage: args[1] = condfile(input)");
-    let pinput = puzzle::read(&ipath)?;
+    let pinput = puzzle::read(&ipath).expect("Unable to read data");
     let opath = std::env::args().nth(2).expect("usage: args[2] = descfile(output)");
-    /*
-    let mut file = File::open(path);
-    let mut s = String::new();
-    file.read_to_string(&mut s)?;
-    */
-    let s = std::fs::read_to_string(ipath.clone()).expect("cannot read cond file");
-    let s = s.trim();
-    let ss: Vec<_> = s.split('#').collect();
-    assert_eq!(ss.len(), 3);
-    let nums: Vec<_> = ss[0].split(',').map(|n| n.parse::<i32>().unwrap()).collect();
-    let tsize = nums[2] as usize;
-    let vmin = nums[3] as usize;
-    let vmax = nums[4] as usize;
-    let isqs = parse_map(&ss[1]);
-    let osqs = parse_map(&ss[2]);
-    dbg!(&nums);
+    let puzzle::PazzleInput {tsize, vmin, vmax, isqs, osqs, ..} = pinput.clone();
     // dbg!(&osqs);
     let n = tsize + 2;
     let mut bool_map = vec![vec![false; n]; n];
