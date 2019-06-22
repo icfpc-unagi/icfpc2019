@@ -57,7 +57,7 @@ impl WorkerState {
 // - 動くたびに Fill する
 // - Drill 中は Block も Fill にする
 // - Fast 中に壁にぶつかると 1 step で止まる
-pub fn apply_action(
+pub fn apply_action_new(
     action: Action,
     worker: &mut WorkerState,
     map: &mut SquareMap,
@@ -71,7 +71,8 @@ pub fn apply_action(
 
 
 // もとの実装（テスト用に残してる）
-pub fn apply_action_old(
+// メンテされてないがこっちにする
+pub fn apply_action(
     action: Action,
     worker: &mut WorkerState,
     map: &mut SquareMap,
