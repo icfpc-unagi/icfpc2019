@@ -9,6 +9,7 @@ members = [
     "utils",
     "wata",
     "puzzle",
+    "hoge",
 ]
 exclude = [".cache", "build"]
 
