@@ -55,6 +55,24 @@ message Api {
       bytes solution_data_error = 4;
     }
     UpdateSolution update_solution = 5;
+
+    message AcquireProblemExtra {}
+    AcquireProblemExtra acquire_problem_extra = 7;
+
+    message UpdateProblemExtra {
+      int64 problem_id = 1;
+      bytes problem_data_image = 2;
+    }
+    UpdateProblemExtra update_problem_extra = 8;
+
+    message AcquireSolutionExtra {}
+    AcquireSolutionExtra acquire_solution_extra = 9;
+
+    message UpdateSolutionExtra {
+      int64 solution_id = 1;
+      bytes solution_data_image = 2;
+    }
+    UpdateSolutionExtra update_solution_extra = 10;
   }
 
   // API Response defition.
@@ -92,5 +110,24 @@ message Api {
 
     message UpdateSolution {}
     UpdateSolution update_solution = 5;
+
+    message AcquireProblemExtra {
+      int64 problem_id = 1;
+      bytes problem_data_blob = 2;
+    }
+    AcquireProblemExtra acquire_problem_extra = 7;
+
+    message UpdateProblemExtra {}
+    UpdateProblemExtra update_problem_extra = 8;
+
+    message AcquireSolutionExtra {
+      int64 solution_id = 1;
+      bytes problem_data_blob = 2;
+      bytes solution_data_blob = 3;
+    }
+    AcquireSolutionExtra acquire_solution_extra = 9;
+
+    message UpdateSolutionExtra {}
+    UpdateSolutionExtra update_solution_extra = 10;
   }
 }

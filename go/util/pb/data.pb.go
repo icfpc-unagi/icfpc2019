@@ -82,15 +82,19 @@ var xxx_messageInfo_Api proto.InternalMessageInfo
 //
 // NEXT ID TO USE: 2
 type Api_Request struct {
-	Context              *Api_Request_Context         `protobuf:"bytes,1,opt,name=context,proto3" json:"context,omitempty"`
-	InsertProblem        *Api_Request_InsertProblem   `protobuf:"bytes,2,opt,name=insert_problem,json=insertProblem,proto3" json:"insert_problem,omitempty"`
-	InsertProgram        *Api_Request_InsertProgram   `protobuf:"bytes,3,opt,name=insert_program,json=insertProgram,proto3" json:"insert_program,omitempty"`
-	AcquireSolution      *Api_Request_AcquireSolution `protobuf:"bytes,4,opt,name=acquire_solution,json=acquireSolution,proto3" json:"acquire_solution,omitempty"`
-	InsertSolution       *Api_Request_InsertSolution  `protobuf:"bytes,6,opt,name=insert_solution,json=insertSolution,proto3" json:"insert_solution,omitempty"`
-	UpdateSolution       *Api_Request_UpdateSolution  `protobuf:"bytes,5,opt,name=update_solution,json=updateSolution,proto3" json:"update_solution,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}                     `json:"-"`
-	XXX_unrecognized     []byte                       `json:"-"`
-	XXX_sizecache        int32                        `json:"-"`
+	Context              *Api_Request_Context              `protobuf:"bytes,1,opt,name=context,proto3" json:"context,omitempty"`
+	InsertProblem        *Api_Request_InsertProblem        `protobuf:"bytes,2,opt,name=insert_problem,json=insertProblem,proto3" json:"insert_problem,omitempty"`
+	InsertProgram        *Api_Request_InsertProgram        `protobuf:"bytes,3,opt,name=insert_program,json=insertProgram,proto3" json:"insert_program,omitempty"`
+	AcquireSolution      *Api_Request_AcquireSolution      `protobuf:"bytes,4,opt,name=acquire_solution,json=acquireSolution,proto3" json:"acquire_solution,omitempty"`
+	InsertSolution       *Api_Request_InsertSolution       `protobuf:"bytes,6,opt,name=insert_solution,json=insertSolution,proto3" json:"insert_solution,omitempty"`
+	UpdateSolution       *Api_Request_UpdateSolution       `protobuf:"bytes,5,opt,name=update_solution,json=updateSolution,proto3" json:"update_solution,omitempty"`
+	AcquireProblemExtra  *Api_Request_AcquireProblemExtra  `protobuf:"bytes,7,opt,name=acquire_problem_extra,json=acquireProblemExtra,proto3" json:"acquire_problem_extra,omitempty"`
+	UpdateProblemExtra   *Api_Request_UpdateProblemExtra   `protobuf:"bytes,8,opt,name=update_problem_extra,json=updateProblemExtra,proto3" json:"update_problem_extra,omitempty"`
+	AcquireSolutionExtra *Api_Request_AcquireSolutionExtra `protobuf:"bytes,9,opt,name=acquire_solution_extra,json=acquireSolutionExtra,proto3" json:"acquire_solution_extra,omitempty"`
+	UpdateSolutionExtra  *Api_Request_UpdateSolutionExtra  `protobuf:"bytes,10,opt,name=update_solution_extra,json=updateSolutionExtra,proto3" json:"update_solution_extra,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                          `json:"-"`
+	XXX_unrecognized     []byte                            `json:"-"`
+	XXX_sizecache        int32                             `json:"-"`
 }
 
 func (m *Api_Request) Reset()         { *m = Api_Request{} }
@@ -156,6 +160,34 @@ func (m *Api_Request) GetInsertSolution() *Api_Request_InsertSolution {
 func (m *Api_Request) GetUpdateSolution() *Api_Request_UpdateSolution {
 	if m != nil {
 		return m.UpdateSolution
+	}
+	return nil
+}
+
+func (m *Api_Request) GetAcquireProblemExtra() *Api_Request_AcquireProblemExtra {
+	if m != nil {
+		return m.AcquireProblemExtra
+	}
+	return nil
+}
+
+func (m *Api_Request) GetUpdateProblemExtra() *Api_Request_UpdateProblemExtra {
+	if m != nil {
+		return m.UpdateProblemExtra
+	}
+	return nil
+}
+
+func (m *Api_Request) GetAcquireSolutionExtra() *Api_Request_AcquireSolutionExtra {
+	if m != nil {
+		return m.AcquireSolutionExtra
+	}
+	return nil
+}
+
+func (m *Api_Request) GetUpdateSolutionExtra() *Api_Request_UpdateSolutionExtra {
+	if m != nil {
+		return m.UpdateSolutionExtra
 	}
 	return nil
 }
@@ -439,19 +471,179 @@ func (m *Api_Request_UpdateSolution) GetSolutionDataError() []byte {
 	return nil
 }
 
+type Api_Request_AcquireProblemExtra struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Api_Request_AcquireProblemExtra) Reset()         { *m = Api_Request_AcquireProblemExtra{} }
+func (m *Api_Request_AcquireProblemExtra) String() string { return proto.CompactTextString(m) }
+func (*Api_Request_AcquireProblemExtra) ProtoMessage()    {}
+func (*Api_Request_AcquireProblemExtra) Descriptor() ([]byte, []int) {
+	return fileDescriptor_871986018790d2fd, []int{0, 0, 6}
+}
+
+func (m *Api_Request_AcquireProblemExtra) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Api_Request_AcquireProblemExtra.Unmarshal(m, b)
+}
+func (m *Api_Request_AcquireProblemExtra) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Api_Request_AcquireProblemExtra.Marshal(b, m, deterministic)
+}
+func (m *Api_Request_AcquireProblemExtra) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Api_Request_AcquireProblemExtra.Merge(m, src)
+}
+func (m *Api_Request_AcquireProblemExtra) XXX_Size() int {
+	return xxx_messageInfo_Api_Request_AcquireProblemExtra.Size(m)
+}
+func (m *Api_Request_AcquireProblemExtra) XXX_DiscardUnknown() {
+	xxx_messageInfo_Api_Request_AcquireProblemExtra.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Api_Request_AcquireProblemExtra proto.InternalMessageInfo
+
+type Api_Request_UpdateProblemExtra struct {
+	ProblemId            int64    `protobuf:"varint,1,opt,name=problem_id,json=problemId,proto3" json:"problem_id,omitempty"`
+	ProblemDataImage     []byte   `protobuf:"bytes,2,opt,name=problem_data_image,json=problemDataImage,proto3" json:"problem_data_image,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Api_Request_UpdateProblemExtra) Reset()         { *m = Api_Request_UpdateProblemExtra{} }
+func (m *Api_Request_UpdateProblemExtra) String() string { return proto.CompactTextString(m) }
+func (*Api_Request_UpdateProblemExtra) ProtoMessage()    {}
+func (*Api_Request_UpdateProblemExtra) Descriptor() ([]byte, []int) {
+	return fileDescriptor_871986018790d2fd, []int{0, 0, 7}
+}
+
+func (m *Api_Request_UpdateProblemExtra) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Api_Request_UpdateProblemExtra.Unmarshal(m, b)
+}
+func (m *Api_Request_UpdateProblemExtra) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Api_Request_UpdateProblemExtra.Marshal(b, m, deterministic)
+}
+func (m *Api_Request_UpdateProblemExtra) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Api_Request_UpdateProblemExtra.Merge(m, src)
+}
+func (m *Api_Request_UpdateProblemExtra) XXX_Size() int {
+	return xxx_messageInfo_Api_Request_UpdateProblemExtra.Size(m)
+}
+func (m *Api_Request_UpdateProblemExtra) XXX_DiscardUnknown() {
+	xxx_messageInfo_Api_Request_UpdateProblemExtra.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Api_Request_UpdateProblemExtra proto.InternalMessageInfo
+
+func (m *Api_Request_UpdateProblemExtra) GetProblemId() int64 {
+	if m != nil {
+		return m.ProblemId
+	}
+	return 0
+}
+
+func (m *Api_Request_UpdateProblemExtra) GetProblemDataImage() []byte {
+	if m != nil {
+		return m.ProblemDataImage
+	}
+	return nil
+}
+
+type Api_Request_AcquireSolutionExtra struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Api_Request_AcquireSolutionExtra) Reset()         { *m = Api_Request_AcquireSolutionExtra{} }
+func (m *Api_Request_AcquireSolutionExtra) String() string { return proto.CompactTextString(m) }
+func (*Api_Request_AcquireSolutionExtra) ProtoMessage()    {}
+func (*Api_Request_AcquireSolutionExtra) Descriptor() ([]byte, []int) {
+	return fileDescriptor_871986018790d2fd, []int{0, 0, 8}
+}
+
+func (m *Api_Request_AcquireSolutionExtra) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Api_Request_AcquireSolutionExtra.Unmarshal(m, b)
+}
+func (m *Api_Request_AcquireSolutionExtra) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Api_Request_AcquireSolutionExtra.Marshal(b, m, deterministic)
+}
+func (m *Api_Request_AcquireSolutionExtra) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Api_Request_AcquireSolutionExtra.Merge(m, src)
+}
+func (m *Api_Request_AcquireSolutionExtra) XXX_Size() int {
+	return xxx_messageInfo_Api_Request_AcquireSolutionExtra.Size(m)
+}
+func (m *Api_Request_AcquireSolutionExtra) XXX_DiscardUnknown() {
+	xxx_messageInfo_Api_Request_AcquireSolutionExtra.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Api_Request_AcquireSolutionExtra proto.InternalMessageInfo
+
+type Api_Request_UpdateSolutionExtra struct {
+	SolutionId           int64    `protobuf:"varint,1,opt,name=solution_id,json=solutionId,proto3" json:"solution_id,omitempty"`
+	SolutionDataImage    []byte   `protobuf:"bytes,2,opt,name=solution_data_image,json=solutionDataImage,proto3" json:"solution_data_image,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Api_Request_UpdateSolutionExtra) Reset()         { *m = Api_Request_UpdateSolutionExtra{} }
+func (m *Api_Request_UpdateSolutionExtra) String() string { return proto.CompactTextString(m) }
+func (*Api_Request_UpdateSolutionExtra) ProtoMessage()    {}
+func (*Api_Request_UpdateSolutionExtra) Descriptor() ([]byte, []int) {
+	return fileDescriptor_871986018790d2fd, []int{0, 0, 9}
+}
+
+func (m *Api_Request_UpdateSolutionExtra) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Api_Request_UpdateSolutionExtra.Unmarshal(m, b)
+}
+func (m *Api_Request_UpdateSolutionExtra) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Api_Request_UpdateSolutionExtra.Marshal(b, m, deterministic)
+}
+func (m *Api_Request_UpdateSolutionExtra) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Api_Request_UpdateSolutionExtra.Merge(m, src)
+}
+func (m *Api_Request_UpdateSolutionExtra) XXX_Size() int {
+	return xxx_messageInfo_Api_Request_UpdateSolutionExtra.Size(m)
+}
+func (m *Api_Request_UpdateSolutionExtra) XXX_DiscardUnknown() {
+	xxx_messageInfo_Api_Request_UpdateSolutionExtra.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Api_Request_UpdateSolutionExtra proto.InternalMessageInfo
+
+func (m *Api_Request_UpdateSolutionExtra) GetSolutionId() int64 {
+	if m != nil {
+		return m.SolutionId
+	}
+	return 0
+}
+
+func (m *Api_Request_UpdateSolutionExtra) GetSolutionDataImage() []byte {
+	if m != nil {
+		return m.SolutionDataImage
+	}
+	return nil
+}
+
 // API Response defition.
 //
 // NEXT ID TO USE: 2
 type Api_Response struct {
-	Context              *Api_Response_Context         `protobuf:"bytes,1,opt,name=context,proto3" json:"context,omitempty"`
-	InsertProblem        *Api_Response_InsertProblem   `protobuf:"bytes,2,opt,name=insert_problem,json=insertProblem,proto3" json:"insert_problem,omitempty"`
-	InsertProgram        *Api_Response_InsertProgram   `protobuf:"bytes,3,opt,name=insert_program,json=insertProgram,proto3" json:"insert_program,omitempty"`
-	AcquireSolution      *Api_Response_AcquireSolution `protobuf:"bytes,4,opt,name=acquire_solution,json=acquireSolution,proto3" json:"acquire_solution,omitempty"`
-	InsertSolution       *Api_Response_InsertSolution  `protobuf:"bytes,6,opt,name=insert_solution,json=insertSolution,proto3" json:"insert_solution,omitempty"`
-	UpdateSolution       *Api_Response_UpdateSolution  `protobuf:"bytes,5,opt,name=update_solution,json=updateSolution,proto3" json:"update_solution,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}                      `json:"-"`
-	XXX_unrecognized     []byte                        `json:"-"`
-	XXX_sizecache        int32                         `json:"-"`
+	Context              *Api_Response_Context              `protobuf:"bytes,1,opt,name=context,proto3" json:"context,omitempty"`
+	InsertProblem        *Api_Response_InsertProblem        `protobuf:"bytes,2,opt,name=insert_problem,json=insertProblem,proto3" json:"insert_problem,omitempty"`
+	InsertProgram        *Api_Response_InsertProgram        `protobuf:"bytes,3,opt,name=insert_program,json=insertProgram,proto3" json:"insert_program,omitempty"`
+	AcquireSolution      *Api_Response_AcquireSolution      `protobuf:"bytes,4,opt,name=acquire_solution,json=acquireSolution,proto3" json:"acquire_solution,omitempty"`
+	InsertSolution       *Api_Response_InsertSolution       `protobuf:"bytes,6,opt,name=insert_solution,json=insertSolution,proto3" json:"insert_solution,omitempty"`
+	UpdateSolution       *Api_Response_UpdateSolution       `protobuf:"bytes,5,opt,name=update_solution,json=updateSolution,proto3" json:"update_solution,omitempty"`
+	AcquireProblemExtra  *Api_Response_AcquireProblemExtra  `protobuf:"bytes,7,opt,name=acquire_problem_extra,json=acquireProblemExtra,proto3" json:"acquire_problem_extra,omitempty"`
+	UpdateProblemExtra   *Api_Response_UpdateProblemExtra   `protobuf:"bytes,8,opt,name=update_problem_extra,json=updateProblemExtra,proto3" json:"update_problem_extra,omitempty"`
+	AcquireSolutionExtra *Api_Response_AcquireSolutionExtra `protobuf:"bytes,9,opt,name=acquire_solution_extra,json=acquireSolutionExtra,proto3" json:"acquire_solution_extra,omitempty"`
+	UpdateSolutionExtra  *Api_Response_UpdateSolutionExtra  `protobuf:"bytes,10,opt,name=update_solution_extra,json=updateSolutionExtra,proto3" json:"update_solution_extra,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                           `json:"-"`
+	XXX_unrecognized     []byte                             `json:"-"`
+	XXX_sizecache        int32                              `json:"-"`
 }
 
 func (m *Api_Response) Reset()         { *m = Api_Response{} }
@@ -517,6 +709,34 @@ func (m *Api_Response) GetInsertSolution() *Api_Response_InsertSolution {
 func (m *Api_Response) GetUpdateSolution() *Api_Response_UpdateSolution {
 	if m != nil {
 		return m.UpdateSolution
+	}
+	return nil
+}
+
+func (m *Api_Response) GetAcquireProblemExtra() *Api_Response_AcquireProblemExtra {
+	if m != nil {
+		return m.AcquireProblemExtra
+	}
+	return nil
+}
+
+func (m *Api_Response) GetUpdateProblemExtra() *Api_Response_UpdateProblemExtra {
+	if m != nil {
+		return m.UpdateProblemExtra
+	}
+	return nil
+}
+
+func (m *Api_Response) GetAcquireSolutionExtra() *Api_Response_AcquireSolutionExtra {
+	if m != nil {
+		return m.AcquireSolutionExtra
+	}
+	return nil
+}
+
+func (m *Api_Response) GetUpdateSolutionExtra() *Api_Response_UpdateSolutionExtra {
+	if m != nil {
+		return m.UpdateSolutionExtra
 	}
 	return nil
 }
@@ -787,6 +1007,170 @@ func (m *Api_Response_UpdateSolution) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Api_Response_UpdateSolution proto.InternalMessageInfo
 
+type Api_Response_AcquireProblemExtra struct {
+	ProblemId            int64    `protobuf:"varint,1,opt,name=problem_id,json=problemId,proto3" json:"problem_id,omitempty"`
+	ProblemDataBlob      []byte   `protobuf:"bytes,2,opt,name=problem_data_blob,json=problemDataBlob,proto3" json:"problem_data_blob,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Api_Response_AcquireProblemExtra) Reset()         { *m = Api_Response_AcquireProblemExtra{} }
+func (m *Api_Response_AcquireProblemExtra) String() string { return proto.CompactTextString(m) }
+func (*Api_Response_AcquireProblemExtra) ProtoMessage()    {}
+func (*Api_Response_AcquireProblemExtra) Descriptor() ([]byte, []int) {
+	return fileDescriptor_871986018790d2fd, []int{0, 1, 6}
+}
+
+func (m *Api_Response_AcquireProblemExtra) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Api_Response_AcquireProblemExtra.Unmarshal(m, b)
+}
+func (m *Api_Response_AcquireProblemExtra) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Api_Response_AcquireProblemExtra.Marshal(b, m, deterministic)
+}
+func (m *Api_Response_AcquireProblemExtra) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Api_Response_AcquireProblemExtra.Merge(m, src)
+}
+func (m *Api_Response_AcquireProblemExtra) XXX_Size() int {
+	return xxx_messageInfo_Api_Response_AcquireProblemExtra.Size(m)
+}
+func (m *Api_Response_AcquireProblemExtra) XXX_DiscardUnknown() {
+	xxx_messageInfo_Api_Response_AcquireProblemExtra.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Api_Response_AcquireProblemExtra proto.InternalMessageInfo
+
+func (m *Api_Response_AcquireProblemExtra) GetProblemId() int64 {
+	if m != nil {
+		return m.ProblemId
+	}
+	return 0
+}
+
+func (m *Api_Response_AcquireProblemExtra) GetProblemDataBlob() []byte {
+	if m != nil {
+		return m.ProblemDataBlob
+	}
+	return nil
+}
+
+type Api_Response_UpdateProblemExtra struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Api_Response_UpdateProblemExtra) Reset()         { *m = Api_Response_UpdateProblemExtra{} }
+func (m *Api_Response_UpdateProblemExtra) String() string { return proto.CompactTextString(m) }
+func (*Api_Response_UpdateProblemExtra) ProtoMessage()    {}
+func (*Api_Response_UpdateProblemExtra) Descriptor() ([]byte, []int) {
+	return fileDescriptor_871986018790d2fd, []int{0, 1, 7}
+}
+
+func (m *Api_Response_UpdateProblemExtra) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Api_Response_UpdateProblemExtra.Unmarshal(m, b)
+}
+func (m *Api_Response_UpdateProblemExtra) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Api_Response_UpdateProblemExtra.Marshal(b, m, deterministic)
+}
+func (m *Api_Response_UpdateProblemExtra) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Api_Response_UpdateProblemExtra.Merge(m, src)
+}
+func (m *Api_Response_UpdateProblemExtra) XXX_Size() int {
+	return xxx_messageInfo_Api_Response_UpdateProblemExtra.Size(m)
+}
+func (m *Api_Response_UpdateProblemExtra) XXX_DiscardUnknown() {
+	xxx_messageInfo_Api_Response_UpdateProblemExtra.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Api_Response_UpdateProblemExtra proto.InternalMessageInfo
+
+type Api_Response_AcquireSolutionExtra struct {
+	SolutionId           int64    `protobuf:"varint,1,opt,name=solution_id,json=solutionId,proto3" json:"solution_id,omitempty"`
+	ProblemDataBlob      []byte   `protobuf:"bytes,2,opt,name=problem_data_blob,json=problemDataBlob,proto3" json:"problem_data_blob,omitempty"`
+	SolutionDataBlob     []byte   `protobuf:"bytes,3,opt,name=solution_data_blob,json=solutionDataBlob,proto3" json:"solution_data_blob,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Api_Response_AcquireSolutionExtra) Reset()         { *m = Api_Response_AcquireSolutionExtra{} }
+func (m *Api_Response_AcquireSolutionExtra) String() string { return proto.CompactTextString(m) }
+func (*Api_Response_AcquireSolutionExtra) ProtoMessage()    {}
+func (*Api_Response_AcquireSolutionExtra) Descriptor() ([]byte, []int) {
+	return fileDescriptor_871986018790d2fd, []int{0, 1, 8}
+}
+
+func (m *Api_Response_AcquireSolutionExtra) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Api_Response_AcquireSolutionExtra.Unmarshal(m, b)
+}
+func (m *Api_Response_AcquireSolutionExtra) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Api_Response_AcquireSolutionExtra.Marshal(b, m, deterministic)
+}
+func (m *Api_Response_AcquireSolutionExtra) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Api_Response_AcquireSolutionExtra.Merge(m, src)
+}
+func (m *Api_Response_AcquireSolutionExtra) XXX_Size() int {
+	return xxx_messageInfo_Api_Response_AcquireSolutionExtra.Size(m)
+}
+func (m *Api_Response_AcquireSolutionExtra) XXX_DiscardUnknown() {
+	xxx_messageInfo_Api_Response_AcquireSolutionExtra.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Api_Response_AcquireSolutionExtra proto.InternalMessageInfo
+
+func (m *Api_Response_AcquireSolutionExtra) GetSolutionId() int64 {
+	if m != nil {
+		return m.SolutionId
+	}
+	return 0
+}
+
+func (m *Api_Response_AcquireSolutionExtra) GetProblemDataBlob() []byte {
+	if m != nil {
+		return m.ProblemDataBlob
+	}
+	return nil
+}
+
+func (m *Api_Response_AcquireSolutionExtra) GetSolutionDataBlob() []byte {
+	if m != nil {
+		return m.SolutionDataBlob
+	}
+	return nil
+}
+
+type Api_Response_UpdateSolutionExtra struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Api_Response_UpdateSolutionExtra) Reset()         { *m = Api_Response_UpdateSolutionExtra{} }
+func (m *Api_Response_UpdateSolutionExtra) String() string { return proto.CompactTextString(m) }
+func (*Api_Response_UpdateSolutionExtra) ProtoMessage()    {}
+func (*Api_Response_UpdateSolutionExtra) Descriptor() ([]byte, []int) {
+	return fileDescriptor_871986018790d2fd, []int{0, 1, 9}
+}
+
+func (m *Api_Response_UpdateSolutionExtra) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Api_Response_UpdateSolutionExtra.Unmarshal(m, b)
+}
+func (m *Api_Response_UpdateSolutionExtra) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Api_Response_UpdateSolutionExtra.Marshal(b, m, deterministic)
+}
+func (m *Api_Response_UpdateSolutionExtra) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Api_Response_UpdateSolutionExtra.Merge(m, src)
+}
+func (m *Api_Response_UpdateSolutionExtra) XXX_Size() int {
+	return xxx_messageInfo_Api_Response_UpdateSolutionExtra.Size(m)
+}
+func (m *Api_Response_UpdateSolutionExtra) XXX_DiscardUnknown() {
+	xxx_messageInfo_Api_Response_UpdateSolutionExtra.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Api_Response_UpdateSolutionExtra proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterEnum("pb.Api_Request_InsertSolution_Strategy", Api_Request_InsertSolution_Strategy_name, Api_Request_InsertSolution_Strategy_value)
 	proto.RegisterType((*Api)(nil), "pb.Api")
@@ -797,6 +1181,10 @@ func init() {
 	proto.RegisterType((*Api_Request_AcquireSolution)(nil), "pb.Api.Request.AcquireSolution")
 	proto.RegisterType((*Api_Request_InsertSolution)(nil), "pb.Api.Request.InsertSolution")
 	proto.RegisterType((*Api_Request_UpdateSolution)(nil), "pb.Api.Request.UpdateSolution")
+	proto.RegisterType((*Api_Request_AcquireProblemExtra)(nil), "pb.Api.Request.AcquireProblemExtra")
+	proto.RegisterType((*Api_Request_UpdateProblemExtra)(nil), "pb.Api.Request.UpdateProblemExtra")
+	proto.RegisterType((*Api_Request_AcquireSolutionExtra)(nil), "pb.Api.Request.AcquireSolutionExtra")
+	proto.RegisterType((*Api_Request_UpdateSolutionExtra)(nil), "pb.Api.Request.UpdateSolutionExtra")
 	proto.RegisterType((*Api_Response)(nil), "pb.Api.Response")
 	proto.RegisterType((*Api_Response_Context)(nil), "pb.Api.Response.Context")
 	proto.RegisterType((*Api_Response_InsertProblem)(nil), "pb.Api.Response.InsertProblem")
@@ -804,51 +1192,68 @@ func init() {
 	proto.RegisterType((*Api_Response_AcquireSolution)(nil), "pb.Api.Response.AcquireSolution")
 	proto.RegisterType((*Api_Response_InsertSolution)(nil), "pb.Api.Response.InsertSolution")
 	proto.RegisterType((*Api_Response_UpdateSolution)(nil), "pb.Api.Response.UpdateSolution")
+	proto.RegisterType((*Api_Response_AcquireProblemExtra)(nil), "pb.Api.Response.AcquireProblemExtra")
+	proto.RegisterType((*Api_Response_UpdateProblemExtra)(nil), "pb.Api.Response.UpdateProblemExtra")
+	proto.RegisterType((*Api_Response_AcquireSolutionExtra)(nil), "pb.Api.Response.AcquireSolutionExtra")
+	proto.RegisterType((*Api_Response_UpdateSolutionExtra)(nil), "pb.Api.Response.UpdateSolutionExtra")
 }
 
 func init() { proto.RegisterFile("data.proto", fileDescriptor_871986018790d2fd) }
 
 var fileDescriptor_871986018790d2fd = []byte{
-	// 641 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x55, 0xdd, 0x6e, 0xda, 0x4c,
-	0x10, 0xfd, 0x1c, 0x12, 0x1c, 0x06, 0x30, 0x64, 0xbf, 0x8b, 0x5a, 0x96, 0xf2, 0xd3, 0x54, 0x55,
-	0xa3, 0xaa, 0xb2, 0xda, 0xf4, 0x09, 0x28, 0xb1, 0x12, 0xfa, 0x93, 0x46, 0x8b, 0x72, 0x8d, 0xd6,
-	0x78, 0x85, 0x2c, 0x01, 0xeb, 0xd8, 0x46, 0x6a, 0x1f, 0xa0, 0xaf, 0x54, 0xf5, 0x61, 0x7a, 0xdd,
-	0x9b, 0xbe, 0x44, 0xb5, 0xeb, 0xb5, 0xf1, 0xae, 0x31, 0xbe, 0x63, 0xcf, 0x9e, 0x39, 0xcc, 0xce,
-	0xcc, 0x19, 0x03, 0x04, 0x24, 0x25, 0x6e, 0x14, 0xb3, 0x94, 0xa1, 0x83, 0xc8, 0xbf, 0xfc, 0x6d,
-	0x41, 0x6b, 0x14, 0x85, 0xce, 0x1f, 0x13, 0x4c, 0x4c, 0x9f, 0x36, 0x34, 0x49, 0xd1, 0x3b, 0x30,
-	0xe7, 0x6c, 0x9d, 0xd2, 0x6f, 0xa9, 0x6d, 0x5c, 0x18, 0x57, 0xdd, 0xeb, 0x67, 0x6e, 0xe4, 0xbb,
-	0xa3, 0x28, 0x74, 0x25, 0xc3, 0x1d, 0x67, 0xd7, 0x38, 0xe7, 0xa1, 0x1b, 0xb0, 0xc2, 0x75, 0x42,
-	0xe3, 0x74, 0x16, 0xc5, 0xcc, 0x5f, 0xd2, 0x95, 0x7d, 0x20, 0x22, 0x4f, 0xf5, 0xc8, 0x89, 0x60,
-	0x3d, 0x64, 0x24, 0xdc, 0x0f, 0xcb, 0x47, 0x55, 0x65, 0x11, 0x93, 0x95, 0xdd, 0x6a, 0x50, 0xe1,
-	0xa4, 0x92, 0x0a, 0x3f, 0xa2, 0x8f, 0x30, 0x24, 0xf3, 0xa7, 0x4d, 0x18, 0xd3, 0x59, 0xc2, 0x96,
-	0x9b, 0x34, 0x64, 0x6b, 0xfb, 0x50, 0xe8, 0x9c, 0xeb, 0x3a, 0xa3, 0x8c, 0x37, 0x95, 0x34, 0x3c,
-	0x20, 0x2a, 0x80, 0x6e, 0x61, 0x20, 0x33, 0x2a, 0xa4, 0xda, 0x42, 0xea, 0x6c, 0x77, 0x4a, 0x85,
-	0x92, 0x7c, 0x48, 0x59, 0x68, 0x13, 0x05, 0x24, 0x2d, 0xe5, 0x74, 0xb4, 0x5b, 0xe8, 0x51, 0xd0,
-	0xb6, 0x42, 0x1b, 0xe5, 0xec, 0x74, 0xc0, 0x94, 0xd5, 0x77, 0x1e, 0xa1, 0xaf, 0x94, 0x13, 0x3d,
-	0x87, 0x9e, 0x2c, 0xff, 0x6c, 0x4d, 0x56, 0x54, 0x74, 0xaf, 0x83, 0xbb, 0x12, 0xbb, 0x27, 0x2b,
-	0x5a, 0xa6, 0xf0, 0x49, 0x10, 0x6d, 0xea, 0x15, 0x94, 0x1b, 0x92, 0x12, 0x45, 0x56, 0x14, 0x34,
-	0x8b, 0xe1, 0x3f, 0x75, 0x59, 0x8e, 0x95, 0x64, 0x05, 0x65, 0xce, 0x02, 0x2a, 0x64, 0xb7, 0x94,
-	0x31, 0x0b, 0xa8, 0x73, 0x02, 0x03, 0xad, 0xdc, 0xce, 0x2f, 0x03, 0x2c, 0xb5, 0x6e, 0x68, 0x0c,
-	0xc7, 0x49, 0x1a, 0x93, 0x94, 0x2e, 0xbe, 0x8b, 0xff, 0xb1, 0xae, 0x5f, 0xed, 0xaf, 0xb4, 0x3b,
-	0x95, 0x74, 0x5c, 0x04, 0xa2, 0x53, 0x80, 0x3c, 0x9b, 0x30, 0x10, 0xb9, 0xb4, 0x70, 0x47, 0x22,
-	0x93, 0x40, 0x5e, 0x8b, 0x1a, 0x84, 0x81, 0x18, 0xb1, 0xec, 0x9a, 0x23, 0x93, 0xe0, 0xf2, 0x05,
-	0x1c, 0xe7, 0x9a, 0x08, 0xa0, 0x3d, 0xb9, 0xbd, 0xff, 0x8a, 0xbd, 0xe1, 0x7f, 0xa8, 0x0b, 0x26,
-	0xf6, 0x1e, 0x3e, 0x8f, 0xc6, 0xde, 0xd0, 0x70, 0x7e, 0x1a, 0x60, 0xa9, 0x9d, 0x42, 0xe7, 0xd0,
-	0xcd, 0x7b, 0xcb, 0x75, 0x0d, 0xa1, 0x0b, 0x39, 0x34, 0x09, 0xd0, 0x4b, 0xb0, 0x0a, 0x42, 0x32,
-	0x67, 0x31, 0x95, 0xa9, 0xf5, 0x73, 0x74, 0xca, 0x41, 0xf4, 0x06, 0x50, 0x41, 0xe3, 0x3d, 0x9a,
-	0xf9, 0x4b, 0xe6, 0x8b, 0x34, 0x7b, 0x78, 0x98, 0xdf, 0xf0, 0x4e, 0x7d, 0x58, 0x32, 0x1f, 0xb9,
-	0xf0, 0xbf, 0xca, 0xa6, 0x71, 0xcc, 0x62, 0x31, 0xf0, 0x3d, 0x7c, 0x52, 0xa6, 0x7b, 0xfc, 0xc2,
-	0xf9, 0xdb, 0x86, 0x63, 0x4c, 0x93, 0x88, 0xad, 0x13, 0x8a, 0xae, 0x75, 0xa7, 0xdb, 0xdb, 0x62,
-	0x67, 0x94, 0xaa, 0xd5, 0xbd, 0x1a, 0xab, 0x9f, 0x55, 0x42, 0xf7, 0x7a, 0xdd, 0xab, 0xf1, 0xfa,
-	0x1e, 0x99, 0x5d, 0x66, 0xff, 0x54, 0x6b, 0xf6, 0x8b, 0x8a, 0x50, 0xa3, 0xdb, 0xef, 0xea, 0xdc,
-	0x7e, 0x5e, 0x93, 0x54, 0xad, 0xdd, 0xef, 0xea, 0xec, 0x5e, 0x55, 0x6a, 0xf0, 0xfb, 0xdb, 0xc2,
-	0xef, 0x7c, 0x7e, 0x44, 0x73, 0x67, 0x2b, 0x9a, 0x24, 0x64, 0x41, 0x13, 0xdb, 0xb8, 0x68, 0x5d,
-	0x75, 0x70, 0x5f, 0xa0, 0x5f, 0x24, 0xe8, 0xb8, 0xfa, 0x5a, 0x50, 0xe7, 0xdd, 0xd0, 0xe6, 0x5d,
-	0xe1, 0x8b, 0x9a, 0xaa, 0xf6, 0x31, 0x34, 0xfb, 0x38, 0x3f, 0x0e, 0x2a, 0x4e, 0x6e, 0x9e, 0xfd,
-	0x06, 0x4b, 0xea, 0x2b, 0xa6, 0xd5, 0xbc, 0x62, 0x0e, 0x2b, 0x2b, 0x46, 0x7b, 0xe8, 0x91, 0xf6,
-	0xd0, 0xca, 0x7a, 0x6c, 0x57, 0xd7, 0xe3, 0x6b, 0x38, 0x29, 0xaf, 0xc7, 0xcc, 0x7a, 0xa6, 0xf0,
-	0xd2, 0xa0, 0xb4, 0x23, 0xb9, 0xf3, 0x9c, 0xa1, 0xbe, 0xbc, 0x38, 0xa2, 0x76, 0xd3, 0x6f, 0x8b,
-	0x2f, 0xed, 0xfb, 0x7f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xf9, 0xd2, 0xf4, 0xef, 0x77, 0x07, 0x00,
-	0x00,
+	// 856 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x57, 0x5b, 0x6e, 0xdb, 0x38,
+	0x14, 0x1d, 0xd9, 0x89, 0x1f, 0xd7, 0xcf, 0xd0, 0x4e, 0x46, 0x10, 0x90, 0xc7, 0xe4, 0x81, 0x09,
+	0x06, 0x03, 0x61, 0x26, 0x5d, 0x81, 0xeb, 0x18, 0x89, 0xfb, 0x48, 0x03, 0xa5, 0x41, 0x83, 0xf6,
+	0xc3, 0xa5, 0x2d, 0xd6, 0x10, 0x60, 0x5b, 0x8a, 0x24, 0x03, 0xe9, 0x02, 0xba, 0x80, 0x6e, 0xa6,
+	0xe8, 0x02, 0xda, 0x2d, 0xf5, 0xbb, 0x20, 0x45, 0x29, 0x22, 0xf5, 0x42, 0xfe, 0xac, 0xcb, 0xc3,
+	0xc3, 0xcb, 0x7b, 0x2f, 0xcf, 0x81, 0x01, 0x4c, 0xec, 0x63, 0xdd, 0x71, 0x6d, 0xdf, 0x46, 0x25,
+	0x67, 0x7a, 0xf8, 0x53, 0x85, 0xf2, 0xc0, 0xb1, 0xb4, 0x1f, 0x4d, 0xa8, 0x1a, 0xe4, 0x7e, 0x4d,
+	0x3c, 0x1f, 0xfd, 0x0f, 0xd5, 0x99, 0xbd, 0xf2, 0xc9, 0x83, 0xaf, 0x2a, 0x07, 0xca, 0x69, 0xe3,
+	0xec, 0x4f, 0xdd, 0x99, 0xea, 0x03, 0xc7, 0xd2, 0x39, 0x42, 0x1f, 0x06, 0xcb, 0x46, 0x88, 0x43,
+	0xe7, 0xd0, 0xb6, 0x56, 0x1e, 0x71, 0xfd, 0x89, 0xe3, 0xda, 0xd3, 0x05, 0x59, 0xaa, 0x25, 0xb6,
+	0x73, 0x57, 0xde, 0x39, 0x66, 0xa8, 0xeb, 0x00, 0x64, 0xb4, 0xac, 0xf8, 0xa7, 0xc8, 0x32, 0x77,
+	0xf1, 0x52, 0x2d, 0x17, 0xb0, 0x50, 0x50, 0x8c, 0x85, 0x7e, 0xa2, 0x17, 0xd0, 0xc5, 0xb3, 0xfb,
+	0xb5, 0xe5, 0x92, 0x89, 0x67, 0x2f, 0xd6, 0xbe, 0x65, 0xaf, 0xd4, 0x0d, 0xc6, 0xb3, 0x2f, 0xf3,
+	0x0c, 0x02, 0xdc, 0x0d, 0x87, 0x19, 0x1d, 0x2c, 0x06, 0xd0, 0x05, 0x74, 0x78, 0x46, 0x11, 0x55,
+	0x85, 0x51, 0xed, 0xa5, 0xa7, 0x14, 0x31, 0xf1, 0x8b, 0xc4, 0x89, 0xd6, 0x8e, 0x89, 0xfd, 0x58,
+	0x4e, 0x9b, 0xe9, 0x44, 0xb7, 0x0c, 0xf6, 0x48, 0xb4, 0x16, 0xbe, 0xd1, 0x3b, 0xd8, 0x0e, 0x6f,
+	0xc7, 0x4b, 0x3d, 0x21, 0x0f, 0xbe, 0x8b, 0xd5, 0x2a, 0xa3, 0x3b, 0xca, 0xb8, 0x22, 0x2f, 0xf1,
+	0x88, 0x42, 0x8d, 0x1e, 0x4e, 0x06, 0xd1, 0x5b, 0xe8, 0xf3, 0x0c, 0x45, 0xde, 0x1a, 0xe3, 0x3d,
+	0x4c, 0x4f, 0x53, 0xa0, 0x45, 0xeb, 0x44, 0x0c, 0xbd, 0x87, 0x1d, 0xb9, 0x19, 0x9c, 0xb7, 0xce,
+	0x78, 0x8f, 0x0b, 0x5a, 0x12, 0x30, 0xf7, 0x71, 0x4a, 0x94, 0x96, 0x42, 0xaa, 0x29, 0xa7, 0x86,
+	0xf4, 0x52, 0x88, 0x95, 0xe5, 0xa5, 0x58, 0x27, 0x83, 0x5a, 0x1d, 0xaa, 0x7c, 0xc2, 0xb5, 0x5b,
+	0x68, 0x09, 0x23, 0x8b, 0xfe, 0x82, 0x66, 0x58, 0x9f, 0x15, 0x5e, 0x12, 0xf6, 0x42, 0xea, 0x46,
+	0x83, 0xc7, 0xae, 0xf0, 0x92, 0xc4, 0x21, 0xf4, 0xb5, 0xb1, 0xa7, 0xd0, 0x8c, 0x20, 0xe7, 0xd8,
+	0xc7, 0x02, 0x2d, 0x1b, 0xda, 0x60, 0x0f, 0xfd, 0x29, 0xd3, 0xd2, 0x58, 0x8c, 0x96, 0x41, 0x66,
+	0xb6, 0x49, 0x18, 0xed, 0x23, 0x64, 0x68, 0x9b, 0x44, 0xdb, 0x82, 0x8e, 0x54, 0x3f, 0xed, 0xbb,
+	0x02, 0x6d, 0x71, 0x36, 0xd1, 0x10, 0x6a, 0x9e, 0xef, 0x62, 0x9f, 0xcc, 0x3f, 0xb3, 0x73, 0xda,
+	0x67, 0x7f, 0xe7, 0x4f, 0xb3, 0x7e, 0xc3, 0xe1, 0x46, 0xb4, 0x11, 0xed, 0x02, 0x84, 0xd9, 0x58,
+	0x26, 0xcb, 0xa5, 0x6c, 0xd4, 0x79, 0x64, 0x6c, 0xf2, 0x65, 0x56, 0x03, 0xcb, 0x64, 0xcf, 0x38,
+	0x58, 0xa6, 0x91, 0xb1, 0x79, 0x78, 0x04, 0xb5, 0x90, 0x13, 0x01, 0x54, 0xc6, 0x17, 0x57, 0x6f,
+	0x8c, 0x51, 0xf7, 0x0f, 0xd4, 0x80, 0xaa, 0x31, 0xba, 0x7e, 0x35, 0x18, 0x8e, 0xba, 0x8a, 0xf6,
+	0x4d, 0x81, 0xb6, 0xd8, 0x33, 0xb4, 0x0f, 0x8d, 0xa8, 0xd7, 0x96, 0xc9, 0xb2, 0x2f, 0x1b, 0x10,
+	0x86, 0xc6, 0x26, 0x3a, 0x81, 0x76, 0x04, 0xf0, 0x66, 0xb6, 0x4b, 0x78, 0x6a, 0xad, 0x30, 0x7a,
+	0x43, 0x83, 0xe8, 0x5f, 0x40, 0x11, 0x8c, 0xf6, 0x68, 0x32, 0x5d, 0xd8, 0x53, 0x96, 0x66, 0xd3,
+	0xe8, 0x86, 0x2b, 0xb4, 0x53, 0xcf, 0x17, 0xf6, 0x14, 0xe9, 0xd0, 0x13, 0xd1, 0xc4, 0x75, 0x6d,
+	0x97, 0x89, 0x4a, 0xd3, 0xd8, 0x8a, 0xc3, 0x47, 0x74, 0x41, 0xdb, 0x86, 0x5e, 0xca, 0xb3, 0xd3,
+	0x30, 0xa0, 0xe4, 0xab, 0x91, 0x2a, 0xa5, 0x48, 0x95, 0xa2, 0x99, 0xc6, 0x87, 0x69, 0x62, 0x2d,
+	0xf1, 0x9c, 0xf0, 0x91, 0xea, 0xc6, 0x46, 0x6a, 0x4c, 0xe3, 0xda, 0x0e, 0xf4, 0xd3, 0x1e, 0x90,
+	0xf6, 0x09, 0x7a, 0x29, 0xd3, 0x5f, 0x5c, 0xce, 0xc4, 0xcd, 0xe3, 0xc7, 0x0b, 0x37, 0x0f, 0xce,
+	0xff, 0xd5, 0x80, 0x9a, 0x41, 0x3c, 0xc7, 0x5e, 0x79, 0x04, 0x9d, 0xc9, 0x3e, 0xa2, 0x3e, 0x8e,
+	0x59, 0x00, 0x49, 0x1a, 0xc9, 0x28, 0xc3, 0x48, 0xf6, 0x12, 0x5b, 0x73, 0x9d, 0x64, 0x94, 0xe1,
+	0x24, 0x39, 0x34, 0x69, 0x56, 0xf2, 0x32, 0xd3, 0x4a, 0x0e, 0x12, 0x44, 0x85, 0x5e, 0x72, 0x99,
+	0xe5, 0x25, 0xfb, 0x19, 0x49, 0x65, 0x9a, 0xc9, 0x65, 0x96, 0x99, 0x24, 0x99, 0x0a, 0xdc, 0xe4,
+	0x2e, 0xdf, 0x4d, 0x8e, 0xb3, 0x6e, 0x59, 0x6c, 0x27, 0xb7, 0xb9, 0x76, 0x72, 0x94, 0x91, 0x68,
+	0xa1, 0x9f, 0x7c, 0x28, 0xf0, 0x93, 0x93, 0xa2, 0xbe, 0xe4, 0x19, 0xca, 0x5d, 0xbe, 0xa1, 0x1c,
+	0x17, 0x54, 0x37, 0xc7, 0x51, 0xfe, 0x8b, 0x1c, 0x85, 0x2a, 0x14, 0x93, 0x8f, 0xc9, 0x92, 0x78,
+	0x1e, 0x9e, 0x13, 0x4f, 0x55, 0x0e, 0xca, 0xa7, 0x75, 0xa3, 0xc5, 0xa2, 0xaf, 0x79, 0x50, 0xd3,
+	0x65, 0xe3, 0xc9, 0xd7, 0x09, 0x01, 0xcf, 0x66, 0x57, 0x14, 0x68, 0x45, 0x12, 0x68, 0xed, 0x4b,
+	0x29, 0xe1, 0x15, 0xc5, 0x72, 0x50, 0x20, 0xfa, 0xb2, 0x89, 0x95, 0x8b, 0x4d, 0x6c, 0x23, 0x61,
+	0x62, 0xd2, 0x45, 0x37, 0x65, 0x41, 0x94, 0x0d, 0xb8, 0x92, 0x34, 0xe0, 0x7f, 0x60, 0x4b, 0xd0,
+	0x4c, 0x26, 0xee, 0x55, 0xa6, 0x59, 0x9d, 0x98, 0x64, 0x52, 0x6d, 0xd7, 0xba, 0xb2, 0x3d, 0xd2,
+	0x88, 0xd8, 0x57, 0xed, 0x63, 0xaa, 0x9e, 0x17, 0x29, 0x77, 0x6a, 0x16, 0xa5, 0xf4, 0x2c, 0xfa,
+	0x69, 0xd6, 0xa0, 0x7d, 0x55, 0xd2, 0xe5, 0xbc, 0xb8, 0x51, 0x4f, 0x38, 0xfb, 0x69, 0x5e, 0x48,
+	0xbd, 0x2d, 0x65, 0xea, 0xa7, 0x15, 0xf6, 0x97, 0xe2, 0xd9, 0xef, 0x00, 0x00, 0x00, 0xff, 0xff,
+	0x38, 0x41, 0x57, 0x98, 0x60, 0x0c, 0x00, 0x00,
 }
