@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/imos/icfpc2019/go/util/db"
 )
@@ -54,6 +55,7 @@ func programHandler(ctx context.Context, r *http.Request) (HTML, error) {
 			`<thead><tr><td>Name</td><td>Score</td><td>Modified</td></thead>` +
 			`<tbody>`)
 	for _, problem := range problems {
+		img := strings.Replace(problem.ProblemName, ".desc", ".png", 1)
 		score := "-"
 		if problem.SolutionScore != nil {
 			if *problem.SolutionScore >= 100000000 {
@@ -66,7 +68,7 @@ func programHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		if problem.SolutionModified != nil {
 			modified = *problem.SolutionModified
 		}
-		output += "<tr><td>" +
+		output += `<tr><td><img src="/static/` + Escape(img) + `">` +
 			Escape(problem.ProblemName) +
 			"</td><td>" +
 			Escape(score) +

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/imos/icfpc2019/go/util/db"
 )
@@ -27,12 +28,14 @@ func problemsHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		`<table class="table table-clickable">` +
 			`<thead><tr><td>ID</td><td>Name</td><td>Created</td></thead>` +
 			`<tbody>`)
+
 	for _, problem := range problems {
+		img := strings.Replace(problem.ProblemName, ".desc", ".png", 1)
 		output += "<tr><td>" +
 			Escape(fmt.Sprintf("%d", problem.ProblemID)) +
-			"</td><td>" +
+			`</td><td><img src="/static/` + Escape(img) + `">` +
 			Escape(problem.ProblemName) +
-			"</td><td>" +
+			"</a></td><td>" +
 			Escape(problem.ProblemCreated) +
 			"</td></tr>"
 	}
