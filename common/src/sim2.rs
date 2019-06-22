@@ -238,24 +238,18 @@ mod tests {
         let solution = read_sol(sol_path);
         let mut state = WorkersState::new_t0(init_x, init_y, &mut map);
 
-        let mut local_ts = vec![0];
+        let mut solution_iters = solution.iter().map(|actions| actions.iter()).collect::<Vec<_>>();
         loop {
+            let num_workers = state.locals.len();
             let mut actions: Vec<Option<&Action>> = vec![];
-            for i in 0..local_ts.len() {
-                actions.push(solution[i].get(local_ts[i]));
+            for i in 0..num_workers {
+                actions.push(solution_iters[i].next());
             }
             if actions.iter().all(|a| a.is_none()) {
                 break;
             }
             let actions = actions.into_iter().map(|a| *a.unwrap_or(&Action::Nothing)).collect::<Vec<_>>();
             let upd = apply_multi_action(&actions, &mut state, &mut map, &mut booster);
-
-            for mut t in local_ts.iter_mut() {
-                *t += 1;
-            }
-            for _ in 0..upd.num_cloned {
-                local_ts.push(0);
-            }
             eprintln!("{:?}", state);
         }
         // print_task(&(map.clone(), booster.clone(), worker.x, worker.y));
