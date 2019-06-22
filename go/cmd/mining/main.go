@@ -285,7 +285,7 @@ func solveTask() string {
 
 func getBlockNumber() (int64, error) {
 	stdout, stderr, err := execute(
-		"lambda-client", "getblockchaininfo", "block")
+		"/nfs/bin/lambda-client", "getblockchaininfo", "block")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", stderr)
 		return 0, errors.Wrap(err, "failed to execute getblockchaininfo")
@@ -299,7 +299,7 @@ func getBlockNumber() (int64, error) {
 
 func getMiningInfo(kind string) (string, error) {
 	stdout, stderr, err := execute(
-		"lambda-client", "getmininginfo", kind)
+		"/nfs/bin/lambda-client", "getmininginfo", kind)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", stderr)
 		return "", errors.Wrapf(
