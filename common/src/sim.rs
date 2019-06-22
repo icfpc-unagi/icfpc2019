@@ -21,7 +21,7 @@ impl WorkerState {
         WorkerState {
             x,
             y,
-            manipulators: vec![(1, 0), (1, 1), (1, -1)],
+            manipulators: vec![(0, 0), (1, 0), (1, 1), (1, -1)],
             unused_boosters: vec![],
             ..Default::default()
         }
@@ -74,10 +74,6 @@ pub fn apply_action(
             if within_mine(pos, size) && (drilling || map[pos.0][pos.1] != Square::Block) {
                 worker.x = pos.0;
                 worker.y = pos.1;
-                if map[pos.0][pos.1] != Square::Filled {
-                    map[pos.0][pos.1] = Square::Filled;
-                    filled.push(pos);
-                }
                 if let Some(b) = booster[pos.0][pos.1].take() {
                     worker.unused_boosters.push(b);
                 }
@@ -85,7 +81,7 @@ pub fn apply_action(
                 panic!("bad move to {:?}", pos);
             }
             if worker.fast_remaining > 0 {
-                worker.fill(map); // in the middle of fast steps
+                filled.append(&mut worker.fill(map)); // in the middle of fast steps
                 let pos = apply_move(worker.pos(), dir);
                 if within_mine(pos, size) && (drilling || map[pos.0][pos.1] != Square::Block) {
                     worker.x = pos.0;
@@ -146,7 +142,7 @@ pub fn apply_action(
             worker.y = y + 1;
         }
     }
-    worker.fill(map);
+    filled.append(&mut worker.fill(map));
     if worker.fast_remaining > 0 {
         worker.fast_remaining -= 1;
     }
