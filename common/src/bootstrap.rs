@@ -5,8 +5,16 @@ pub type BootstrapResult = (RasterizedTask, Vec<Action>, PlayerState);
 
 impl PlayerState {
     fn has_expand(&self) -> bool {
-        self.unused_boosters.iter().any(|&b| b == Booster::Extension)
+        self.unused_boosters
+            .iter()
+            .any(|&b| b == Booster::Extension)
     }
+}
+
+enum ExpandStrategy {
+    migimae = 1,
+    migi = 2,
+    mae = 3,
 }
 
 pub fn bootstrap_expand<F: Fn(&PlayerState) -> Option<Action>>(
@@ -35,8 +43,12 @@ pub fn bootstrap_expand<F: Fn(&PlayerState) -> Option<Action>>(
     }
 
     let (actions, x, y) = tsp_k(
-        square_map, start, &targets, |_, _| true,
-        usize::min(max_expands, targets.len()));
+        square_map,
+        start,
+        &targets,
+        |_, _| true,
+        usize::min(max_expands, targets.len()),
+    );
 
     let mut square_map = square_map.clone();
     let mut booster_map = booster_map.clone();
@@ -79,56 +91,39 @@ pub fn bootstrap_expand_0_atsumerudake(
     task: &RasterizedTask,
     max_expands: usize,
 ) -> BootstrapResult {
-    let f = |p: &PlayerState| {
-        None
-    };
+    let f = |p: &PlayerState| None;
 
-    bootstrap_expand(
-        task,
-        f,
-        max_expands)
+    bootstrap_expand(task, f, max_expands)
 }
 
-pub fn bootstrap_expand_1_migimae(
-    task: &RasterizedTask,
-    max_expands: usize,
-) -> BootstrapResult {
-    let f = |p: &PlayerState| {
-        Some(Action::Extension(1, -((p.manipulators.len() - 2) as i32)))
-    };
+pub fn bootstrap_expand_1_migimae(task: &RasterizedTask, max_expands: usize) -> BootstrapResult {
+    let f = |p: &PlayerState| Some(Action::Extension(1, -((p.manipulators.len() - 2) as i32)));
 
-    bootstrap_expand(
-        task,
-        f,
-        max_expands)
+    bootstrap_expand(task, f, max_expands)
 }
 
-pub fn bootstrap_expand_2_migi(
-    task: &RasterizedTask,
-    max_expands: usize,
-) -> BootstrapResult {
-    let f = |p: &PlayerState| {
-        Some(Action::Extension(0, -((p.manipulators.len() - 3) as i32)))
-    };
+pub fn bootstrap_expand_2_migi(task: &RasterizedTask, max_expands: usize) -> BootstrapResult {
+    let f = |p: &PlayerState| Some(Action::Extension(0, -((p.manipulators.len() - 3) as i32)));
 
-    bootstrap_expand(
-        task,
-        f,
-        max_expands)
+    bootstrap_expand(task, f, max_expands)
 }
 
-pub fn bootstrap_expand_3_mae(
+pub fn bootstrap_expand_3_mae(task: &RasterizedTask, max_expands: usize) -> BootstrapResult {
+    let f = |p: &PlayerState| Some(Action::Extension((p.manipulators.len() - 2) as i32, 0));
+
+    bootstrap_expand(task, f, max_expands)
+}
+
+pub fn bootstrap_expand_with_strategy(
     task: &RasterizedTask,
     max_expands: usize,
+    strategy: ExpandStrategy,
 ) -> BootstrapResult {
-    let f = |p: &PlayerState| {
-        Some(Action::Extension((p.manipulators.len() - 2) as i32, 0))
-    };
-
-    bootstrap_expand(
-        task,
-        f,
-        max_expands)
+    match strategy {
+        Migimae => bootstrap_expand_1_migimae(task, max_expands),
+        Migi => bootstrap_expand_2_migi(task, max_expands),
+        Mae => bootstrap_expand_3_mae(task, max_expands),
+    }
 }
 
 #[cfg(test)]
@@ -139,51 +134,35 @@ mod tests {
     fn it_works() {
         {
             let task = load_example_01();
-            let (task, actions, state) = bootstrap_expand_1_migimae(
-                &task,
-                100,
-            );
+            let (task, actions, state) = bootstrap_expand_1_migimae(&task, 100);
             dbg!(&actions);
             dbg!(&state);
         }
 
         {
             let task = load_example_01();
-            let (task, actions, state) = bootstrap_expand_2_migi(
-                &task,
-                100,
-            );
+            let (task, actions, state) = bootstrap_expand_2_migi(&task, 100);
             dbg!(&actions);
             dbg!(&state);
         }
 
         {
             let task = load_example_01();
-            let (task, actions, state) = bootstrap_expand_3_mae(
-                &task,
-                100,
-            );
+            let (task, actions, state) = bootstrap_expand_3_mae(&task, 100);
             dbg!(&actions);
             dbg!(&state);
         }
 
         {
             let task = load_example_01();
-            let (task, actions, state) = bootstrap_expand_0_atsumerudake(
-                &task,
-                100,
-            );
+            let (task, actions, state) = bootstrap_expand_0_atsumerudake(&task, 100);
             dbg!(&actions);
             dbg!(&state);
         }
 
-
         {
             let task = load_example_01();
-            let (task, actions, state) = bootstrap_expand_1_migimae(
-                &task,
-                0,
-            );
+            let (task, actions, state) = bootstrap_expand_1_migimae(&task, 0);
             dbg!(&actions);
             dbg!(&state);
         }
