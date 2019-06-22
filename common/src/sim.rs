@@ -26,13 +26,13 @@ impl WorkerState {
             ..Default::default()
         }
     }
-    pub fn new2(x: usize, y: usize, map: &mut Vec<Vec<Square>>) -> WorkerState {
+    pub fn new2(x: usize, y: usize, map: &mut SquareMap) -> WorkerState {
         let w = WorkerState::new(x, y);
         w.fill(map);
         w
     }
     // Returns updated squares
-    pub fn fill(&self, map: &mut Vec<Vec<Square>>) -> Vec<(usize, usize)> {
+    pub fn fill(&self, map: &mut SquareMap) -> Vec<(usize, usize)> {
         let mut filled = vec![];
         for &manipulator in &self.manipulators {
             if is_visible(map, self.pos(), manipulator) {
@@ -62,8 +62,8 @@ pub struct Update {
 pub fn apply_action(
     action: Action,
     worker: &mut WorkerState,
-    map: &mut Vec<Vec<Square>>,
-    booster: &mut Vec<Vec<Option<Booster>>>,
+    map: &mut SquareMap,
+    booster: &mut BoosterMap,
 ) -> Update {
     let size = (map.len(), map[0].len());
     let mut filled = vec![];
