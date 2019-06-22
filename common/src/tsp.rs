@@ -78,7 +78,7 @@ pub fn tsp<F: Fn(usize, usize) -> bool>(
     // 頂点順を復元
     let mut b = (1 << n) - 1;
     let mut v = (0..n)
-        .max_by_key(|v| dp[*v][b].0 + cost_to_goal[*v])
+        .min_by_key(|v| dp[*v][b].0 + cost_to_goal[*v])
         .unwrap();
     let mut ord = vec![];
 
