@@ -91,6 +91,9 @@ func apiHandler(
 	if err := updateSolutionHandler(ctx, req, resp); err != nil {
 		return err
 	}
+	if err := insertSolutionHandler(ctx, req, resp); err != nil {
+		return err
+	}
 	return nil
 }
 

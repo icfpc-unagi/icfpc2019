@@ -15,21 +15,39 @@ message Api {
     message Context {}
     Context context = 1;
 
+    // 問題の追加を行います
     message InsertProblem {
       string problem_name = 1;
       bytes problem_data = 2;
     }
     InsertProblem insert_problem = 2;
 
+    // AIプログラムの追加を行います
     message InsertProgram {
       string program_name = 1;
       string program_code = 2;
     }
     InsertProgram insert_program = 3;
 
+    // ジャッジプログラムが実行対象をこのメソッドで確保します
     message AcquireSolution {}
     AcquireSolution acquire_solution = 4;
 
+    // リジャッジを行います
+    message InsertSolution {
+      enum Strategy {
+        // 既存のフィールドはリジャッジしません
+        IGNORE = 0;
+        // 既存のものもリジャッジします
+        REPLACE = 1;
+      }
+      Strategy strategy = 1;
+      int64 program_id = 2;
+      int64 problem_id = 3;
+    }
+    InsertSolution insert_solution = 6;
+
+    // スコアの更新を行います
     message UpdateSolution {
       int64 solution_id = 1;
       int64 solution_score = 2;
@@ -68,6 +86,9 @@ message Api {
       bytes problem_data_blob = 7;
     }
     AcquireSolution acquire_solution = 4;
+
+    message InsertSolution {}
+    InsertSolution insert_solution = 6;
 
     message UpdateSolution {}
     UpdateSolution update_solution = 5;
