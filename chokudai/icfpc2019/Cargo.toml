@@ -1,5 +1,5 @@
 [package]
-name = "icfpc2019"
+name = "chokudai"
 version = "0.1.0"
 authors = ["chokudai"]
 edition = "2018"
