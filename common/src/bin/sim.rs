@@ -12,7 +12,7 @@ fn main() {
   let xsize = map.len();
   // let ysize = map[0].len();
   let sol = read_sol(&args[2]);
-  let mut worker = WorkerState::new(init_x, init_y);
+  let mut worker = WorkerState::new2(init_x, init_y, &mut map);
   let mut time = 0;
 
   let hr = &repeat('-').take(xsize + 5).collect::<String>();

@@ -285,9 +285,12 @@ mod tests {
     fn sim_golden(task_path: &str, sol_path: &str) {
         let (mut map, mut booster, init_x, init_y) = read_task(task_path);
         let sol = read_sol(sol_path);
-        let mut worker = WorkerState::new(init_x, init_y);
+        let mut worker = WorkerState::new2(init_x, init_y, &mut map);
         for action in sol {
             apply_action(action, &mut worker, &mut map, &mut booster);
         }
+        eprintln!("{:?}", worker);
+        print_task(&(map.clone(), booster.clone(), worker.x, worker.y));
+        assert!(map.iter().all(|v| v.iter().all(|&s| s != Square::Empty)));
     }
 }
