@@ -35,6 +35,7 @@ func acquireProblemExtraHandler(
 				problem_data
 			WHERE
 				problem_data_image IS NULL
+			ORDER BY RAND()
 			LIMIT 1`); err != nil {
 			return err
 		}

@@ -71,6 +71,7 @@ message Api {
     message UpdateSolutionExtra {
       int64 solution_id = 1;
       bytes solution_data_image = 2;
+      string solution_data_modified = 3;
     }
     UpdateSolutionExtra update_solution_extra = 10;
   }
@@ -124,6 +125,7 @@ message Api {
       int64 solution_id = 1;
       bytes problem_data_blob = 2;
       bytes solution_data_blob = 3;
+      string solution_data_modified = 4;
     }
     AcquireSolutionExtra acquire_solution_extra = 9;
 

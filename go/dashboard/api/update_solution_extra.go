@@ -25,10 +25,11 @@ func updateSolutionExtraHandler(
 		_, err := tx.ExecContext(
 			ctx,
 			`UPDATE solution_data
-				SET solution_data_image = ?
-				WHERE solution_id = ?`,
+			SET solution_data_image = ?
+			WHERE solution_id = ? AND solution_data_modified = ?`,
 			req.GetSolutionDataImage(),
-			req.GetSolutionId())
+			req.GetSolutionId(),
+			req.GetSolutionDataModified())
 		if err != nil {
 			return err
 		}

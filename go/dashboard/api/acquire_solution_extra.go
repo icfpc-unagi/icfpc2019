@@ -23,15 +23,17 @@ func acquireSolutionExtraHandler(
 	}
 	if err := func() error {
 		row := struct {
-			SolutionID       int64  `db:"solution_id"`
-			ProblemDataBlob  []byte `db:"problem_data_blob"`
-			SolutionDataBlob []byte `db:"solution_data_blob"`
+			SolutionID           int64  `db:"solution_id"`
+			ProblemDataBlob      []byte `db:"problem_data_blob"`
+			SolutionDataBlob     []byte `db:"solution_data_blob"`
+			SolutionDataModified string `db:"solution_data_modified"`
 		}{}
 		if err := db.Row(ctx, &row, `
 			SELECT 
 				solution_id,
 				problem_data_blob,
-				solution_data_blob
+				solution_data_blob,
+				solution_data_modified
 			FROM
 				solutions
 				NATURAL LEFT JOIN problem_data
@@ -39,12 +41,14 @@ func acquireSolutionExtraHandler(
 			WHERE
 				solution_data_blob IS NOT NULL
 				solution_data_image IS NULL
+			ORDER BY RAND()
 			LIMIT 1`); err != nil {
 			return err
 		}
 		resp.SolutionId = row.SolutionID
 		resp.ProblemDataBlob = row.ProblemDataBlob
 		resp.SolutionDataBlob = row.SolutionDataBlob
+		resp.SolutionDataModified = row.SolutionDataModified
 		return nil
 	}(); err != nil {
 		tx.Rollback()
