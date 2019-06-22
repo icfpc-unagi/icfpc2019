@@ -6,6 +6,7 @@ fn main() {
     let t = read_task(&taskfile);
 
     let mut best_string = "".to_string();
+    let mut best_size = 99999999;
 
     let mut loop_cnt = 0;
 
@@ -24,7 +25,7 @@ fn main() {
         let first_state = get_first_state(first_field, first_itemfield, FX, FY);
         
         //途中で塗られたものを使用するバージョン
-        //let second_state = get_first_state((initialMove.0).0, (initialMove.0).1, (initialMove.2).x, (initialMove.2).y);
+        //let mut second_state = get_first_state((initialMove.0).0, (initialMove.0).1, (initialMove.2).x, (initialMove.2).y);
         //途中で塗られたものを使用しないバージョン
         let mut second_state = get_first_state(default_field, (initialMove.0).1, (initialMove.2).x, (initialMove.2).y);
         eprintln!("{}", second_state.p.manipulators.len());
@@ -37,10 +38,11 @@ fn main() {
         let pre_string = actions_to_string(&initialMove.1);
         let ans_string = actions_to_string(&final_action);
 
-        let size =  pre_string.len() + ans_string.len();
+        let size =  (initialMove.1).len() + final_action.len();
         eprintln!("add: {} size: {}", loop_cnt, size);
-        if best_string == "" || best_string.len() > size{
+        if best_size > size{
             best_string = pre_string + &ans_string;
+            best_size = size;
         }
 
     }
