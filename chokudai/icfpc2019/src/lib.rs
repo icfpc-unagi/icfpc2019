@@ -1,5 +1,8 @@
 use common::*;
 
+use std::time::{Duration, Instant};
+use std::thread::sleep;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct State{
     pub p: WorkerState,     //プレイヤー情報
@@ -16,56 +19,9 @@ pub fn get_first_state(mut field: Vec<Vec<Square>>, item_field: Vec<Vec<Option<B
     }
 }
 
-
-///State
-pub fn make_easy_target_list(S: &State, H: usize, W:usize, T: &Vec<Vec<usize>>, UseOptimization: usize) -> (usize, Vec<(usize, usize)>){
+fn make_list_with_startpoint(S: &State, H: usize, W: usize, start_point: (usize, usize)) -> Vec<(usize, usize)>{
 
     let mut ans: Vec<(usize, usize)> = Vec::with_capacity(0);
-
-    let mut start_point = (!0, !0);
-    let mut dist = 999999;
-    let mut lastAction = 0;
-
-    use rand:: Rng;
-    let mut rng = rand::thread_rng();
-
-    //'a: for x in 0..H{
-    //    for y in 0..W {
-    //        if S.field[x][y] == Square::Empty {
-    //            start_point = (x, y);
-    //            break 'a;
-    //        }
-    //    }
-    //}
-
-    for x in 0..H{
-        for y in 0..W {
-            if S.field[x][y] == Square::Empty {
-
-                let tdist = get_diff(x, S.p.x) + get_diff(y, S.p.y);
-                if lastAction == 0 && dist > tdist {
-                    start_point = (x, y);
-                    dist = tdist;
-                }
-
-                for k in 0..4 {
-                    let (nx, ny) = apply_move((x, y), k);
-                    if  T[nx][ny] != !0 && lastAction < T[nx][ny]{
-                        start_point = (x, y);
-                        dist = tdist;
-                        lastAction = T[nx][ny];
-                        
-                    }
-                    if UseOptimization == 2 && T[nx][ny] != !0 && rng.gen::<usize>() % 2 == 1{
-                        start_point = (x, y);
-                        dist = tdist;
-                        lastAction = T[nx][ny];
-                    }
-                }
-            }
-        }
-    }
-
     if start_point.0 != !0 {
 
         //println!("start_point {} {}", start_point.0, start_point.1);
@@ -132,6 +88,69 @@ pub fn make_easy_target_list(S: &State, H: usize, W:usize, T: &Vec<Vec<usize>>, 
             }
         }
     }
+    ans
+}
+
+pub fn make_simple_target_list(S: &State, H: usize, W:usize) -> Vec<(usize, usize)>{
+    
+    let mut start_point = (!0, !0);
+    let mut dist = 999999;
+
+    for x in 0..H{
+        for y in 0..W {
+            if S.field[x][y] == Square::Empty {
+                let tdist = get_diff(x, S.p.x) + get_diff(y, S.p.y);
+                if dist > tdist {
+                    start_point = (x, y);
+                    dist = tdist;
+                }
+            }
+        }
+    }
+    make_list_with_startpoint(S, H, W, start_point)
+}
+
+///State
+pub fn make_easy_target_list(S: &State, H: usize, W:usize, T: &Vec<Vec<usize>>, UseOptimization: usize) -> (usize, Vec<(usize, usize)>){
+
+
+    let mut start_point = (!0, !0);
+    let mut dist = 999999;
+    let mut lastAction = 0;
+
+    use rand:: Rng;
+    let mut rng = rand::thread_rng();
+
+
+    for x in 0..H{
+        for y in 0..W {
+            if S.field[x][y] == Square::Empty {
+
+                let tdist = get_diff(x, S.p.x) + get_diff(y, S.p.y);
+                if lastAction == 0 && dist > tdist {
+                    start_point = (x, y);
+                    dist = tdist;
+                }
+
+                for k in 0..4 {
+                    let (nx, ny) = apply_move((x, y), k);
+                    if  T[nx][ny] != !0 && lastAction < T[nx][ny]{
+                        start_point = (x, y);
+                        dist = tdist;
+                        lastAction = T[nx][ny];
+                        
+                    }
+                    if UseOptimization == 2 && T[nx][ny] != !0 && rng.gen::<usize>() % 2 == 1{
+                        start_point = (x, y);
+                        dist = tdist;
+                        lastAction = T[nx][ny];
+                    }
+                }
+            }
+        }
+    }
+
+    let ans = make_list_with_startpoint(S, H, W, start_point);
     (lastAction, ans)
 }
 
@@ -158,6 +177,10 @@ pub fn make_move(a2 :&Vec<Action>, R: usize, L: usize, d: usize) -> Vec<Action>{
         if *act == Action::TurnL{
             stockL += 1;
         }
+    }
+
+    if stockR >= 1 && stockL >= 1{
+        println!("!?");
     }
 
     for act in a2{
@@ -256,12 +279,12 @@ pub fn make_action_by_state(first_state: &State, UseOptimization: usize) -> Vec<
                 }
             }
         }
-        eprintln!("empty : {}  Len : {}", empty_cell, final_action.len());
+        //eprintln!("empty : {}  Len : {}", empty_cell, final_action.len());
 
 
         let (mut last_act, point_list) = make_easy_target_list(&current_state, H, W, &LastActionTable, UseOptimization);
         
-        eprintln!("List : {}", point_list.len());
+        //eprintln!("List : {}", point_list.len());
         if(point_list.len() == 0){
             break;
         }
@@ -474,4 +497,111 @@ pub fn make_action_by_state(first_state: &State, UseOptimization: usize) -> Vec<
     }
 
     final_action
-} 
+}
+
+///返り値：成功フラグ、新しいAction列
+pub fn shortening_actions(first_state: &State, actions: &Vec<Action>, Seconds: usize) -> (bool, Vec<Action>){
+
+    let start = Instant::now();
+
+    let minimum_range = 10;
+    let maximum_range = 100;
+
+    loop{
+
+        let end = start.elapsed();
+        let time = end.as_secs();
+        if time >= Seconds as u64{
+            break;
+        }
+
+        use rand:: Rng;
+        let mut rng = rand::thread_rng();
+
+        let action_range = rng.gen::<usize>() % (maximum_range - minimum_range + 1) + minimum_range;
+        let start_action = rng.gen::<usize>() % (actions.len() - action_range);
+        let end_action = start_action + action_range;
+
+        let (flag, act) = shortening(&first_state, actions, start_action, end_action);
+
+        if flag{
+            return (true, act);
+        }
+    }
+    
+    (false, Vec::with_capacity(0))
+}
+
+fn shortening(first_state: &State, acts: &Vec<Action>, start:usize, end:usize) -> (bool, Vec<Action>){
+
+    let H = first_state.field.len();
+    let W = first_state.field[0].len();
+    let actions = acts.clone();
+
+    let mut start_state = first_state.clone();
+    for i in 0..start {
+        let act = actions[i];
+        apply_action(act, &mut start_state.p, &mut start_state.field, &mut start_state.item_field);
+    }
+    let start_position = start_state.p.clone();
+    let start_field = start_state.field.clone();
+    let start_itemfield = start_state.item_field.clone();
+
+    let mut current_state = start_state.clone();
+    for i in start..end {
+        let act = actions[i];
+        apply_action(act, &mut current_state.p, &mut current_state.field, &mut current_state.item_field);
+    }
+    current_state.field = start_field;
+    current_state.item_field = start_itemfield;
+    let end_position = current_state.p.clone();
+
+    for i in end..actions.len() {
+        let act = actions[i];
+        apply_action(act, &mut current_state.p, &mut current_state.field, &mut current_state.item_field);
+    }
+
+    let check_state = State{ 
+        p: start_position.clone(),
+        field: current_state.field.clone(),
+        item_field: current_state.item_field.clone(),
+    };
+
+    let mut empty_cells = 0;
+    let mut max_x = 0;
+    let mut min_x = 999999;
+    let mut max_y = 0;
+    let mut min_y = 999999;
+    
+    for x in 0..H {
+        for y in 0..W {
+            if check_state.field[x][y] == Square::Empty{
+                empty_cells += 1;
+                if max_x < x { max_x = x; }
+                if min_x > x { min_x = x; }
+                if max_y < y { max_y = y; }
+                if min_y > y { min_y = y; }
+            }
+        }
+    }
+
+    println!("RemoveRange : {}", end - start);
+    println!("EmptyCell : {}", empty_cells);
+    println!("range : ({}, {}) to ({}, {})", min_x, min_y, max_x, max_y);
+
+    let x_move = max_x - min_x + (max_x - std::cmp::max(start_position.x, end_position.x) + (std::cmp::min(start_position.x, end_position.x) - min_x));
+    let y_move = max_y - min_y + (max_y - std::cmp::max(start_position.y, end_position.y) + (std::cmp::min(start_position.y, end_position.y) - min_y));
+    let mut need_to_move = x_move + y_move;
+    if start_position.dir != end_position.dir{
+        if start_position.dir == (end_position.dir + 2) % 4{
+            need_to_move += 2;
+        }
+        else{
+            need_to_move += 1;
+        }
+    }
+
+    println!("needToMove : {}", need_to_move);
+
+    (false, Vec::with_capacity(0))
+}

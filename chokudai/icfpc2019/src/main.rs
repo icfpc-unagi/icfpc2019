@@ -1,5 +1,6 @@
 use common::*;
 use chokudai::*;
+use std::cmp::*;
 
 fn main() {
     let taskfile = std::env::args().nth(1).expect("usage: args[1] = taskfile");
@@ -29,18 +30,25 @@ fn main() {
         //let mut second_state = get_first_state((initialMove.0).0, (initialMove.0).1, (initialMove.2).x, (initialMove.2).y);
         //途中で塗られたものを使用しないバージョン
         let mut second_state = get_first_state(default_field, (initialMove.0).1, (initialMove.2).x, (initialMove.2).y);
-        eprintln!("{}", second_state.p.manipulators.len());
+        //eprintln!("{}", second_state.p.manipulators.len());
         second_state.p.manipulators = (initialMove.2).manipulators;
-        eprintln!("{}", second_state.p.manipulators.len());
+        //eprintln!("{}", second_state.p.manipulators.len());
 
         //let mut final_action = make_action_by_state(&first_state, 1);
         let mut final_action = make_action_by_state(&second_state, 1);
+        loop{
+            let (flag, act) = shortening_actions(&second_state, &final_action, 0);
+            if !flag {
+                break;
+            }
+            final_action = act;
+        }
         
         let pre_string = actions_to_string(&initialMove.1);
         let ans_string = actions_to_string(&final_action);
 
         let size =  (initialMove.1).len() + final_action.len();
-        eprintln!("add: {} size: {}", loop_cnt, size);
+        eprintln!("add: {} size: {}", loop_cnt - 1, size);
         if best_size > size{
             best_string = pre_string + &ans_string;
             best_size = size;
