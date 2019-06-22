@@ -173,7 +173,7 @@ pub fn within_mine((x, y): (usize, usize), (w, h): (usize, usize)) -> bool {
     0 < x && x < w - 1 && 0 < y && y < h
 }
 
-fn swap_remove_one_from_vec<T: Eq>(v: &mut Vec<T>, t: &T) -> Option<T> {
+pub fn swap_remove_one_from_vec<T: Eq>(v: &mut Vec<T>, t: &T) -> Option<T> {
     if let Some(i) = v.iter().position(|i| i == t) {
         let j = v.len() - 1;
         v.swap(i, j);

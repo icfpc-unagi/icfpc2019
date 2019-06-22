@@ -1,4 +1,5 @@
 use crate::*;
+use crate::sim::swap_remove_one_from_vec;
 
 use std::collections::*;
 
@@ -10,6 +11,27 @@ pub struct LocalState {
     pub manipulators: Vec<(i32, i32)>,    // マニピュレータたちの位置
     pub fast_remaining: usize,            // Fast効果残り時間
     pub drill_remaining: usize,           // Drill効果残り時間
+}
+
+impl LocalState {
+    // Returns updated squares
+    pub fn fill(&self, map: &mut SquareMap) -> Vec<(usize, usize)> {
+        let mut filled = vec![];
+        for &manipulator in &self.manipulators {
+            if is_visible(map, self.pos(), manipulator) {
+                let x = (self.x as i32 + manipulator.0) as usize;
+                let y = (self.y as i32 + manipulator.1) as usize;
+                if map[x][y] != Square::Filled {
+                    map[x][y] = Square::Filled;
+                    filled.push((x, y));
+                }
+            }
+        }
+        filled
+    }
+    pub fn pos(&self) -> (usize, usize) {
+        (self.x, self.y)
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
@@ -65,10 +87,14 @@ pub fn apply_multi_action(
 ) -> Update {
     let WorkersState { locals, shared } = workers;
     assert_eq!(actions.len(), locals.len());
+    let n = actions.len();
 
     let size = (map.len(), map[0].len());
     let mut filled = vec![];
-    for (action, worker) in actions.iter().zip(locals.iter()) {
+
+    for i in 0..n {
+        let action = actions[i];
+        let mut worker = locals.get_mut(i).unwrap();
         match action {
             Action::Move(dir) => {
                 let drilling = worker.drill_remaining > 0;
@@ -77,7 +103,7 @@ pub fn apply_multi_action(
                     worker.x = pos.0;
                     worker.y = pos.1;
                     if let Some(b) = booster[pos.0][pos.1].take() {
-                        worker.unused_boosters.push(b);
+                        shared.unused_boosters.push(b);
                     }
                 } else {
                     panic!("bad move to {:?}", pos);
@@ -93,7 +119,7 @@ pub fn apply_multi_action(
                             filled.push(pos);
                         }
                         if let Some(b) = booster[pos.0][pos.1].take() {
-                            worker.unused_boosters.push(b);
+                            shared.unused_boosters.push(b);
                         }
                     }
                 }
@@ -119,27 +145,27 @@ pub fn apply_multi_action(
             }
             Action::Extension(dx, dy) => worker.manipulators.push((dx, dy)),
             Action::Fast => {
-                swap_remove_one_from_vec(&mut worker.unused_boosters, &Booster::Fast)
+                swap_remove_one_from_vec(&mut shared.unused_boosters, &Booster::Fast)
                     .expect("no Fast remaining");
                 worker.fast_remaining = 51;
             }
             Action::Drill => {
-                swap_remove_one_from_vec(&mut worker.unused_boosters, &Booster::Drill)
+                swap_remove_one_from_vec(&mut shared.unused_boosters, &Booster::Drill)
                     .expect("no Drill remaining");
                 worker.drill_remaining = 31;
             }
             Action::Reset => {
-                worker.beacons.insert(worker.pos());
+                shared.beacons.insert(worker.pos());
             }
             Action::Teleport(x, y) => {
                 let to = (x + 1, y + 1);
-                if !worker.beacons.contains(&to) {
+                if !shared.beacons.contains(&to) {
                     panic!(
                         "teleporting to invalid beacon {:?} out of {:?}",
-                        to, worker.beacons
+                        to, shared.beacons
                     )
                 }
-                swap_remove_one_from_vec(&mut worker.unused_boosters, &Booster::Teleport);
+                swap_remove_one_from_vec(&mut shared.unused_boosters, &Booster::Teleport);
                 worker.x = x + 1;
                 worker.y = y + 1;
             }
