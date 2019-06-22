@@ -347,13 +347,13 @@ pub fn make_action_by_state(first_state: &State, UseOptimization: usize) -> Vec<
                             let mut d = !0;
                             if target_pos.0 != next_target_pos.0 {
                                 if target_pos.0 < next_target_pos.0 {
-                                    if  current_state.field[target_pos.0 + 1][target_pos.1 - 1] != Square::Block {
+                                    if  current_state.field[target_pos.0][target_pos.1 - 1] != Square::Block {
                                         pos = (target_pos.0 - 1, target_pos.1 - 1);
                                         d = 0;
                                     }
                                 }
                                 else {
-                                    if  current_state.field[target_pos.0 - 1][target_pos.1 + 1] != Square::Block {
+                                    if  current_state.field[target_pos.0][target_pos.1 + 1] != Square::Block {
                                         pos = (target_pos.0 + 1, target_pos.1 + 1);
                                         d = 2;
                                     }
@@ -361,13 +361,13 @@ pub fn make_action_by_state(first_state: &State, UseOptimization: usize) -> Vec<
                             }
                             else {
                                 if target_pos.1 < next_target_pos.1 {
-                                    if current_state.field[target_pos.0 + 1][target_pos.1 + 1] != Square::Block {
+                                    if current_state.field[target_pos.0][target_pos.1 + 1] != Square::Block {
                                         pos = (target_pos.0 + 1, target_pos.1 - 1);
                                         d = 3;
                                     }
                                 }
                                 else {
-                                    if current_state.field[target_pos.0 - 1][target_pos.1 - 1] != Square::Block {
+                                    if current_state.field[target_pos.0][target_pos.1 - 1] != Square::Block {
                                         pos = (target_pos.0 - 1, target_pos.1 + 1);
                                         d = 1;
                                     }
