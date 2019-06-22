@@ -28,7 +28,7 @@ impl WorkerState {
             ..Default::default()
         }
     }
-    #[deprecated(note="This function has a bug. Use new3 instead.")]
+    #[deprecated(note="これを使うと最初のturnでboosterを使えない可能性あり。 `new3` を使って。")]
     pub fn new2(x: usize, y: usize, map: &mut SquareMap) -> WorkerState {
         let w = WorkerState::new(x, y);
         w.fill(map);
@@ -66,7 +66,7 @@ impl WorkerState {
 // - 動くたびに Fill する
 // - Drill 中は Block も Fill にする
 // - Fast 中に壁にぶつかると 1 step で止まる
-pub fn apply_action_new(
+pub fn apply_action(
     action: Action,
     worker: &mut WorkerState,
     map: &mut SquareMap,
@@ -75,13 +75,17 @@ pub fn apply_action_new(
     let mut workers = mem::replace(worker, WorkerState::default()).into();
     let upd = apply_multi_action(&[action], &mut workers, map, booster);
     mem::replace(worker, workers.into());
+    // 1 workerしかいないので先にboosterをとったことにして良い
+    // これを渡さないと `has_expand` が壊れる
+    if let Some(b) = booster[worker.x][worker.y].take() {
+        worker.unused_boosters.push(b);
+    }
     upd
 }
 
 
 // もとの実装（テスト用に残してる）
-// メンテされてないがこっちにする
-pub fn apply_action(
+pub fn apply_action_old(
     action: Action,
     worker: &mut WorkerState,
     map: &mut SquareMap,
