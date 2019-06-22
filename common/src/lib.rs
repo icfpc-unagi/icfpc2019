@@ -66,6 +66,7 @@ impl std::str::FromStr for Booster {
             "L" => Ok(Booster::Drill),
             "R" => Ok(Booster::Teleport),
             "X" => Ok(Booster::X),
+            "C" => Ok(Booster::CloneWorker),
             _ => Err(()),
         }
     }
