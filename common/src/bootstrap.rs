@@ -30,6 +30,12 @@ pub fn bootstrap_expand<F: Fn(&PlayerState) -> Option<Action>>(
         }
     }
 
+    if targets.len() > 20 {
+        eprintln!("TOO MANY EXPANDS: {}", targets.len());
+        eprintln!("TOO MANY EXPANDS: {}", targets.len());
+        eprintln!("TOO MANY EXPANDS: {}", targets.len());
+    }
+
     let (actions, x, y) = tsp(square_map, start, &targets, |_, _| true);
 
     let mut square_map = square_map.clone();
@@ -44,6 +50,8 @@ pub fn bootstrap_expand<F: Fn(&PlayerState) -> Option<Action>>(
             &mut square_map,
             &mut booster_map,
         );
+        //assert!(move_action == Action::Move());
+
         actions2.push(*move_action);
 
         if player_state.has_expand() {
@@ -67,6 +75,20 @@ pub fn bootstrap_expand<F: Fn(&PlayerState) -> Option<Action>>(
     )
 }
 
+pub fn bootstrap_expand_0_atsumerudake(
+    task: &RasterizedTask,
+    max_expands: usize,
+) -> BootstrapResult {
+    let f = |p: &PlayerState| {
+        None
+    };
+
+    bootstrap_expand(
+        task,
+        f,
+        max_expands)
+}
+
 pub fn bootstrap_expand_1_migimae(
     task: &RasterizedTask,
     max_expands: usize,
@@ -81,18 +103,78 @@ pub fn bootstrap_expand_1_migimae(
         max_expands)
 }
 
+pub fn bootstrap_expand_2_migi(
+    task: &RasterizedTask,
+    max_expands: usize,
+) -> BootstrapResult {
+    let f = |p: &PlayerState| {
+        Some(Action::Extension(0, -((p.manipulators.len() - 3) as i32)))
+    };
+
+    bootstrap_expand(
+        task,
+        f,
+        max_expands)
+}
+
+pub fn bootstrap_expand_3_mae(
+    task: &RasterizedTask,
+    max_expands: usize,
+) -> BootstrapResult {
+    let f = |p: &PlayerState| {
+        Some(Action::Extension((p.manipulators.len() - 2) as i32, 0))
+    };
+
+    bootstrap_expand(
+        task,
+        f,
+        max_expands)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn it_works() {
-        let task = load_example_01();
-        let (task, actions, state) = bootstrap_expand_1_migimae(
-            &task,
-            100,
-        );
-        dbg!(&actions);
-        dbg!(&state);
+        {
+            let task = load_example_01();
+            let (task, actions, state) = bootstrap_expand_1_migimae(
+                &task,
+                100,
+            );
+            dbg!(&actions);
+            dbg!(&state);
+        }
+
+        {
+            let task = load_example_01();
+            let (task, actions, state) = bootstrap_expand_2_migi(
+                &task,
+                100,
+            );
+            dbg!(&actions);
+            dbg!(&state);
+        }
+
+        {
+            let task = load_example_01();
+            let (task, actions, state) = bootstrap_expand_3_mae(
+                &task,
+                100,
+            );
+            dbg!(&actions);
+            dbg!(&state);
+        }
+
+        {
+            let task = load_example_01();
+            let (task, actions, state) = bootstrap_expand_0_atsumerudake(
+                &task,
+                100,
+            );
+            dbg!(&actions);
+            dbg!(&state);
+        }
     }
 }
