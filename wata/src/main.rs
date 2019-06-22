@@ -315,8 +315,9 @@ fn clone_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx
                     best_move = mv;
                 }
             }
+            let t = t + best_move.len();
             act.extend(best_move);
-            max_t.setmax(t + act.len());
+            max_t.setmax(t);
             acts.push(act);
         }
         if min_t.setmin(max_t) {
