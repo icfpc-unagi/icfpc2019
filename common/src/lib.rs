@@ -10,6 +10,7 @@ pub mod bootstrap;
 pub mod subtask;
 pub mod bootstrap_clone;
 pub mod vectorize;
+pub mod task2;
 
 pub use reach::*;
 pub use task::*;
@@ -23,6 +24,7 @@ pub use bootstrap::*;
 pub use subtask::*;
 pub use bootstrap_clone::*;
 pub use vectorize::*;
+pub use task2::*;
 
 #[macro_export]
 macro_rules! mat {

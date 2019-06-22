@@ -1,6 +1,6 @@
 use crate::*;
 
-fn to_bool_map<T: Copy + std::cmp::PartialEq>(
+pub fn to_bool_map<T: Copy + std::cmp::PartialEq>(
     original: &Vec<Vec<T>>,
     true_value: T,
 ) -> Vec<Vec<bool>> {
