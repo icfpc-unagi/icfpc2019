@@ -31,11 +31,9 @@ pub fn bootstrap_expand<F: Fn(&PlayerState) -> Option<Action>>(
     }
 
     if targets.len() > 20 {
-        eprintln!("awoeifjpaowejfpoiawejfpoiawejfpoawiejfopawejfpawoeifjapwoefjipae")
-        eprintln!("awoeifjpaowejfpoiawejfpoiawejfpoawiejfopawejfpawoeifjapwoefjipae")
         eprintln!("TOO MANY EXPANDS: {}", targets.len());
-        eprintln!("awoeifjpaowejfpoiawejfpoiawejfpoawiejfopawejfpawoeifjapwoefjipae")
-        eprintln!("awoeifjpaowejfpoiawejfpoiawejfpoawiejfopawejfpawoeifjapwoefjipae")
+        eprintln!("TOO MANY EXPANDS: {}", targets.len());
+        eprintln!("TOO MANY EXPANDS: {}", targets.len());
     }
 
     let (actions, x, y) = tsp(square_map, start, &targets, |_, _| true);
