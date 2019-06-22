@@ -40,7 +40,7 @@ pub fn tsp_k<F: Fn(usize, usize) -> bool>(
         })
         .collect();
 
-    if n == 0 {
+    if n_required_targets == 0 {
         return bfs.search_fewest_actions_to_satisfy(
             map,
             &WorkerState::new(start.0, start.1),
