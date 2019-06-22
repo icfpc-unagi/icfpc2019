@@ -3,7 +3,13 @@ use crate::*;
 // 更新されたタスク、ここまでのアクション列、プレイヤーの状態
 pub type BootstrapResult = (RasterizedTask, Vec<Action>, PlayerState);
 
-pub fn bootstrap_expand<F: Fn(PlayerState) -> Option<Action>>(
+impl PlayerState {
+    fn has_expand(&self) -> bool {
+        self.unused_boosters.iter().any(|&b| b == Booster::Extension)
+    }
+}
+
+pub fn bootstrap_expand<F: Fn(&PlayerState) -> Option<Action>>(
     task: &RasterizedTask,
     expand_callback: F,
     max_expands: usize,
@@ -29,22 +35,50 @@ pub fn bootstrap_expand<F: Fn(PlayerState) -> Option<Action>>(
     let mut square_map = square_map.clone();
     let mut booster_map = booster_map.clone();
     let mut player_state = PlayerState::new(*start_x, *start_y);
-    for action in actions.iter() {
+
+    let mut actions2: Vec<Action> = vec![];
+    for move_action in actions.iter() {
         apply_action(
-            *action,
+            *move_action,
             &mut player_state,
             &mut square_map,
             &mut booster_map,
         );
+        actions2.push(*move_action);
 
-        // if player_state.unused_boosters.
+        if player_state.has_expand() {
+            if let Some(expand_action) = expand_callback(&player_state) {
+                apply_action(
+                    expand_action,
+                    &mut player_state,
+                    &mut square_map,
+                    &mut booster_map,
+                );
+                actions2.push(expand_action);
+            }
+        }
     }
 
+    let (x, y) = (player_state.x, player_state.y);
     (
-        (square_map, booster_map, player_state.x, player_state.y),
+        (square_map, booster_map, x, y),
         actions,
-        player_state,
+        player_state.clone(),
     )
+}
+
+pub fn bootstrap_expand_1_migimae(
+    task: &RasterizedTask,
+    max_expands: usize,
+) -> BootstrapResult {
+    let f = |p: &PlayerState| {
+        Some(Action::Extension(1, -((p.manipulators.len() - 2) as i32)))
+    };
+
+    bootstrap_expand(
+        task,
+        f,
+        max_expands)
 }
 
 #[cfg(test)]
@@ -54,9 +88,8 @@ mod tests {
     #[test]
     fn it_works() {
         let task = load_example_01();
-        let (task, actions, state) = bootstrap_expand(
+        let (task, actions, state) = bootstrap_expand_1_migimae(
             &task,
-            |p| None,
             100,
         );
         dbg!(&actions);
