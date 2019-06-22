@@ -1,7 +1,4 @@
 use common::*;
-use common::reach::*;
-use common::bfs::*;
-use common::sim::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct State{
@@ -11,9 +8,9 @@ pub struct State{
 }
 
 ///初期Stateを作るための関数
-fn get_first_state(field: Vec<Vec<Square>>, item_field: Vec<Vec<Option<Booster>>>, fx: usize, fy: usize) -> State{
+fn get_first_state(mut field: Vec<Vec<Square>>, item_field: Vec<Vec<Option<Booster>>>, fx: usize, fy: usize) -> State{
     State{
-        p: WorkerState::new(fx, fy),
+        p: WorkerState::new2(fx, fy, &mut field),
         field: field,
         item_field: item_field,
     }
