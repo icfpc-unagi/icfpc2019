@@ -215,7 +215,7 @@ mod tests {
             let xsize = map.len();
             let ysize = map[0].len();
 
-            let mut random_empty_cell = || loop {
+            let mut random_empty_cell = |rng: &mut rand::rngs::ThreadRng| loop {
                 let x: usize = rng.gen::<usize>() % xsize;
                 let y: usize = rng.gen::<usize>() % ysize;
                 if map[x][y] == Square::Empty {
@@ -225,15 +225,21 @@ mod tests {
 
             let mut bfs = BFS::new(map.len(), map[0].len());
             for _ in 0..100 {
-                let (sx, sy) = random_empty_cell();
-                let (tx, ty) = random_empty_cell();
+                let (sx, sy) = random_empty_cell(&mut rng);
+                let (tx, ty) = random_empty_cell(&mut rng);
 
                 let mut ps = WorkerState::new(sx, sy);
+                ps.dir = rng.gen::<usize>() % 4;
                 let actions = bfs.search_fewest_actions_to_move(&map, &ps, tx, ty);
 
                 let mut m = map.clone();
                 let mut b = booster.clone();
                 for a in actions.iter() {
+                    if let Action::Move(_) = a {
+                    } else {
+                        assert!(false);
+                    }
+
                     apply_action(*a, &mut ps, &mut m, &mut b);
                     assert_eq!(map[ps.x][ps.y], Square::Empty);
                 }
@@ -269,7 +275,7 @@ mod tests {
                 let (tx, ty) = random_empty_cell();
 
                 let mut ps = WorkerState::new(sx, sy);
-                ps.manipulators.push((2, 5));  // MAJI YABAI DESU
+                ps.manipulators.push((2, 5)); // MAJI YABAI DESU
 
                 let (actions, gx, gy) = bfs.search_fewest_actions_to_wrap(&map, &ps, tx, ty);
 
