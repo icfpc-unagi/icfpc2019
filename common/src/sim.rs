@@ -9,7 +9,7 @@ pub struct WorkerState {
     pub x: usize,                         //・今いる座標
     pub y: usize,                         //
     pub dir: usize,                       //・向いている向き
-    pub manipulators: Vec<(i32, i32)>,    // マニピュレータたちの相対位置（方向0のときの）
+    pub manipulators: Vec<(i32, i32)>,    // マニピュレータたちの位置
     pub unused_boosters: Vec<Booster>,    //・持っている
     pub fast_remaining: usize,            // Fast効果残り時間
     pub drill_remaining: usize,           // Drill効果残り時間
@@ -55,6 +55,9 @@ impl WorkerState {
 pub struct Update {
     pub filled: Vec<(usize, usize)>,
 }
+
+
+// TODO(tos): sim2に実装をうつす
 
 // Map への影響も考慮して動く
 // - 動くたびに Fill する

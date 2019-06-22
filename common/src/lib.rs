@@ -4,6 +4,7 @@ pub mod player_state;
 pub mod sol;
 pub mod bfs;
 pub mod sim;
+pub mod sim2;
 pub mod tsp;
 
 pub use reach::*;
