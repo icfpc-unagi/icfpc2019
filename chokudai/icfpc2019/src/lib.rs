@@ -128,6 +128,8 @@ pub fn get_diff(a:usize, b:usize) -> usize{
     b - a
 }
 
+const optimization_num: usize = 2; //0..OptimizationNum
+
 pub fn make_action_by_state(first_state: &State, UseOptimization: usize) -> Vec<Action>
 {
     let H = first_state.field.len();
