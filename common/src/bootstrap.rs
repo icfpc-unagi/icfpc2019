@@ -14,8 +14,6 @@ pub fn bootstrap_expand<F: Fn(&PlayerState) -> Option<Action>>(
     expand_callback: F,
     max_expands: usize,
 ) -> BootstrapResult {
-    // TODO: max_expandsをちゃんと使う！！！！！！！
-
     let (square_map, booster_map, start_x, start_y) = task;
     let start = (*start_x, *start_y);
     let (xsize, ysize) = get_xysize(square_map);
@@ -36,7 +34,9 @@ pub fn bootstrap_expand<F: Fn(&PlayerState) -> Option<Action>>(
         eprintln!("TOO MANY EXPANDS: {}", targets.len());
     }
 
-    let (actions, x, y) = tsp(square_map, start, &targets, |_, _| true);
+    let (actions, x, y) = tsp_k(
+        square_map, start, &targets, |_, _| true,
+        usize::min(max_expands, targets.len()));
 
     let mut square_map = square_map.clone();
     let mut booster_map = booster_map.clone();
@@ -172,6 +172,17 @@ mod tests {
             let (task, actions, state) = bootstrap_expand_0_atsumerudake(
                 &task,
                 100,
+            );
+            dbg!(&actions);
+            dbg!(&state);
+        }
+
+
+        {
+            let task = load_example_01();
+            let (task, actions, state) = bootstrap_expand_1_migimae(
+                &task,
+                0,
             );
             dbg!(&actions);
             dbg!(&state);
