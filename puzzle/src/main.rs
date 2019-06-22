@@ -49,8 +49,8 @@ fn main() -> std::io::Result<()> {
         }
         */
         for (x, y) in &osqs {
-            let x = x+&1;
-            let y = y+1;
+            let x = *x+1;
+            let y = *y+1;
             let mut bfs = BFS::new(n, n);
             let (path, goalx, goaly) = bfs.search(
                 x, y,
