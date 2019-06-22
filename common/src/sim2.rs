@@ -23,6 +23,27 @@ pub struct WorkersState {
     pub shared: SharedState,
 }
 
+// from v1
+impl From<WorkerState> for WorkersState {
+    fn from(state: WorkerState) -> WorkersState {
+        let WorkerState {x, y, dir, manipulators, unused_boosters, fast_remaining, drill_remaining, beacons} = state;
+        WorkersState {
+            locals: vec![LocalState {
+                x, y, manipulators, fast_remaining, drill_remaining
+            }],
+            shared: SharedState {
+                unused_boosters, beacons
+            },
+        }
+    }
+}
+
+// to v1
+/*
+impl From<WorkersState> for WorkerState {
+}
+*/
+
 pub fn apply_multi_action(
     actions: &[Action],
     workers: &mut WorkersState,
