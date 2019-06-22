@@ -117,9 +117,9 @@ pub fn solution_to_string(lists: &[Vec<Action>]) -> String {
     let mut out = String::new();
     for (i, list) in lists.iter().enumerate() {
         if i != 0 {
-            out.push_str(&"#");
+            out += &"#";
         }
-        out += &actions_to_string(&list);
+        out += &actions_to_string(list);
     }
     out
 }
