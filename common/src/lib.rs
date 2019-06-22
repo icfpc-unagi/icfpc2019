@@ -53,6 +53,7 @@ pub enum Booster {
     Drill,
     Teleport,
     X,
+    CloneWorker,
 }
 
 impl std::str::FromStr for Booster {
@@ -91,6 +92,7 @@ pub enum Action {
     Drill,
     Reset,
     Teleport(usize, usize),
+    CloneWorker,
 }
 
 impl std::fmt::Display for Action {
@@ -105,6 +107,7 @@ impl std::fmt::Display for Action {
             Action::Drill => f.write_str("L"),
             Action::Reset => f.write_str("R"),
             Action::Teleport(x, y) => f.write_fmt(format_args!("T({},{})", x, y)),
+            Action::CloneWorker => f.write_str("C"),
         }
     }
 }
