@@ -16,8 +16,10 @@ enum Cell {
 use Cell::*;
 
 fn main() -> std::io::Result<()> {
+    let mut rng = rand::thread_rng(); // デフォルトの乱数生成器を初期化します
     // println!("Hello, world!");
     let path = std::env::args().nth(1).expect("usage: args[1] = condfile(input)");
+    let pinput = puzzle::read(&path)?;
     // let opath = std::env::args().nth(2).expect("usage: args[2] = descfile(output)");
     /*
     let mut file = File::open(path);
@@ -37,100 +39,105 @@ fn main() -> std::io::Result<()> {
     dbg!(&nums);
     // dbg!(&osqs);
     let n = tsize + 2;
-    let mut map = vec![vec![Unk; n]; n];
-    // let map = gen_polygon(tsize, &isqs, &osqs);
-    {
-        // generate a polygon
-        for i in 0..n {
-            map[0][i] = Out;
-            map[n-1][i] = Out;
-            map[i][0] = Out;
-            map[i][n-1] = Out;
-        }
-        for (x, y) in &isqs {
-            map[x+1][y+1] = In;
-        }
-        /*
-        for (x, y) in &osqs {
-            map[x+1][y+1] = Out;
-        }
-        */
-        for (x, y) in &osqs {
-            let x = *x+1;
-            let y = *y+1;
-            let mut bfs = BFS::new(n, n);
-            let (path, goalx, goaly) = bfs.search(
-                x, y,
-                |qx, qy| { map[qx][qy] == Out },
-                |qx, qy| { map[qx][qy] == In }
-                );
-            for (px, py) in &path {
-                let px = *px;
-                let py = *py;
-                assert!(map[px][py] != In);
-                map[px][py] = Out;
-            }
-            dbg!(path);
-        }
-    }
-    {
-        // vertex wo fuyasu
-        let mut n_vertex = 0;
-        for x in 0..(n-1) {
-            for y in 0..(n-1) {
-                if is_corner(&map, x, y) {
-                    n_vertex += 1;
-                }
-            }
-        }
-        assert!(n_vertex <= vmax);
-        while n_vertex < vmin {
-            dbg!((n_vertex, vmin));
-            let mut rng = rand::thread_rng(); // デフォルトの乱数生成器を初期化します
-            let x: usize = rng.gen::<usize>() % (n-2) + 1;
-            let y: usize = rng.gen::<usize>() % (n-2) + 1;
-            if map[x][y] != Unk {
-                continue;
-            }
-            let mut cnt = 0;
-            for d in 0..4 {
-                let (tx, ty) = apply_move((x, y), d);
-                if map[tx][ty] == Out {
-                    cnt += 1;
-                }
-            }
-            if cnt != 1 {
-                continue;
-            }
-            for dx in 0..2 { for dy in 0..2 {
-                if is_corner(&map, x-dx, y-dy) {
-                    n_vertex -= 1;
-                }
-            }}
-            map[x][y] = Out;
-            for dx in 0..2 { for dy in 0..2 {
-                if is_corner(&map, x-dx, y-dy) {
-                    n_vertex += 1;
-                }
-            }}
-            // todo(tos)
-        }
-    }
     let mut bool_map = vec![vec![false; n]; n];
-    for x in 0..n {
-        for y in 0..n {
-            bool_map[x][y] = (map[x][y] != Out);
+    // let map = gen_polygon(tsize, &isqs, &osqs);
+    loop { // repeat until success
+        let mut map = vec![vec![Unk; n]; n];
+        {
+            // generate a polygon
+            for i in 0..n {
+                map[0][i] = Out;
+                map[n-1][i] = Out;
+                map[i][0] = Out;
+                map[i][n-1] = Out;
+            }
+            for (x, y) in &isqs {
+                map[x+1][y+1] = In;
+            }
+            /*
+            for (x, y) in &osqs {
+                map[x+1][y+1] = Out;
+            }
+            */
+            let mut osqs_shuffled = osqs.clone();
+            rng.shuffle(&mut osqs_shuffled);
+            for (x, y) in &osqs_shuffled {
+                let x = *x+1;
+                let y = *y+1;
+                let mut bfs = BFS::new(n, n);
+                let (path, goalx, goaly) = bfs.search(
+                    x, y,
+                    |qx, qy| { map[qx][qy] == Out },
+                    |qx, qy| { map[qx][qy] == In }
+                    );
+                for (px, py) in &path {
+                    let px = *px;
+                    let py = *py;
+                    assert!(map[px][py] != In);
+                    map[px][py] = Out;
+                }
+                dbg!(path);
+            }
         }
-    }
+        {
+            // vertex wo fuyasu
+            let mut n_vertex = 0;
+            for x in 0..(n-1) {
+                for y in 0..(n-1) {
+                    if is_corner(&map, x, y) {
+                        n_vertex += 1;
+                    }
+                }
+            }
+            assert!(n_vertex <= vmax);
+            while n_vertex < vmin {
+                dbg!((n_vertex, vmin));
+                let x: usize = rng.gen::<usize>() % (n-2) + 1;
+                let y: usize = rng.gen::<usize>() % (n-2) + 1;
+                if map[x][y] != Unk {
+                    continue;
+                }
+                let mut cnt = 0;
+                for d in 0..4 {
+                    let (tx, ty) = apply_move((x, y), d);
+                    if map[tx][ty] == Out {
+                        cnt += 1;
+                    }
+                }
+                if cnt != 1 {
+                    continue;
+                }
+                for dx in 0..2 { for dy in 0..2 {
+                    if is_corner(&map, x-dx, y-dy) {
+                        n_vertex -= 1;
+                    }
+                }}
+                map[x][y] = Out;
+                for dx in 0..2 { for dy in 0..2 {
+                    if is_corner(&map, x-dx, y-dy) {
+                        n_vertex += 1;
+                    }
+                }}
+                // todo(tos)
+            }
+        }
+        for x in 0..n {
+            for y in 0..n {
+                bool_map[x][y] = (map[x][y] != Out);
+            }
+        }
 
-    let pinput = puzzle::read(&path)?;
-    for x in 0..n {
-        for y in 0..n {
-            eprint!("{}", if bool_map[x][y] { '.' } else { '#' });
+        for x in 0..n {
+            for y in 0..n {
+                eprint!("{}", if bool_map[x][y] { '.' } else { '#' });
+            }
+            eprintln!();
         }
-        eprintln!();
+        if puzzle::check(&pinput, &bool_map) {
+            break;
+        }
+        eprintln!("check failed! retrying...");
     }
-    assert!(puzzle::check(&pinput, &bool_map));
     let taskspec = raster_map_to_task_specification(
         &bool_map,
         pinput.mnum,
