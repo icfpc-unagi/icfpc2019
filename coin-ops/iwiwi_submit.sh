@@ -11,9 +11,27 @@ ls -alFh ${TASK_SOL_PATH}
 ls -alFh ${PUZZLE_SOL_PATH}
 
 echo ""
-echo ""
-echo ""
-echo python lambda-cli.py submit ${BLOCK} ${TASK_SOL_PATH} ${PUZZLE_SOL_PATH}
-echo ""
-echo ""
-echo ""
+echo "OK?:"
+echo "  " python lambda-cli.py submit ${BLOCK} ${TASK_SOL_PATH} ${PUZZLE_SOL_PATH}
+echo 
+
+while true; do
+    echo "Yes or No:"
+
+    read answer
+
+    case $answer in
+        yes)
+            python lambda-cli.py submit ${BLOCK} ${TASK_SOL_PATH} ${PUZZLE_SOL_PATH}
+            break
+            ;;
+        no)
+            echo "Abort"
+            break
+            ;;
+        *)
+            echo "Unrecognized: $answer"
+            ;;
+    esac
+done
+
