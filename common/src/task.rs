@@ -64,7 +64,9 @@ fn parse_task_specification(task: &str) -> TaskSpecification {
 // Rasterize
 ////////////////////////////////////////////////////////////////////////////////
 
-pub type RasterizedTask = (Vec<Vec<Square>>, Vec<Vec<Option<Booster>>>, usize, usize);
+pub type SquareMap = Vec<Vec<Square>>;
+pub type BoosterMap = Vec<Vec<Option<Booster>>>;
+pub type RasterizedTask = (SquareMap, BoosterMap, usize, usize);
 
 fn get_size(task: &TaskSpecification) -> (usize, usize) {
     (
