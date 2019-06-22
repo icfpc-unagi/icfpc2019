@@ -267,7 +267,7 @@ pub fn solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx, 
     actions
 }
 
-fn chokudai_main(t: RasterizedTask, op: usize) -> Vec<Action> {
+fn chokudai_main(t: RasterizedTask, op: usize, expand: bool) -> Vec<Action> {
     let mut best_action = vec![];
     let mut loop_cnt = 0;
     loop{
@@ -303,6 +303,9 @@ fn chokudai_main(t: RasterizedTask, op: usize) -> Vec<Action> {
         if best_action.len() == 0 || best_action.len() > size{
             best_action = pre_action.clone();
             best_action.extend(ans_action);
+        }
+        if !expand {
+            break;
         }
     }
     best_action
@@ -351,7 +354,7 @@ fn clone_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx
             sy -= dy;
             let mut best_move = vec![];
             for op in 0..2 {
-                let mv = chokudai_main((map.clone(), boosters.clone(), sx, sy), op);
+                let mv = chokudai_main((map.clone(), boosters.clone(), sx, sy), op, true);
                 // let ch_state = chokudai::get_first_state(map.clone(), boosters.clone(), sx, sy);
                 // let mv = chokudai::make_action_by_state(&ch_state, op);
                 if op == 0 || best_move.len() > mv.len() {
@@ -396,7 +399,7 @@ pub fn split_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>,
         let mut best = vec![];
         let (sx0, sy0) = pas[0].0;
         for op in 0..2 {
-            let mv = chokudai_main((map.clone(), boosters.clone(), sx0, sy0), op);
+            let mv = chokudai_main((map.clone(), boosters.clone(), sx0, sy0), op, false);
             if op == 0 || best.len() > mv.len() {
                 best = mv;
             }
