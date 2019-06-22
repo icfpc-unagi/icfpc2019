@@ -18,7 +18,7 @@ pub fn get_first_state(mut field: Vec<Vec<Square>>, item_field: Vec<Vec<Option<B
 
 
 ///State
-pub fn make_easy_target_list(S: &State, H: usize, W:usize, T: &Vec<Vec<usize>>) -> (usize, Vec<(usize, usize)>){
+pub fn make_easy_target_list(S: &State, H: usize, W:usize, T: &Vec<Vec<usize>>, UseOptimization: usize) -> (usize, Vec<(usize, usize)>){
 
     let mut ans: Vec<(usize, usize)> = Vec::with_capacity(0);
 
@@ -56,7 +56,7 @@ pub fn make_easy_target_list(S: &State, H: usize, W:usize, T: &Vec<Vec<usize>>) 
                         lastAction = T[nx][ny];
                         
                     }
-                    if T[nx][ny] != !0 && rng.gen::<usize>() % 2 == 1{
+                    if UseOptimization == 2 && T[nx][ny] != !0 && rng.gen::<usize>() % 2 == 1{
                         start_point = (x, y);
                         dist = tdist;
                         lastAction = T[nx][ny];
@@ -259,7 +259,7 @@ pub fn make_action_by_state(first_state: &State, UseOptimization: usize) -> Vec<
         eprintln!("empty : {}  Len : {}", empty_cell, final_action.len());
 
 
-        let (mut last_act, point_list) = make_easy_target_list(&current_state, H, W, &LastActionTable);
+        let (mut last_act, point_list) = make_easy_target_list(&current_state, H, W, &LastActionTable, UseOptimization);
         
         eprintln!("List : {}", point_list.len());
         if(point_list.len() == 0){

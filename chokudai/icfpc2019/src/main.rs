@@ -11,7 +11,8 @@ fn main() {
     let mut loop_cnt = 0;
 
     loop{
-        let initialMove = bootstrap_expand_1_migimae(&t, loop_cnt);
+        //let initialMove = bootstrap_expand_1_migimae(&t, loop_cnt);
+        let initialMove = bootstrap_expand_2_migi(&t, loop_cnt);
         if loop_cnt + 4 > (initialMove.2).manipulators.len() {
             break;
         }
