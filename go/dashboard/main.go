@@ -19,6 +19,10 @@ type Response struct {
 }
 
 func handle(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/" {
+		http.Redirect(w, r, "/ranking", http.StatusFound)
+		return
+	}
 	json.NewEncoder(w).Encode(Response{Status: "ok", Message: "Hello world."})
 }
 
