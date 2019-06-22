@@ -38,6 +38,10 @@ impl WorkerState {
     }
 }
 
+pub struct Update {
+    filled: Vec<(usize, usize)>,
+}
+
 // Map への影響も考慮して動く
 // - 動くたびに Fill する
 // - Drill 中は Block も Fill にする
@@ -47,8 +51,9 @@ pub fn apply_action(
     worker: &mut WorkerState,
     map: &mut Vec<Vec<Square>>,
     booster: &mut Vec<Vec<Option<Booster>>>,
-) {
+) -> Update {
     let size = (map.len(), map[0].len());
+    let mut filled = vec![];
     match action {
         Action::Move(dir) => {
             let drilling = worker.drill_remaining > 0;
@@ -56,7 +61,10 @@ pub fn apply_action(
             if within_mine(pos, size) && (drilling || map[pos.0][pos.1] != Square::Block) {
                 worker.x = pos.0;
                 worker.y = pos.1;
-                map[pos.0][pos.1] = Square::Filled;
+                if map[pos.0][pos.1] != Square::Filled {
+                    map[pos.0][pos.1] = Square::Filled;
+                    filled.push(pos);
+                }
                 if let Some(b) = booster[pos.0][pos.1].take() {
                     worker.unused_boosters.push(b);
                 }
@@ -68,7 +76,10 @@ pub fn apply_action(
                 if within_mine(pos, size) && (drilling || map[pos.0][pos.1] != Square::Block) {
                     worker.x = pos.0;
                     worker.y = pos.1;
-                    map[pos.0][pos.1] = Square::Filled;
+                    if map[pos.0][pos.1] != Square::Filled {
+                        map[pos.0][pos.1] = Square::Filled;
+                        filled.push(pos);
+                    }
                     if let Some(b) = booster[pos.0][pos.1].take() {
                         worker.unused_boosters.push(b);
                     }
@@ -126,6 +137,9 @@ pub fn apply_action(
     }
     if worker.drill_remaining > 0 {
         worker.drill_remaining -= 1;
+    }
+    Update{
+        filled,
     }
 }
 
