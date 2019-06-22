@@ -1,5 +1,5 @@
 use crate::*;
-use crate::sim::swap_remove_one_from_vec;
+use crate::sim::{swap_remove_one_from_vec, within_mine};
 
 use std::collections::*;
 
