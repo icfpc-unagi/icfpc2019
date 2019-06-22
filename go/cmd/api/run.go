@@ -113,7 +113,7 @@ func runCommand(
 		defer wg.Done()
 		select {
 		case <-done:
-		case <-time.After(time.Second * 10):
+		case <-time.After(time.Second * 180):
 			cmd.Process.Kill()
 		}
 	}()
