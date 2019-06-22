@@ -22,7 +22,6 @@ func acquireProblemExtraHandler(
 		return errors.WithStack(err)
 	}
 	if err := func() error {
-		// TODO: acquire lock?
 		row := struct {
 			ProblemID       int64  `db:"problem_id"`
 			ProblemDataBlob []byte `db:"problem_data_blob"`
@@ -37,7 +36,9 @@ func acquireProblemExtraHandler(
 				problem_data_image IS NULL
 			ORDER BY RAND()
 			LIMIT 1`); err != nil {
-			return err
+			// ok to return empty
+			apiResp.AcquireProblemExtra = resp
+			return nil
 		}
 		resp.ProblemId = row.ProblemID
 		resp.ProblemDataBlob = row.ProblemDataBlob

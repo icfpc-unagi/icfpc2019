@@ -21,6 +21,7 @@ func init() {
 			return
 		}
 		w.Header().Set("Content-Type", "image/png")
+		w.Header().Set("Cache-Control", "public")
 		_, err = w.Write(output)
 		if err != nil {
 			log.Errorf(ctx, "%+v", err)

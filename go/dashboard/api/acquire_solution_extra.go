@@ -39,11 +39,13 @@ func acquireSolutionExtraHandler(
 				NATURAL LEFT JOIN problem_data
 				NATURAL LEFT JOIN solution_data
 			WHERE
-				solution_data_blob IS NOT NULL
+				solution_data_blob IS NOT NULL AND
 				solution_data_image IS NULL
 			ORDER BY RAND()
 			LIMIT 1`); err != nil {
-			return err
+			// ok to return empty
+			apiResp.AcquireSolutionExtra = resp
+			return nil
 		}
 		resp.SolutionId = row.SolutionID
 		resp.ProblemDataBlob = row.ProblemDataBlob
