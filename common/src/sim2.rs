@@ -1,5 +1,5 @@
 use crate::*;
-use crate::sim::swap_remove_one_from_vec;
+use crate::sim::{swap_remove_one_from_vec, within_mine};
 
 use std::collections::*;
 
@@ -14,6 +14,19 @@ pub struct LocalState {
 }
 
 impl LocalState {
+    pub fn new(x: usize, y: usize) -> LocalState {
+        LocalState {
+            x,
+            y,
+            manipulators: vec![(0, 0), (1, 0), (1, 1), (1, -1)],
+            ..Default::default()
+        }
+    }
+
+    pub fn clone_worker(&self) -> LocalState {
+        LocalState::new(self.x, self.y)
+    }
+
     // Returns updated squares
     pub fn fill(&self, map: &mut SquareMap) -> Vec<(usize, usize)> {
         let mut filled = vec![];
@@ -91,6 +104,7 @@ pub fn apply_multi_action(
 
     let size = (map.len(), map[0].len());
     let mut filled = vec![];
+    let mut new_workers = vec![];
 
     for i in 0..n {
         let action = actions[i];
@@ -169,6 +183,11 @@ pub fn apply_multi_action(
                 worker.x = x + 1;
                 worker.y = y + 1;
             }
+            Action::CloneWorker => {
+                swap_remove_one_from_vec(&mut shared.unused_boosters, &Booster::CloneWorker)
+                    .expect("no Clone remaining");
+                new_workers.push(worker.clone_worker());
+            }
         }
         filled.append(&mut worker.fill(map));
         if worker.fast_remaining > 0 {
@@ -178,5 +197,6 @@ pub fn apply_multi_action(
             worker.drill_remaining -= 1;
         }
     }
+    locals.append(&mut new_workers);
     Update { filled }
 }

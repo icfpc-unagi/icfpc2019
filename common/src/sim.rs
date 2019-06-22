@@ -158,6 +158,9 @@ pub fn apply_action_old(
             worker.x = x + 1;
             worker.y = y + 1;
         }
+        Action::CloneWorker => {
+            unimplemented!()
+        }
     }
     filled.append(&mut worker.fill(map));
     if worker.fast_remaining > 0 {

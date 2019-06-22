@@ -148,6 +148,7 @@ pub fn print_task(task: &RasterizedTask) {
                                     Booster::Fast => 'F',
                                     Booster::Teleport => 'R',
                                     Booster::X => 'X',
+                                    Booster::CloneWorker => 'C',
                                 }
                             } else {
                                 ' '
