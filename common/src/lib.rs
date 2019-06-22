@@ -5,6 +5,7 @@ pub mod sol;
 pub mod bfs;
 pub mod sim;
 pub mod tsp;
+pub mod bootstrap;
 
 pub use reach::*;
 pub use task::*;
@@ -13,6 +14,7 @@ pub use bfs::*;
 pub use sim::*;
 pub use sol::*;
 pub use tsp::*;
+pub use bootstrap::*;
 
 #[macro_export]
 macro_rules! mat {
