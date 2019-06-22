@@ -215,7 +215,7 @@ mod tests {
             let xsize = map.len();
             let ysize = map[0].len();
 
-            let mut random_empty_cell = |rng: &mut rand::rngs::ThreadRng| loop {
+            let random_empty_cell = |rng: &mut rand::rngs::ThreadRng| loop {
                 let x: usize = rng.gen::<usize>() % xsize;
                 let y: usize = rng.gen::<usize>() % ysize;
                 if map[x][y] == Square::Empty {
