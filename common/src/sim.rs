@@ -48,13 +48,12 @@ pub fn apply_action(
     map: &mut Vec<Vec<Square>>,
     booster: &mut Vec<Vec<Option<Booster>>>,
 ) {
-    let w = map.len();
-    let h = map[0].len();
+    let size = (map.len(), map[0].len());
     match action {
         Action::Move(dir) => {
             let drilling = worker.drill_remaining > 0;
             let pos = apply_move(worker.pos(), dir);
-            if pos.0 < w && pos.1 < h && (drilling || map[pos.0][pos.1] != Square::Block) {
+            if within_mine(pos, size) && (drilling || map[pos.0][pos.1] != Square::Block) {
                 worker.x = pos.0;
                 worker.y = pos.1;
                 map[pos.0][pos.1] = Square::Filled;
@@ -62,11 +61,11 @@ pub fn apply_action(
                     worker.unused_boosters.push(b);
                 }
             } else {
-                panic!("bad move");
+                panic!("bad move to {:?}", pos);
             }
             if worker.fast_remaining > 0 {
                 let pos = apply_move(worker.pos(), dir);
-                if pos.0 < w && pos.1 < h && (drilling || map[pos.0][pos.1] != Square::Block) {
+                if within_mine(pos, size) && (drilling || map[pos.0][pos.1] != Square::Block) {
                     worker.x = pos.0;
                     worker.y = pos.1;
                     map[pos.0][pos.1] = Square::Filled;
@@ -97,34 +96,27 @@ pub fn apply_action(
         }
         Action::Extension(dx, dy) => worker.manipulators.push((dx, dy)),
         Action::Fast => {
-            let i = worker
-                .unused_boosters
-                .iter()
-                .position(|&b| b == Booster::Fast)
+            swap_remove_one_from_vec(&mut worker.unused_boosters, &Booster::Fast)
                 .expect("no Fast remaining");
-            let j = worker.unused_boosters.len() - 1;
-            worker.unused_boosters.swap(i, j);
-            worker.unused_boosters.pop();
-            worker.fast_remaining = 51;
+            worker.fast_remaining = 50;
         }
         Action::Drill => {
-            let i = worker
-                .unused_boosters
-                .iter()
-                .position(|&b| b == Booster::Drill)
+            swap_remove_one_from_vec(&mut worker.unused_boosters, &Booster::Drill)
                 .expect("no Drill remaining");
-            let j = worker.unused_boosters.len() - 1;
-            worker.unused_boosters.swap(i, j);
-            worker.unused_boosters.pop();
-            worker.drill_remaining = 31;
+            worker.drill_remaining = 30;
         }
         Action::Reset => {
             worker.beacons.insert(worker.pos());
         }
         Action::Teleport(x, y) => {
-            if !worker.beacons.contains(&(x, y)) {
-                panic!()
+            let to = (x, y);
+            if !worker.beacons.contains(&to) {
+                panic!(
+                    "teleporting to invalid beacon {:?} out of {:?}",
+                    to, worker.beacons
+                )
             }
+            swap_remove_one_from_vec(&mut worker.unused_boosters, &Booster::Teleport);
             worker.x = x;
             worker.y = y;
         }
@@ -134,6 +126,20 @@ pub fn apply_action(
     }
     if worker.drill_remaining > 0 {
         worker.drill_remaining -= 1;
+    }
+}
+
+pub fn within_mine((x, y): (usize, usize), (w, h): (usize, usize)) -> bool {
+    0 < x && x < w - 1 && 0 < y && y < h
+}
+
+fn swap_remove_one_from_vec<T: Eq>(v: &mut Vec<T>, t: &T) -> Option<T> {
+    if let Some(i) = v.iter().position(|i| i == t) {
+        let j = v.len() - 1;
+        v.swap(i, j);
+        v.pop()
+    } else {
+        None
     }
 }
 
