@@ -63,7 +63,7 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		FROM solutions
 		WHERE
 			solution_score IS NOT NULL AND
-			solution_booster == ""
+			solution_booster = ""
 		GROUP BY program_id, problem_id`); err != nil {
 		return "", err
 	}
