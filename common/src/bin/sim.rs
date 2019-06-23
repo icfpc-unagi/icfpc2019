@@ -17,7 +17,7 @@ fn main() {
   if matches.free.len() < 2 {
     eprintln!(
       "{}",
-      opts.usage(&format!("Usage: {} <desc> <sol>", &args[0]))
+      opts.usage(&format!("Usage: {} <desc> <sol> [buy]", &args[0]))
     );
     std::process::exit(1);
   }
@@ -31,13 +31,14 @@ fn main() {
 
   let task_path = &matches.free[0];
   let sol_path = &matches.free[1];
+  let buy = matches.free.get(2).map(|b| parse_buy(&b)).unwrap_or(vec![]);
 
   // Initialize
   let (mut map, mut booster, init_x, init_y) = read_task(task_path);
   let xsize = map.len();
   let ysize = map[0].len();
   let sol = &read_sol(sol_path);
-  let mut workers = WorkersState::new_t0(init_x, init_y, &mut map);
+  let mut workers = WorkersState::new_t0_with_options(init_x, init_y, &mut map, buy);
   let mut time = 0;
 
   // Play

@@ -60,7 +60,7 @@ pub fn parse_sol(s: &str) -> Vec<Vec<Action>> {
             },
             'C' => Action::CloneWorker,
             // Panic
-            _ => panic!("unexpected `{}`", c),
+            _ => panic!("unexpected `{}` in solution", c),
         })
     }
     vs.push(v);

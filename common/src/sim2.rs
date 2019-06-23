@@ -1,16 +1,17 @@
-use crate::*;
-use crate::sim::{swap_remove_one_from_vec, within_mine};
 
+use crate::sim::{swap_remove_one_from_vec, within_mine};
+use crate::*;
 use std::collections::*;
+use std::iter::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct LocalState {
-    pub x: usize,                         //・今いる座標
-    pub y: usize,                         //
-    pub dir: usize,                       // (deprecated?) ・向いている向き
-    pub manipulators: Vec<(i32, i32)>,    // マニピュレータたちの位置
-    pub fast_remaining: usize,            // Fast効果残り時間
-    pub drill_remaining: usize,           // Drill効果残り時間
+    pub x: usize,                      //・今いる座標
+    pub y: usize,                      //
+    pub dir: usize,                    // (deprecated?) ・向いている向き
+    pub manipulators: Vec<(i32, i32)>, // マニピュレータたちの位置
+    pub fast_remaining: usize,         // Fast効果残り時間
+    pub drill_remaining: usize,        // Drill効果残り時間
 }
 
 impl LocalState {
@@ -71,18 +72,43 @@ impl WorkersState {
             shared: SharedState::default(),
         }
     }
+    pub fn new_t0_with_options(x: usize, y: usize, map: &mut SquareMap, init_boosters: Vec<Booster>) -> WorkersState {
+        eprintln!("Buy: {}", String::from_iter(init_boosters.iter().map(|b| b.to_string())));
+        WorkersState {
+            shared: SharedState{
+                unused_boosters: init_boosters,
+                ..Default::default()
+            },
+            ..WorkersState::new_t0(x, y, map)
+        }
+    }
 }
 
 // from v1
 impl From<WorkerState> for WorkersState {
     fn from(state: WorkerState) -> WorkersState {
-        let WorkerState {x, y, dir, manipulators, unused_boosters, fast_remaining, drill_remaining, beacons} = state;
+        let WorkerState {
+            x,
+            y,
+            dir,
+            manipulators,
+            unused_boosters,
+            fast_remaining,
+            drill_remaining,
+            beacons,
+        } = state;
         WorkersState {
             locals: vec![LocalState {
-                x, y, dir, manipulators, fast_remaining, drill_remaining
+                x,
+                y,
+                dir,
+                manipulators,
+                fast_remaining,
+                drill_remaining,
             }],
             shared: SharedState {
-                unused_boosters, beacons
+                unused_boosters,
+                beacons,
             },
         }
     }
@@ -92,16 +118,31 @@ impl From<WorkerState> for WorkersState {
 impl From<WorkersState> for WorkerState {
     fn from(state: WorkersState) -> WorkerState {
         let WorkersState { mut locals, shared } = state;
-        let SharedState { unused_boosters, beacons } = shared;
+        let SharedState {
+            unused_boosters,
+            beacons,
+        } = shared;
         if locals.len() != 1 {
             panic!("v1 does not support cloned workers");
         }
         let local = locals.pop().unwrap();
         let LocalState {
-            x, y, dir, manipulators, fast_remaining, drill_remaining
+            x,
+            y,
+            dir,
+            manipulators,
+            fast_remaining,
+            drill_remaining,
         } = local;
         WorkerState {
-            x, y, dir, manipulators, unused_boosters, fast_remaining, drill_remaining, beacons
+            x,
+            y,
+            dir,
+            manipulators,
+            unused_boosters,
+            fast_remaining,
+            drill_remaining,
+            beacons,
         }
     }
 }
@@ -178,7 +219,7 @@ pub fn apply_multi_action(
                 swap_remove_one_from_vec(&mut shared.unused_boosters, &Booster::Extension)
                     .expect("no Extension remaining");
                 worker.manipulators.push((dx, dy));
-            },
+            }
             Action::Fast => {
                 swap_remove_one_from_vec(&mut shared.unused_boosters, &Booster::Fast)
                     .expect("no Fast remaining");
@@ -241,7 +282,10 @@ mod tests {
         let solution = read_sol(sol_path);
         let mut state = WorkersState::new_t0(init_x, init_y, &mut map);
 
-        let mut solution_iters = solution.iter().map(|actions| actions.iter()).collect::<Vec<_>>();
+        let mut solution_iters = solution
+            .iter()
+            .map(|actions| actions.iter())
+            .collect::<Vec<_>>();
         loop {
             let num_workers = state.locals.len();
             let mut actions: Vec<Option<&Action>> = vec![];
@@ -251,7 +295,10 @@ mod tests {
             if actions.iter().all(|a| a.is_none()) {
                 break;
             }
-            let actions = actions.into_iter().map(|a| *a.unwrap_or(&Action::Nothing)).collect::<Vec<_>>();
+            let actions = actions
+                .into_iter()
+                .map(|a| *a.unwrap_or(&Action::Nothing))
+                .collect::<Vec<_>>();
             let upd = apply_multi_action(&actions, &mut state, &mut map, &mut booster);
             eprintln!("{:?}", state);
         }

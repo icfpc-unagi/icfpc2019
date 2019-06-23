@@ -41,16 +41,25 @@ macro_rules! mat {
 }
 
 pub trait SetMinMax {
-	fn setmin(&mut self, v: Self) -> bool;
-	fn setmax(&mut self, v: Self) -> bool;
+    fn setmin(&mut self, v: Self) -> bool;
+    fn setmax(&mut self, v: Self) -> bool;
 }
-impl<T> SetMinMax for T where T: PartialOrd {
-	fn setmin(&mut self, v: T) -> bool {
-		*self > v && { *self = v; true }
-	}
-	fn setmax(&mut self, v: T) -> bool {
-		*self < v && { *self = v; true }
-	}
+impl<T> SetMinMax for T
+where
+    T: PartialOrd,
+{
+    fn setmin(&mut self, v: T) -> bool {
+        *self > v && {
+            *self = v;
+            true
+        }
+    }
+    fn setmax(&mut self, v: T) -> bool {
+        *self < v && {
+            *self = v;
+            true
+        }
+    }
 }
 
 #[derive(Copy, Debug, Clone, PartialEq, Eq)]
@@ -86,13 +95,34 @@ impl std::str::FromStr for Booster {
     }
 }
 
+pub fn parse_buy(s: &str) -> Vec<Booster> {
+    s.trim()
+        .chars()
+        .map(|c| c.to_string().parse().expect("booster code"))
+        .collect()
+}
+
+impl std::fmt::Display for Booster {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        use std::fmt::Write;
+        f.write_char(match self {
+Booster::Extension =>             'B' ,
+Booster::Fast =>             'F' ,
+Booster::Drill =>             'L' ,
+Booster::Teleport =>             'R' ,
+Booster::X =>             'X' ,
+Booster::CloneWorker =>             'C' ,
+})
+    }
+}
+
 pub fn apply_move((x, y): (usize, usize), dir: usize) -> (usize, usize) {
     match dir {
         0 => (x + 1, y),
         1 => (x, y - 1),
         2 => (x - 1, y),
         3 => (x, y + 1),
-        _ => panic!("illegal dir: {}", dir)
+        _ => panic!("illegal dir: {}", dir),
     }
 }
 
