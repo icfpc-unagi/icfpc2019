@@ -1,13 +1,47 @@
 use common::*;
-
-
 use std::thread::sleep;
 use std::time::{Duration, Instant};
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct State {
     pub p: WorkerState,                        //プレイヤー情報
     pub field: Vec<Vec<Square>>,               //壁情報
     pub item_field: Vec<Vec<Option<Booster>>>, //アイテム情報
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ChokudaiOptions {
+    pub OptType: usize,   //移動の最適化タイプ　0:貪欲 1: 連続した2手のみ先読み
+    pub RandFlag: bool,   //true: 初期位置の採用方法のランダム導入（影響弱め）
+    pub miningFlag: bool, //true: 直線移動の強化
+}
+
+impl Default for ChokudaiOptions {
+    fn default() -> ChokudaiOptions {
+        ChokudaiOptions {
+            OptType: 1,
+            RandFlag: false,
+            miningFlag: false,
+        }
+    }
+}
+
+impl ChokudaiOptions {
+    fn small() -> Vec<ChokudaiOptions> {
+        vec![
+            ChokudaiOptions {
+                OptType: 1,
+                RandFlag: false,
+                miningFlag: false,
+            },
+            ChokudaiOptions {
+                OptType: 1,
+                RandFlag: false,
+                miningFlag: true,
+            },
+        ]
+    }
+
 }
 
 ///初期Stateを作るための関数
@@ -121,7 +155,7 @@ pub fn make_easy_target_list(
     H: usize,
     W: usize,
     T: &Vec<Vec<usize>>,
-    UseOptimization: usize,
+    option: &ChokudaiOptions,
 ) -> (usize, Vec<(usize, usize)>) {
 
     let mut start_point = (!0, !0);
@@ -140,7 +174,7 @@ pub fn make_easy_target_list(
                         start_point = (x, y);
                         lastAction = T[nx][ny];
                     }
-                    if UseOptimization == 2 && T[nx][ny] != !0 && rng.gen::<usize>() % 2 == 1 {
+                    if option.RandFlag && T[nx][ny] != !0 && rng.gen::<usize>() % 2 == 1 {
                         start_point = (x, y);
                         lastAction = T[nx][ny];
                     }
@@ -232,21 +266,19 @@ fn check_straight(S: &State, tx: usize, ty: usize) -> bool {
     let d = S.p.dir;
     let sx = S.p.x;
     let sy = S.p.y;
-    
-    return false;
+
     if d == 0 {
         if tx <= sx {
             return false;
         }
-        
+
         //eprintln!("ok!");
-        
-        
+
         let px = tx - 1;
         let py = sy;
         let dx = (tx - px) as i32;
         let dy = (ty - py) as i32;
-        
+
         /*
         let mut hasManu = false;
         for dxy in &S.p.manipulators {
@@ -262,8 +294,7 @@ fn check_straight(S: &State, tx: usize, ty: usize) -> bool {
         if get_diff(sy, ty) > 1 {
             return false;
         }
-        
-        
+
         for x in sx + 1..tx {
             if S.field[x][sy] == Square::Block {
                 return false;
@@ -396,11 +427,10 @@ fn check_straight_right(S: &State, tx: usize, ty: usize) -> bool {
     false
 }
 
-const optimization_num: usize = 2; //0..OptimizationNum
 
 fn get_next_action(
     first_state: &State,
-    UseOptimization: usize,
+    option: &ChokudaiOptions,
     final_action: &Vec<Action>,
     bfs: &mut BFS,
 ) -> Vec<Action> {
@@ -457,7 +487,7 @@ fn get_next_action(
 
     loop {
         let (last_act, point_list) =
-            make_easy_target_list(&current_state, H, W, &LastActionTable, UseOptimization);
+            make_easy_target_list(&current_state, H, W, &LastActionTable, option);
 
         //eprintln!("List : {}", point_list.len());
         if point_list.len() == 0 {
@@ -479,6 +509,10 @@ fn get_next_action(
         let back_state = p_state[last_act].clone();
 
         let mut firstloop = false;
+        if option.miningFlag {
+            firstloop = true;
+        }
+
 
         /*
         if (point_list.len() > 10) {
@@ -522,7 +556,7 @@ fn get_next_action(
 
         for i in 0..point_list.len() {
             let target_pos = point_list[i];
-
+            //println!("{}", firstloop);
             //eprintln!("check: {} {}", target_pos.0, target_pos.1);
             //塗り済みであるかの検出
             if current_state.field[target_pos.0][target_pos.1] != Square::Empty {
@@ -535,10 +569,12 @@ fn get_next_action(
             if check_straight(&current_state, target_pos.0, target_pos.1) {
                 //println!("find");
                 actions = get_straight(&current_state, target_pos.0, target_pos.1);
-            } else if false && !firstloop && check_straight_left(&current_state, target_pos.0, target_pos.1)
+            } else if false
+                && !firstloop
+                && check_straight_left(&current_state, target_pos.0, target_pos.1)
             {
 
-            } else if UseOptimization == 0 {
+            } else if !option.OptType == 0 {
                 let (a2, gx, gy) = bfs.search_fewest_actions_to_wrap(
                     &current_state.field,
                     &current_state.p,
@@ -547,7 +583,7 @@ fn get_next_action(
                 );
 
                 actions = make_move(&a2, 0, 0, current_state.p.dir);
-            } else if UseOptimization == 1 || UseOptimization == 2 {
+            } else if option.OptType == 1 {
                 //２連塗チェック
                 let mut use_double_position = ((!0, !0), !0);
 
@@ -737,7 +773,7 @@ fn get_next_action(
     next_action
 }
 
-pub fn make_action_by_state(first_state: &State, UseOptimization: usize) -> Vec<Action> {
+pub fn make_action_by_state(first_state: &State, option: &ChokudaiOptions) -> Vec<Action> {
     let H = first_state.field.len();
     let W = first_state.field[0].len();
 
@@ -749,7 +785,7 @@ pub fn make_action_by_state(first_state: &State, UseOptimization: usize) -> Vec<
     let mut final_action: Vec<Action> = Vec::with_capacity(0);
 
     loop {
-        let next_action = get_next_action(first_state, UseOptimization, &final_action, &mut bfs);
+        let next_action = get_next_action(first_state, option, &final_action, &mut bfs);
         if next_action.len() == final_action.len() {
             break;
         }
@@ -763,6 +799,8 @@ pub fn optimization_actions(
     first_state: &State,
     actions: &Vec<Action>,
     Seconds: usize,
+    option: &ChokudaiOptions,
+
 ) -> (bool, Vec<Action>) {
 
     let mut ans: Vec<Action> = actions.clone();
@@ -775,7 +813,8 @@ pub fn optimization_actions(
         if time >= Seconds as u64 {
             break;
         }
-        let (flag, act) = shortening_actions(first_state, &ans, (Seconds as u64 - time) as usize);
+        let (flag, act) =
+            shortening_actions(first_state, &ans, (Seconds as u64 - time) as usize, option);
         if flag {
             ans = act;
         }
@@ -794,6 +833,7 @@ pub fn shortening_actions(
     first_state: &State,
     actions: &Vec<Action>,
     Seconds: usize,
+    option: &ChokudaiOptions,
 ) -> (bool, Vec<Action>) {
     if actions.len() < 3 {
         return (false, Vec::with_capacity(0));
@@ -829,7 +869,14 @@ pub fn shortening_actions(
         let end_action = start_action + action_range;
 
         //println!("{} {} {}", start_action, end_action, actions.len());
-        let (flag, act) = shortening(&first_state, actions, start_action, end_action, &mut bfs);
+        let (flag, act) = shortening(
+            &first_state,
+            actions,
+            start_action,
+            end_action,
+            &mut bfs,
+            option,
+        );
 
         if flag {
             return (true, act);
@@ -845,6 +892,7 @@ fn shortening(
     start: usize,
     end: usize,
     bfs: &mut BFS,
+    option: &ChokudaiOptions,
 ) -> (bool, Vec<Action>) {
 
     let H = first_state.field.len();
@@ -975,7 +1023,7 @@ fn shortening(
 
         let mut final_action = now_actions;
         loop {
-            let next_action = get_next_action(&first_state, 1, &final_action, bfs);
+            let next_action = get_next_action(&first_state, &option, &final_action, bfs);
             if final_action.len() == next_action.len() {
                 break;
             }

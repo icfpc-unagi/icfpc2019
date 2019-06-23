@@ -52,8 +52,8 @@ fn main() {
         //eprintln!("{}", second_state.p.manipulators.len());
 
         //let mut final_action = make_action_by_state(&first_state, 1);
-        let mut final_action = make_action_by_state(&second_state, 1);
-        let (flag, act) = optimization_actions(&second_state, &final_action, 5);
+        let mut final_action = make_action_by_state(&second_state, &ChokudaiOptions::default());
+        let (flag, act) = optimization_actions(&second_state, &final_action, 5, &ChokudaiOptions::default());
         if flag {
             final_action = act;
         }
@@ -66,19 +66,22 @@ fn main() {
             best_second_state = second_state.clone();
             best_ans_action = final_action.clone();
         }
-
     }
-    let mut final_action = make_action_by_state(&best_second_state, 1);
-    let (flag, act) = optimization_actions(&best_second_state, &best_ans_action, 30);
-    if flag {
-        best_ans_action = act;
+    let (flag, act) = optimization_actions(&best_second_state, &best_ans_action, 30, &ChokudaiOptions::default());
+    best_ans_action = act;
+
+    let mut best_action: Vec<Action> = Vec::with_capacity(0);
+    for act in &best_pre_action {
+        best_action.push(*act);
     }
 
-    let pre_string = actions_to_string(&best_pre_action);
-    let ans_string = actions_to_string(&best_ans_action);
-    best_size = best_pre_action.len() + best_ans_action.len();
+    //iwi opt
 
-    let mut best_string = pre_string.to_string() + &ans_string;
+    best_size = best_action.len();
+
+    let mut best_string = actions_to_string(&best_action);
+
+
     eprintln!("Best: {}", best_size);
     println!("{}", best_string);
 }
