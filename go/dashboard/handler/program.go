@@ -79,7 +79,7 @@ func programHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		}
 		score := HTML("-")
 		image := HTML("")
-		dataUrl := HTML("")
+		dataHref := HTML("")
 		if problem.SolutionScore != nil {
 			if *problem.SolutionScore >= 100000000 {
 				score = "invalid"
@@ -87,13 +87,13 @@ func programHandler(ctx context.Context, r *http.Request) (HTML, error) {
 				score = Escape(fmt.Sprintf("%d", *problem.SolutionScore))
 			}
 			image = `<img src="/solution_image?solution_id=` + Escape(fmt.Sprintf("%d", *problem.SolutionID)) + `" style="max-width:300px;height:auto">`
-			dataUrl = ` data-url="/solution?solution_id=` + Escape(fmt.Sprintf("%d", *problem.SolutionID)) + `"`
+			dataHref = ` data-href="/solution?solution_id=` + Escape(fmt.Sprintf("%d", *problem.SolutionID)) + `"`
 		}
 		modified := "-"
 		if problem.SolutionModified != nil {
 			modified = *problem.SolutionModified
 		}
-		output += `<tr` + dataUrl + `><td>` +
+		output += `<tr` + dataHref + `><td>` +
 			Escape(problem.ProblemName) +
 			"</td><td>" +
 			booster +
