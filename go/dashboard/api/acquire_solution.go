@@ -59,7 +59,7 @@ func acquireSolutionHandler(
 		}{}
 		if err := tx.GetContext(
 			ctx, &row, `SELECT @solution_id AS solution_id`); err != nil {
-			return 0, err
+			return 0, errors.WithStack(err)
 		}
 		return row.SolutionID, nil
 	}()
@@ -83,7 +83,7 @@ func acquireSolutionHandler(
 			ProblemName     string `db:"problem_name"`
 			ProblemDataBlob []byte `db:"problem_data_blob"`
 		}{}
-		if err := tx.GetContext(ctx, &row, `
+		if err := db.DB().GetContext(ctx, &row, `
 			SELECT 
 				solution_id,
 				solution_booster,
@@ -100,7 +100,7 @@ func acquireSolutionHandler(
 				NATURAL LEFT JOIN problem_data
 			WHERE solution_id = ?
 			LIMIT 1`, solutionID); err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		resp.SolutionId = row.SolutionID
 		resp.SolutionBooster = row.SolutionBooster

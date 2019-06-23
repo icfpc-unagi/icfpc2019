@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"os"
 	"os/exec"
 	"path"
@@ -28,30 +29,42 @@ func run(args ...string) error {
 	queue := make(chan struct{}, *parallel)
 
 	ctx := context.Background()
-	for {
-		resp, err := apiutil.Call(ctx, &pb.Api_Request{
-			AcquireSolution: &pb.Api_Request_AcquireSolution{},
-		})
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "failed to call API: %+v\n", err)
-			time.Sleep(10 * time.Second)
-			continue
-		}
-		solution := resp.GetAcquireSolution()
-		if solution.GetSolutionId() == 0 {
-			fmt.Fprintf(os.Stderr, "no solution to run\n")
-			return nil
-		}
-		wg.Add(1)
-		queue <- struct{}{}
+	canceled := false
+	for threadID := 0; float64(threadID) <
+		math.Sqrt(float64(*parallel)/3); threadID++ {
 		go func() {
-			defer func() { <-queue }()
-			defer wg.Done()
-			if err := runOnce(ctx, solution); err != nil {
-				fmt.Fprintf(os.Stderr, "%+v\n", err)
+			for {
+				queue <- struct{}{}
+				if canceled {
+					return
+				}
+				resp, err := apiutil.Call(ctx, &pb.Api_Request{
+					AcquireSolution: &pb.Api_Request_AcquireSolution{},
+				})
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "failed to call API: %+v\n", err)
+					time.Sleep(10 * time.Second)
+					continue
+				}
+				solution := resp.GetAcquireSolution()
+				if solution.GetSolutionId() == 0 {
+					canceled = true
+					fmt.Fprintf(os.Stderr, "no solution to run\n")
+					return
+				}
+				wg.Add(1)
+				go func() {
+					defer func() { <-queue }()
+					defer wg.Done()
+					if err := runOnce(ctx, solution); err != nil {
+						fmt.Fprintf(os.Stderr, "%+v\n", err)
+					}
+				}()
 			}
 		}()
+		time.Sleep(time.Second)
 	}
+	return nil
 }
 
 func runOnce(

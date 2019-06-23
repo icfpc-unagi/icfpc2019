@@ -163,6 +163,15 @@ func generatePuzzle() (string, error) {
 
 	programs := []*Program{
 		&Program{
+			Command: "/nfs/programs/puzzle-003 ${PUZZLE_FILE} /dev/stdout",
+		},
+		&Program{
+			Command: "/nfs/programs/puzzle-003 ${PUZZLE_FILE} /dev/stdout",
+		},
+		&Program{
+			Command: "/nfs/programs/puzzle-003 ${PUZZLE_FILE} /dev/stdout",
+		},
+		&Program{
 			Command: "/nfs/programs/puzzle-001 ${PUZZLE_FILE} /dev/stdout",
 		},
 		&Program{
