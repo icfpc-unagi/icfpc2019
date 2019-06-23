@@ -63,8 +63,8 @@ fn main() {
         if best_size > size && size != 0 {
             best_size = size;
             best_pre_action = initialMove.1;
-            best_second_state = second_state;
-            best_ans_action = final_action;
+            best_second_state = second_state.clone();
+            best_ans_action = final_action.clone();
         }
 
     }

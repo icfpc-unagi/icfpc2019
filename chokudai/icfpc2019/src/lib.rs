@@ -232,29 +232,55 @@ fn check_straight(S: &State, tx: usize, ty: usize) -> bool {
     let d = S.p.dir;
     let sx = S.p.x;
     let sy = S.p.y;
-
+    
+    return false;
     if d == 0 {
         if tx <= sx {
             return false;
         }
+        
+        //eprintln!("ok!");
+        
+        
+        let px = tx - 1;
+        let py = sy;
+        let dx = (tx - px) as i32;
+        let dy = (ty - py) as i32;
+        
+        /*
+        let mut hasManu = false;
+        for dxy in &S.p.manipulators {
+            if *dxy == (dx, dy){
+                hasManu = true;
+                break;
+            }
+        }
+        if !hasManu {return false;}
+        if !is_visible(&S.field, (px, py), (dx, dy)) {return false;}
+        */
+
         if get_diff(sy, ty) > 1 {
             return false;
         }
+        
+        
         for x in sx + 1..tx {
             if S.field[x][sy] == Square::Block {
                 return false;
             }
         }
+
         return true;
     } else if d == 1 {
-        if ty <= sy {
+
+        if ty >= sy {
             return false;
         }
         if get_diff(sx, tx) > 1 {
             return false;
         }
-        for x in sx + 1..tx {
-            if S.field[x][sy] == Square::Block {
+        for y in ty..sy {
+            if S.field[sx][y] == Square::Block {
                 return false;
             }
         }
@@ -279,11 +305,12 @@ fn check_straight(S: &State, tx: usize, ty: usize) -> bool {
         if get_diff(sx, tx) > 1 {
             return false;
         }
-        for x in sx + 1..tx {
-            if S.field[x][sy] == Square::Block {
+        for y in sy + 1..ty {
+            if S.field[sx][y] == Square::Block {
                 return false;
             }
         }
+        //eprintln!("ok!");
         return true;
     }
 
@@ -333,21 +360,7 @@ fn check_straight_left(S: &State, tx: usize, ty: usize) -> bool {
         return true;
 
     } else if d == 1 {
-        if ty < sy {
-            return false;
-        }
-        if tx <= sy {
-            return false;
-        }
 
-        if get_diff(sx, tx) > 1 {
-            return false;
-        }
-        for x in sx + 1..tx {
-            if S.field[x][sy] == Square::Block {
-                return false;
-            }
-        }
         return true;
     } else if d == 2 {
         if tx > sx {
@@ -369,18 +382,7 @@ fn check_straight_left(S: &State, tx: usize, ty: usize) -> bool {
         return true;
 
     } else if d == 3 {
-        if ty < sy {
-            return false;
-        }
-        if get_diff(sx, tx) > 1 {
-            return false;
-        }
-        for x in sx + 1..tx {
-            if S.field[x][sy] == Square::Block {
-                return false;
-            }
-        }
-        return true;
+
     }
 
     false
@@ -478,6 +480,46 @@ fn get_next_action(
 
         let mut firstloop = false;
 
+        /*
+        if (point_list.len() > 10) {
+            let mut maxx = 0;
+            let mut minx = 99999;
+            let mut maxy = 0;
+            let mut miny = 99999;
+
+            for i in 0..point_list.len() {
+                let (x, y) = point_list[i];
+                if maxx < x {
+                    maxx = x;
+                }
+                if minx > x {
+                    minx = x;
+                }
+                if maxy < y {
+                    maxy = y;
+                }
+                if miny > y {
+                    miny = y;
+                }
+            }
+
+            let mut V = vec![vec![','; maxx - minx + 1]; maxy - miny + 1];
+
+            for i in 0..point_list.len() {
+                let (x, y) = point_list[i];
+                V[y - miny][x - minx] = 'o';
+            }
+
+            for y in 0..V.len() {
+                for x in 0..V[0].len() {
+                    eprint!("{}", V[y][x]);
+                }
+                eprintln!("");
+            }
+        }
+        */
+
+
         for i in 0..point_list.len() {
             let target_pos = point_list[i];
 
@@ -490,8 +532,13 @@ fn get_next_action(
 
             let mut actions: Vec<Action> = Vec::with_capacity(0);
 
+            if check_straight(&current_state, target_pos.0, target_pos.1) {
+                //println!("find");
+                actions = get_straight(&current_state, target_pos.0, target_pos.1);
+            } else if false && !firstloop && check_straight_left(&current_state, target_pos.0, target_pos.1)
+            {
 
-            if UseOptimization == 0 {
+            } else if UseOptimization == 0 {
                 let (a2, gx, gy) = bfs.search_fewest_actions_to_wrap(
                     &current_state.field,
                     &current_state.p,
