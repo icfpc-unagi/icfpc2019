@@ -26,6 +26,8 @@ message Api {
     message InsertProgram {
       string program_name = 1;
       string program_code = 2;
+      // ブースターを "," 区切りで (e.g., ",CC")
+      string program_boosters = 3;
     }
     InsertProgram insert_program = 3;
 
@@ -34,6 +36,7 @@ message Api {
     AcquireSolution acquire_solution = 4;
 
     // リジャッジを行います
+    // 注意: ブースター非対応
     message InsertSolution {
       enum Strategy {
         // 既存のフィールドはリジャッジしません
@@ -103,6 +106,7 @@ message Api {
 
     message AcquireSolution {
       int64 solution_id = 1;
+      string solution_booster = 8;
       int64 program_id = 2;
       string program_name = 3;
       string program_code = 4;
@@ -129,6 +133,7 @@ message Api {
 
     message AcquireSolutionExtra {
       int64 solution_id = 1;
+      string solution_booster = 5;
       bytes problem_data_blob = 2;
       bytes solution_data_blob = 3;
       string solution_data_modified = 4;

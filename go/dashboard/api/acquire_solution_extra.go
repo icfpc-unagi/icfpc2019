@@ -24,6 +24,7 @@ func acquireSolutionExtraHandler(
 	if err := func() error {
 		row := struct {
 			SolutionID           int64  `db:"solution_id"`
+			SolutionBooster      string `db:"solution_booster"`
 			ProblemDataBlob      []byte `db:"problem_data_blob"`
 			SolutionDataBlob     []byte `db:"solution_data_blob"`
 			SolutionDataModified string `db:"solution_data_modified"`
@@ -31,6 +32,7 @@ func acquireSolutionExtraHandler(
 		if err := db.Row(ctx, &row, `
 			SELECT 
 				solution_id,
+				solution_booster,
 				problem_data_blob,
 				solution_data_blob,
 				solution_data_modified
@@ -48,6 +50,7 @@ func acquireSolutionExtraHandler(
 			return nil
 		}
 		resp.SolutionId = row.SolutionID
+		resp.SolutionBooster = row.SolutionBooster
 		resp.ProblemDataBlob = row.ProblemDataBlob
 		resp.SolutionDataBlob = row.SolutionDataBlob
 		resp.SolutionDataModified = row.SolutionDataModified

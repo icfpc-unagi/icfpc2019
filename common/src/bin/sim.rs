@@ -10,7 +10,7 @@ fn main() {
   let args = std::env::args().collect::<Vec<_>>();
   let mut opts = Options::new();
   opts
-    .optopt("v", "verbose", "verbose logs", "0,1,2,3")
+    .optflagopt("v", "verbose", "verbose logs", "0,1,2,3")
     .optopt("g", "png", "output png", "file path")
     .parsing_style(ParsingStyle::FloatingFrees);
   let matches = opts.parse(&args[1..]).unwrap_or_else(|e| panic!(e));
@@ -22,7 +22,11 @@ fn main() {
     std::process::exit(1);
   }
 
-  let verbose: i32 = matches.opt_get_default("v", 0).unwrap();
+  let verbose: i32 = if matches.opt_present("v") {
+    matches.opt_get_default("v", 3).unwrap()
+  } else {
+    0
+  };
   let png = matches.opt_str("g").and_then(|path| {
     std::fs::File::create(&path)
       .map_err(|e| eprintln!("failed to open {}: {}", &path, e))
@@ -42,26 +46,33 @@ fn main() {
   let mut time = 0;
 
   // Play
-  let hr = &repeat('-').take(xsize + 5).collect::<String>();
+  let hr = &repeat('-')
+    .take(if verbose >= 3 { xsize + 5 } else { 16 })
+    .collect::<String>();
   let mut time_filled = vec![vec![0usize; ysize]; xsize];
   let mut action_iters = vec![sol[0].iter()];
   while action_iters.iter().any(|it| it.clone().next().is_some()) {
-    let actions = action_iters.iter_mut().map(|it| it.next().copied().unwrap_or(Action::Nothing)).collect::<Vec<_>>();
+    let actions = action_iters
+      .iter_mut()
+      .map(|it| it.next().copied().unwrap_or(Action::Nothing))
+      .collect::<Vec<_>>();
     let update = apply_multi_action(&actions, &mut workers, &mut map, &mut booster);
-    for i in action_iters.len()..action_iters.len()+update.num_cloned {
+    for i in action_iters.len()..action_iters.len() + update.num_cloned {
       action_iters.push(sol[i].iter());
     }
     for f in &update.filled {
       time_filled[f.0][f.1] = time;
     }
     time += 1;
-    if verbose >= 2 {
+    if verbose >= 1 {
       eprintln!("Time: {}", time);
       eprintln!("Actions: {:?}", actions);
-      eprintln!("{:?}", workers);
+      if verbose >= 2 {
+        eprintln!("{:?}", workers);
+      }
       eprintln!("{:?}", update);
       if verbose >= 3 {
-            // TODO: print workers
+        // TODO: print workers
         print_task(&(map.clone(), booster.clone(), 9999, 9999));
       }
       eprintln!("{}", hr);

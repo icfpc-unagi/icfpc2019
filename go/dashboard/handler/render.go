@@ -548,7 +548,7 @@ $(function(){
 </script>
 </head>
 <body>
-<table id="body">
+<table id="body" style="table-layout: fixed">
 <tr><td id="header">
 <header>
 <span><a href="/" id="home" title="Home">Unagi Dashboard</a></span>
@@ -562,7 +562,7 @@ $(function(){
 </span>
 </header>
 </td></tr>
-<tr><td id="article">
+<tr><td id="article" style="overflow-x:scroll">
 <article>
 <div id="container">
 		`))
