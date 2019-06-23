@@ -107,6 +107,18 @@ pub fn check(input: &PazzleInput, output: &Vec<Vec<bool>>) -> bool {
 		eprintln!("too large: {} * {}", n - 2, m - 2);
 		return false;
 	}
+	for &(i, j) in &input.isqs {
+		if !output[i + 1][j + 1] {
+			eprintln!("inside point is outside");
+			return false;
+		}
+	}
+	for &(i, j) in &input.osqs {
+		if output[i + 1][j + 1] {
+			eprintln!("outside point is inside");
+			return false;
+		}
+	}
 	let mut min_x = n;
 	let mut max_x = 0;
 	let mut min_y = m;
