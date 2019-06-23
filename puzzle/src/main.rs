@@ -48,7 +48,6 @@ fn generate_raster_marine_day(pinput: &puzzle::PazzleInput) -> Option<Vec<Vec<bo
     }
     let m = tsize / 5;
     let n = tsize + 2;
-    let mut bool_map = vec![vec![false; n]; n];
 
     let mut map = vec![vec![Unk; n]; n];
     for i in 0..n {
@@ -64,6 +63,19 @@ fn generate_raster_marine_day(pinput: &puzzle::PazzleInput) -> Option<Vec<Vec<bo
     }
     for k in 0..m {
         let x = 5*k+3;
+        {
+            let (y0, y1) = if k % 2 == 0 {
+                (1, n-2)
+            } else {
+                (n-2, 1)
+            };
+            for &(tx, ty) in &[(x-2, y0), (x-1, y0), (x+1, y1), (x+2, y1)] {
+                if map[tx][ty] == Out {
+                    eprintln!("out: ymin or ymax"); return None;
+                }
+                map[tx][ty] = In;
+            }
+        }
         for y in 1..n-1 {
             if map[x][y] != Out {
                 map[x][y] = In;
@@ -78,17 +90,6 @@ fn generate_raster_marine_day(pinput: &puzzle::PazzleInput) -> Option<Vec<Vec<bo
                 map[x+1][y] = In;
                 map[x+1][y+1] = In;
             }
-        }
-        let (y0, y1) = if k % 2 == 0 {
-            (1, n-1)
-        } else {
-            (n-1, 1)
-        };
-        for &(tx, ty) in &[(x-2, y0), (x-1, y0), (x+1, y1), (x+2, y1)] {
-            if map[tx][ty] == Out {
-                eprintln!("out: ymin or ymax"); return None;
-            }
-            map[tx][ty] = In;
         }
     }
     for &(x, y) in &isqs {
@@ -106,7 +107,87 @@ fn generate_raster_marine_day(pinput: &puzzle::PazzleInput) -> Option<Vec<Vec<bo
             }
         }
     }
-    unimplemented!()
+        {
+            let mut rng = rand::thread_rng(); // デフォルトの乱数生成器を初期化します
+            // vertex wo fuyasu
+            let mut n_vertex = 0;
+            for x in 0..(n-1) {
+                for y in 0..(n-1) {
+                    if is_corner_rev(&map, x, y) {
+                        n_vertex += 1;
+                    }
+                }
+            }
+            assert!(n_vertex <= vmax);
+            while n_vertex < vmin {
+                dbg!((n_vertex, vmin));
+                let x: usize = rng.gen::<usize>() % (n-2) + 1;
+                let y: usize = rng.gen::<usize>() % (n-2) + 1;
+                if map[x][y] != Unk {
+                    continue;
+                }
+                let mut cnt = 0;
+                for d in 0..4 {
+                    let (tx, ty) = apply_move((x, y), d);
+                    if map[tx][ty] == In {
+                        cnt += 1;
+                        // こういうのも駄目なので除外
+                        // ?.#
+                        // #..
+                        // ?.?
+                        let (sx, sy) = apply_move(apply_move((x, y), (d+2)%4), (d+1)%4);
+                        if map[sx][sy] == In { cnt += 10; }
+                        let (sx, sy) = apply_move(apply_move((x, y), (d+2)%4), (d+3)%4);
+                        if map[sx][sy] == In { cnt += 10; }
+                    }
+                }
+                if cnt != 1 {
+                    continue;
+                }
+                for dx in 0..2 { for dy in 0..2 {
+                    if is_corner_rev(&map, x-dx, y-dy) {
+                        n_vertex -= 1;
+                    }
+                }}
+                map[x][y] = In;
+                for dx in 0..2 { for dy in 0..2 {
+                    if is_corner_rev(&map, x-dx, y-dy) {
+                        n_vertex += 1;
+                    }
+                }}
+                // todo(tos)
+            }
+        }
+
+
+    let mut bool_map = vec![vec![false; n]; n];
+    for x in 0..n {
+        for y in 0..n {
+            bool_map[x][y] = (map[x][y] == In);
+        }
+    }
+        for x in 0..n {
+            for y in 0..n {
+                eprint!("{}", if bool_map[x][y] { '.' } else { '#' });
+            }
+            eprintln!();
+        }
+        if puzzle::check(&pinput, &bool_map) {
+            return Some(bool_map);
+        }
+        eprintln!("check failed!"); return None;
+}
+
+fn is_corner_rev(map: &Vec<Vec<Cell>>, x: usize, y: usize) -> bool {
+    let mut cnt = 0;
+    for dx in 0..2 {
+        for dy in 0..2 {
+            if map[x+dx][y+dy] == In {
+                cnt += 1;
+            }
+        }
+    }
+    cnt % 2 == 1
 }
 
 
