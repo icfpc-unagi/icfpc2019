@@ -228,68 +228,67 @@ fn generate_raster_v1(pinput: &puzzle::PazzleInput) -> Vec<Vec<bool>> {
 }
 
 
-fn adjust_vnum(map: &mut Vec<Vec<Cell>>, vmin: usize, vmax: usize)
-        {
+fn adjust_vnum(map: &mut Vec<Vec<Cell>>, vmin: usize, vmax: usize) {
     let mut rng = rand::thread_rng();
     let n = map.len();
     assert_eq!(n, map[0].len());
-            // vertex wo fuyasu
-            let mut n_vertex = 0;
-            for x in 0..(n-1) {
-                for y in 0..(n-1) {
-                    if is_corner(&map, x, y) {
-                        n_vertex += 1;
-                    }
-                }
-            }
-            assert!(n_vertex <= vmax);
-            'search_v: while n_vertex < vmin {
-                let x: usize = rng.gen::<usize>() % (n-2) + 1;
-                let y: usize = rng.gen::<usize>() % (n-2) + 1;
-                if !map[x][y].is_unk() {
-                    continue;
-                }
-                eprintln!("{} < {}", n_vertex, vmin);
-                // dbg!((n_vertex, vmin));
-                let orig = map[x][y].as_bool();
-                let mut cnt = 0;
-                for d in 0..4 {
-                    let (tx, ty) = apply_move((x, y), d);
-                    if map[tx][ty].as_bool() != orig {
-                        cnt += 1;
-                        // こういうのも駄目なので除外
-                        // ?.#
-                        // #..
-                        // ?.?
-                        let (sx, sy) = apply_move(apply_move((x, y), (d+2)%4), (d+1)%4);
-                        if map[sx][sy].as_bool() != orig {
-                            continue 'search_v;
-                        }
-                        let (sx, sy) = apply_move(apply_move((x, y), (d+2)%4), (d+3)%4);
-                        if map[sx][sy].as_bool() != orig {
-                            continue 'search_v;
-                        }
-                    }
-                }
-                if cnt != 1 {
-                    continue;
-                }
-                eprintln!("found ({}, {})", x, y);
-                // dbg!((x, y));
-                for dx in 0..2 { for dy in 0..2 {
-                    if is_corner(&map, x-dx, y-dy) {
-                        n_vertex -= 1;
-                    }
-                }}
-                map[x][y] = Cell::as_unk(!orig);
-                for dx in 0..2 { for dy in 0..2 {
-                    if is_corner(&map, x-dx, y-dy) {
-                        n_vertex += 1;
-                    }
-                }}
-                // todo(tos)
+    // vertex wo fuyasu
+    let mut n_vertex = 0;
+    for x in 0..(n-1) {
+        for y in 0..(n-1) {
+            if is_corner(&map, x, y) {
+                n_vertex += 1;
             }
         }
+    }
+    assert!(n_vertex <= vmax);
+    'search_v: while n_vertex < vmin {
+        let x: usize = rng.gen::<usize>() % (n-2) + 1;
+        let y: usize = rng.gen::<usize>() % (n-2) + 1;
+        if !map[x][y].is_unk() {
+            continue;
+        }
+        eprintln!("{} < {}", n_vertex, vmin);
+        // dbg!((n_vertex, vmin));
+        let orig = map[x][y].as_bool();
+        let mut cnt = 0;
+        for d in 0..4 {
+            let (tx, ty) = apply_move((x, y), d);
+            if map[tx][ty].as_bool() != orig {
+                cnt += 1;
+                // こういうのも駄目なので除外
+                // ?.#
+                // #..
+                // ?.?
+                let (sx, sy) = apply_move(apply_move((x, y), (d+2)%4), (d+1)%4);
+                if map[sx][sy].as_bool() != orig {
+                    continue 'search_v;
+                }
+                let (sx, sy) = apply_move(apply_move((x, y), (d+2)%4), (d+3)%4);
+                if map[sx][sy].as_bool() != orig {
+                    continue 'search_v;
+                }
+            }
+        }
+        if cnt != 1 {
+            continue;
+        }
+        eprintln!("found ({}, {})", x, y);
+        // dbg!((x, y));
+        for dx in 0..2 { for dy in 0..2 {
+            if is_corner(&map, x-dx, y-dy) {
+                n_vertex -= 1;
+            }
+        }}
+        map[x][y] = Cell::as_unk(!orig);
+        for dx in 0..2 { for dy in 0..2 {
+            if is_corner(&map, x-dx, y-dy) {
+                n_vertex += 1;
+            }
+        }}
+        // todo(tos)
+    }
+}
 
 fn is_corner(map: &Vec<Vec<Cell>>, x: usize, y: usize) -> bool {
     let mut cnt = 0;
