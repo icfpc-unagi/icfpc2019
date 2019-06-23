@@ -198,7 +198,7 @@ impl DynamicSolution {
     pub fn replace(&mut self, begin: usize, end: usize, new_actions: &[Action]) {
         // step beginとstep endは踏む。つまり、stepは(begin, end)が置き換わる。
         // actionでいうと[begin, end)が置き換わる。
-        // ぜんぶふまれること！（踏む場所の変化には対応してない）
+        // (begin, end) は既にdeactivateされていること！
 
         assert!(begin < end);
         assert!(end <= self.actions.len());
@@ -216,7 +216,7 @@ impl DynamicSolution {
         }
 
         {
-            let new_end_state = new_states.pop().unwrap();  // 注意！POPしてるよ！！
+            let new_end_state = new_states.pop().unwrap(); // 注意！POPしてるよ！！
             let original_end_state = &self.states[end];
             assert_eq!(new_end_state.x, original_end_state.x);
             assert_eq!(new_end_state.y, original_end_state.y);
@@ -233,12 +233,16 @@ impl DynamicSolution {
         }
 
         {
+            eprintln!("{:?} {:?}", &self.actions[begin..end], new_actions);
+
             let mut new_full_actions = vec![];
             new_full_actions.extend_from_slice(&self.actions[..begin]);
             new_full_actions.extend_from_slice(new_actions);
             new_full_actions.extend_from_slice(&self.actions[end..]);
             std::mem::swap(&mut self.actions, &mut new_full_actions);
         }
+
+        self.reactivate_range(begin, begin + new_actions.len());
     }
 }
 
@@ -268,8 +272,6 @@ pub fn optimize_pure_move(task: &RasterizedTask, actions: &Vec<Action>) -> Vec<A
             }
             end += 1;
         }
-        let diff3 = dsol.reactivate_range(begin, end);
-        assert_eq!(diff3, 0);
 
         // より良い移動の仕方を入手する
         let begin_state = &dsol.states[begin];
@@ -294,15 +296,16 @@ pub fn optimize_pure_move(task: &RasterizedTask, actions: &Vec<Action>) -> Vec<A
 
         if n_new_actions < n_original_actions {
             dbg!((begin, end, n_original_actions, n_new_actions));
+            dsol.replace(begin, end, &new_actions);
+        } else {
+            let diff3 = dsol.reactivate_range(begin, end);
+            assert_eq!(diff3, 0);
         }
-
-        dsol.replace(begin, end, &new_actions);
 
         begin += 1;
     }
 
     dbg!(dsol.actions.len());
-
     dsol.actions
 }
 
@@ -433,19 +436,45 @@ mod tests {
 
     #[test]
     fn test_optimize() {
-        let (task, mut actions) = prepare_task_and_actions();
+        let (task, mut full_actions) = prepare_task_and_actions();
 
-        actions = actions[..100].to_vec();
-        actions.insert(1, Action::TurnR);
-        actions.insert(1, Action::TurnL);
+        let mut rng = rand::thread_rng();
+        for _ in 0..30 {
+            //let n_actions = rng.gen_range(5, full_actions.len());
+            //let mut actions = full_actions[..n_actions].to_vec();
+            let mut actions = full_actions.clone();
 
+            for _ in 0..20 {
+                let i = rng.gen_range(0, actions.len() - 1);
+                actions.insert(i, Action::TurnR);
+                actions.insert(i, Action::TurnL);
+            }
+            for _ in  0..20 {
+                let i = rng.gen_range(0, actions.len() - 1);
+                actions.insert(i, Action::TurnR);
+                actions.insert(i, Action::TurnR);
+                actions.insert(i, Action::TurnR);
+                actions.insert(i, Action::TurnR);
+            }
+
+            let optimized_actions = optimize_pure_move(&task, &actions);
+
+            //  dbg!(&actions);
+            // dbg!(&optimized_actions);
+
+            let (_, sm1) = get_filled_square_map_naive(&task, &actions, 0, 0);
+            let (_, sm2) = get_filled_square_map_naive(&task, &optimized_actions, 0, 0);
+            // print_map(&sm1);
+            // print_map(&sm2);
+            assert_eq!(sm1, sm2);
+            eprintln!("{} {}", actions.len(), optimized_actions.len());
+        }
+
+        /*
         actions.insert(10, Action::TurnR);
         actions.insert(10, Action::TurnR);
         actions.insert(10, Action::TurnR);
         actions.insert(10, Action::TurnR);
-
-        optimize_pure_move(&task, &actions);
-
-
+        */
     }
 }
