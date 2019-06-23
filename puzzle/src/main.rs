@@ -180,6 +180,8 @@ fn generate_raster_v2(pinput: &puzzle::PazzleInput) -> Option<Vec<Vec<bool>>> {
     let n = tsize + 2;
     let mut map = vec![vec![UOut; n]; n];
     let img = gen_unagi::gen_unagi();
+    dbg!((img.len(), img[0].len()));
+    assert!(false);
     /*
     let img = [
         b"*****",
