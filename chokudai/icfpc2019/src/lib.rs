@@ -233,7 +233,7 @@ fn check_straight(S: &State, tx: usize, ty: usize) -> bool {
     let sx = S.p.x;
     let sy = S.p.y;
     
-    //return false;
+    return false;
     if d == 0 {
         if tx <= sx {
             return false;
