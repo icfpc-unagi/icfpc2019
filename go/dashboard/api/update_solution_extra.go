@@ -22,12 +22,16 @@ func updateSolutionExtraHandler(
 		return errors.WithStack(err)
 	}
 	if err := func() error {
+		image := req.GetSolutionDataImage()
+		if image == nil {
+			image = []byte{}
+		}
 		_, err := tx.ExecContext(
 			ctx,
 			`UPDATE solution_data
 			SET solution_data_image = ?
 			WHERE solution_id = ? AND solution_data_modified = ?`,
-			req.GetSolutionDataImage(),
+			image,
 			req.GetSolutionId(),
 			req.GetSolutionDataModified())
 		if err != nil {

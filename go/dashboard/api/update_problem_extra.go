@@ -26,11 +26,15 @@ func updateProblemExtraHandler(
 		return errors.WithStack(err)
 	}
 	if err := func() error {
+		image := req.GetProblemDataImage()
+		if image == nil {
+			image = []byte{}
+		}
 		_, err := tx.ExecContext(ctx,
 			`UPDATE problem_data
 			SET problem_data_image = ?
 			WHERE problem_id = ?`,
-			req.GetProblemDataImage(), req.GetProblemId())
+			image, req.GetProblemId())
 		if err != nil {
 			return err
 		}

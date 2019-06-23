@@ -35,9 +35,9 @@ func acquireSolutionExtraHandler(
 				solution_data_blob,
 				solution_data_modified
 			FROM
-				solutions
+				solution_data
+				NATURAL LEFT JOIN solutions
 				NATURAL LEFT JOIN problem_data
-				NATURAL LEFT JOIN solution_data
 			WHERE
 				solution_data_image_is_null AND
 				LENGTH(solution_data_blob) > 0
