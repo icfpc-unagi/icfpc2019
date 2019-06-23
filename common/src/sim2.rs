@@ -73,7 +73,7 @@ impl WorkersState {
         }
     }
     pub fn new_t0_with_options(x: usize, y: usize, map: &mut SquareMap, init_boosters: Vec<Booster>) -> WorkersState {
-        eprintln!("Buy: {}", String::from_iter(init_boosters.iter().map(|b| b.to_string())));
+        eprintln!("Buy: [{}]", String::from_iter(init_boosters.iter().map(|b| b.to_string())));
         WorkersState {
             shared: SharedState{
                 unused_boosters: init_boosters,
