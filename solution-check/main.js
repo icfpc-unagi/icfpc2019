@@ -66,8 +66,9 @@ async function main() {
     submit_solution.onchange();
     await sleep(100);
     while (true) {
-        if (document.getElementById("output").innerHTML ==
-            "Done uploading solution") {
+        output = document.getElementById("output").innerHTML;
+        if (output == "Done uploading solution" ||
+            output == "Failed: solution text is malformed") {
             break;
         }
         await sleep(50);
