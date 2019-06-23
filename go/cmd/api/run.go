@@ -62,7 +62,9 @@ func runOnce(
 		for {
 			select {
 			case <-time.After(time.Second * 60):
-				resp, err := apiutil.Call(ctx, &pb.Api_Request{
+				fmt.Fprintf(os.Stderr,
+					"extending solution: %d\n", solution.GetSolutionId())
+				_, err := apiutil.Call(ctx, &pb.Api_Request{
 					ExtendSolution: &pb.Api_Request_ExtendSolution{
 						SolutionId: solution.GetSolutionId(),
 					},
@@ -77,7 +79,6 @@ func runOnce(
 		}
 	}()
 
-	ctx := context.Background()
 	fmt.Fprintf(os.Stderr, "starting solution: %d\n", solution.GetSolutionId())
 	result := &pb.Api_Request_UpdateSolution{
 		SolutionId: solution.GetSolutionId(),
