@@ -252,14 +252,17 @@ pub fn optimize_pure_move(task: &RasterizedTask, actions: &Vec<Action>) -> Vec<A
     let (xsize, ysize) = get_xysize(&task.0);
     let mut bfs = BFS::new(xsize, ysize);
 
-    /*
-    TODO: いじっても大丈夫そうな場所か確認する。具体的には
-    * Fastを使っていない
-    * その後でboostを使ったりしていない
-    */
+    // 後ろからやっていって、extensionを踏んだらやめる。
+    let mut begin = dsol.states.len() - 2;
+    while begin != !0 {
+        match dsol.actions[begin] {
+            Action::TurnL => (),
+            Action::TurnR => (),
+            Action::Move(_) => (),
+            Action::Nothing => (),
+            _ => break,
+        }
 
-    let mut begin = 0;
-    while begin + 1 < dsol.states.len() {
         // state beginは踏んだまま。endも踏んだまま。(begin, end) を消しても、大丈夫。というところを探す。
         let mut end = begin + 1;
         while end + 1 < dsol.states.len() {
@@ -302,9 +305,10 @@ pub fn optimize_pure_move(task: &RasterizedTask, actions: &Vec<Action>) -> Vec<A
             assert_eq!(diff3, 0);
         }
 
-        begin += 1;
+        begin -= 1;
     }
 
+    eprintln!("Optimization till: {}", begin);
     dbg!(dsol.actions.len());
     dsol.actions
 }
@@ -449,7 +453,7 @@ mod tests {
                 actions.insert(i, Action::TurnR);
                 actions.insert(i, Action::TurnL);
             }
-            for _ in  0..20 {
+            for _ in 0..20 {
                 let i = rng.gen_range(0, actions.len() - 1);
                 actions.insert(i, Action::TurnR);
                 actions.insert(i, Action::TurnR);
