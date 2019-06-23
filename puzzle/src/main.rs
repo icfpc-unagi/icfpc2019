@@ -21,6 +21,7 @@ fn main() -> std::io::Result<()> {
     let pinput = puzzle::read(&ipath).expect("Unable to read data");
     let opath = std::env::args().nth(2).expect("usage: args[2] = descfile(output)");
     let bool_map = generate_raster_marine_day(&pinput);
+    // let bool_map = Some(bool_map.unwrap()); // debug!!
     let bool_map = bool_map.unwrap_or_else(
         || generate_raster_v1(&pinput));
 
@@ -63,33 +64,47 @@ fn generate_raster_marine_day(pinput: &puzzle::PazzleInput) -> Option<Vec<Vec<bo
     }
     for k in 0..m {
         let x = 5*k+3;
-        {
-            let (y0, y1) = if k % 2 == 0 {
-                (1, n-2)
-            } else {
-                (n-2, 1)
-            };
-            for &(tx, ty) in &[(x-2, y0), (x-1, y0), (x+1, y1), (x+2, y1)] {
-                if map[tx][ty] == Out {
-                    eprintln!("out: ymin or ymax"); return None;
+        if k != 0 {
+            let mut ok = false;
+            'h: for h in 0..n-2 {
+                let y = if k % 2 == 0 {
+                    1 + h
+                } else {
+                    n-2 - h
+                };
+                for dx in 1..=4 {
+                    if map[x-dx][y] == Out {
+                        continue 'h
+                    }
                 }
-                map[tx][ty] = In;
+                for dx in 1..=4 {
+                    map[x-dx][y] = In;
+                }
+                ok = true;
+                break;
+            }
+            if !ok {
+                eprintln!("horizontal conn"); return None;
             }
         }
         for y in 1..n-1 {
             if map[x][y] != Out {
                 map[x][y] = In;
+                continue;
             }
             if map[x-1][y-1] != Out && map[x-1][y] != Out && map[x-1][y+1] != Out {
                 map[x-1][y-1] = In;
                 map[x-1][y] = In;
                 map[x-1][y+1] = In;
+                continue;
             }
             if map[x+1][y-1] != Out && map[x+1][y] != Out && map[x+1][y+1] != Out {
                 map[x+1][y-1] = In;
                 map[x+1][y] = In;
                 map[x+1][y+1] = In;
+                continue;
             }
+            eprintln!("cannot avoid out"); return None;
         }
     }
     for &(x, y) in &isqs {
