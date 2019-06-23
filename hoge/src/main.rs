@@ -8,6 +8,11 @@ fn main() {
     let original_actions = &sol[0];
 
     let optimized_actions = common::optimize_pure_move_old(&task, original_actions);
-    //println!("{} -> {}", original_actions.len(), optimized_actions.len());
-    println!("{}", common::actions_to_string(&optimized_actions));
+    let (n1, n2) = (original_actions.len(), optimized_actions.len());
+    println!(
+        "{} -> {} ({:.2}%)",
+        n1, n2,
+        ((n1 - n2) as f32) / (n1 as f32) * 100.0
+    );
+    //println!("{}", common::actions_to_string(&optimized_actions));
 }
