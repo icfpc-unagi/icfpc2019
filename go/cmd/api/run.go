@@ -164,10 +164,9 @@ func runCommand(
 	}
 	result.SolutionDataError = append(
 		result.GetSolutionDataError(), []byte(output)...)
-	if err != nil {
-		result.SolutionDataError = append(
-			result.GetSolutionDataError(), []byte(err.Error())...)
-	} else if matches := regexp.MustCompile(
+	result.SolutionDataError = append(
+		result.GetSolutionDataError(), []byte(err.Error())...)
+	if matches := regexp.MustCompile(
 		`Success!\s+Your solution took (\d+) time units\.`,
 	).FindStringSubmatch(string(output)); matches != nil && len(matches) > 0 {
 		result.SolutionScore, err = strconv.ParseInt(matches[1], 10, 64)
