@@ -3,7 +3,7 @@ use image::*;
 use std::iter::*;
 
 pub fn gen_unagi() -> Vec<Vec<bool>> {
-  let pngfile = std::fs::File::open("Unagi.png")
+  let pngfile = std::fs::File::open("/nfs/github/puzzle/Unagi.png")
       .unwrap_or_else(|e| panic!("failed to open unagi: {}", e));
   let png = image::png::PNGDecoder::new(pngfile).unwrap();
   let (xsize, ysize) = png.dimensions();
