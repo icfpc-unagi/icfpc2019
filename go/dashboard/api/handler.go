@@ -79,6 +79,14 @@ func handler(w http.ResponseWriter, r *http.Request) error {
 
 func apiHandler(
 	ctx context.Context, req *pb.Api_Request, resp *pb.Api_Response) error {
+	defer func() {
+		if proto.Size(resp) < 100000 {
+			log.Debugf(ctx, "Response: %s", proto.MarshalTextString(resp))
+		}
+	}()
+	if proto.Size(req) < 100000 {
+		log.Debugf(ctx, "Request: %s", proto.MarshalTextString(req))
+	}
 	if err := insertProblemHandler(ctx, req, resp); err != nil {
 		return err
 	}
