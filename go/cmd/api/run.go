@@ -33,7 +33,9 @@ func run(args ...string) error {
 			AcquireSolution: &pb.Api_Request_AcquireSolution{},
 		})
 		if err != nil {
-			return err
+			fmt.Fprintf(os.Stderr, "failed to call API: %+v\n", err)
+			time.Sleep(10 * time.Second)
+			continue
 		}
 		solution := resp.GetAcquireSolution()
 		if solution.GetSolutionId() == 0 {
@@ -134,6 +136,7 @@ func runCommand(
 		if !timeout {
 			break
 		}
+		fmt.Fprintf(os.Stderr, "scorer failed: %s: %+v\n", output, err)
 	}
 	result.SolutionDataError = append(
 		result.GetSolutionDataError(), []byte(output)...)
@@ -157,9 +160,11 @@ func runCommand(
 }
 
 func commandWithTimeout(
-	name string, arg ...string,
+	name string, args ...string,
 ) (output []byte, timeout bool, err error) {
-	cmd := exec.Command(name, arg...)
+	fmt.Fprintf(os.Stderr, "running %s %v\n", name, args)
+
+	cmd := exec.Command(name, args...)
 	done := make(chan struct{}, 1)
 	errs := make(chan error, 20)
 
