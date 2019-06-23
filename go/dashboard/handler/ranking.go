@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"regexp"
 	"sort"
 
 	"github.com/imos/icfpc2019/go/util/db"
@@ -98,12 +99,25 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 	sort.SliceStable(programIDs, func(i, j int) bool {
 		return totalScores[programIDs[i]] > totalScores[programIDs[j]]
 	})
+	seenProgramName := map[string]bool{}
+	oldProgramIDs := programIDs
+	programIDs = []int64{}
+	for _, programID := range oldProgramIDs {
+		programName := programNameByID[programID]
+		programName =
+			regexp.MustCompile("@.*$").ReplaceAllString(programName, "")
+		if seenProgramName[programName] {
+			continue
+		}
+		seenProgramName[programName] = true
+		programIDs = append(programIDs, programID)
+	}
 
 	var output HTML
 	output = `<table class="table table-clickable">` +
 		`<thead><tr><td>Problem</td><td colspan="2" align="center">Best</td>`
 	for i, programID := range programIDs {
-		if i > 10 {
+		if i > 30 {
 			break
 		}
 		output += `<td colspan="2" align="center">` +
@@ -132,7 +146,7 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 
 		programIDToScore := scoreTable[problem.ProblemID]
 		for i, programID := range programIDs {
-			if i > 10 {
+			if i > 30 {
 				break
 			}
 			output += renderScore(&scores[programIDToScore[programID]], false)
