@@ -137,7 +137,7 @@ impl DynamicSolution {
         let (xsize, ysize) = get_xysize(&task.0);
 
         let mut dummy_square_map = task.0.clone();
-        let mut dummy_booster_map = mat![None; xsize; ysize];
+        let mut dummy_booster_map = task.1.clone();
 
         let mut state = get_initial_state(&task);
         let mut states = vec![state.clone()];
@@ -195,14 +195,13 @@ impl DynamicSolution {
         n
     }
 
-    /*
     pub fn replace(&mut self, begin: usize, end: usize, new_actions: &[Action]) {
-        // new_actionsは同じ場所にたどり着くこと！！
+        // step beginとstep endは踏む。つまり、stepは(begin, end)が置き換わる。
+        // actionでいうと[begin, end)が置き換わる。
+        // ぜんぶふまれること！（踏む場所の変化には対応してない）
 
         assert!(begin < end);
         assert!(end <= self.actions.len());
-
-        self.deactivate(begin, end);
 
         let mut new_states = vec![];
         let mut state = self.states[begin].clone();
@@ -217,7 +216,7 @@ impl DynamicSolution {
         }
 
         {
-            let new_end_state = new_states.last().unwrap();
+            let new_end_state = new_states.pop().unwrap();  // 注意！POPしてるよ！！
             let original_end_state = &self.states[end];
             assert_eq!(new_end_state.x, original_end_state.x);
             assert_eq!(new_end_state.y, original_end_state.y);
@@ -225,23 +224,22 @@ impl DynamicSolution {
             assert_eq!(new_end_state.manipulators, original_end_state.manipulators);
         }
 
-        let mut new_full_actions = vec![];
-        new_full_actions.extend_from_slice(&self.actions[..begin]);
-        new_full_actions.extend_from_slice(new_actions);
-        new_full_actions.extend_from_slice(&self.actions[end..]);
-        std::mem::swap(&mut self.actions, &mut new_full_actions);
-        drop(new_full_actions);
+        {
+            let mut new_full_states = vec![];
+            new_full_states.extend_from_slice(&self.states[..begin + 1]);
+            new_full_states.extend_from_slice(&new_states);
+            new_full_states.extend_from_slice(&self.states[end..]);
+            std::mem::swap(&mut self.states, &mut new_full_states);
+        }
 
-        let mut new_full_states = vec![];
-        new_full_states.extend_from_slice(&self.states[..begin + 1]);
-        new_full_states.extend_from_slice(&new_states[..new_states.len() - 1]);
-        new_full_states.extend_from_slice(&self.states[end..]);
-        std::mem::swap(&mut self.states, &mut new_full_states);
-        drop(new_full_states);
-
-        self.reactivate(begin, begin + new_actions.len());
+        {
+            let mut new_full_actions = vec![];
+            new_full_actions.extend_from_slice(&self.actions[..begin]);
+            new_full_actions.extend_from_slice(new_actions);
+            new_full_actions.extend_from_slice(&self.actions[end..]);
+            std::mem::swap(&mut self.actions, &mut new_full_actions);
+        }
     }
-    */
 }
 
 pub fn optimize_pure_move(task: &RasterizedTask, actions: &Vec<Action>) -> Vec<Action> {
@@ -257,10 +255,10 @@ pub fn optimize_pure_move(task: &RasterizedTask, actions: &Vec<Action>) -> Vec<A
     */
 
     let mut begin = 0;
-    while begin < dsol.states.len() {
+    while begin + 1 < dsol.states.len() {
         // state beginは踏んだまま。endも踏んだまま。(begin, end) を消しても、大丈夫。というところを探す。
         let mut end = begin + 1;
-        while end + 1 <= dsol.states.len() {
+        while end + 1 < dsol.states.len() {
             // endをふまない、というのを試してみて大丈夫だったら進む、endは踏むことにしてbreak
             let diff = dsol.deactivate_step(end);
             if diff > 0 {
@@ -270,7 +268,8 @@ pub fn optimize_pure_move(task: &RasterizedTask, actions: &Vec<Action>) -> Vec<A
             }
             end += 1;
         }
-        dbg!((begin, end));
+        let diff3 = dsol.reactivate_range(begin, end);
+        assert_eq!(diff3, 0);
 
         // より良い移動の仕方を入手する
         let begin_state = &dsol.states[begin];
@@ -281,7 +280,7 @@ pub fn optimize_pure_move(task: &RasterizedTask, actions: &Vec<Action>) -> Vec<A
             end_state.x,
             end_state.y,
         );
-        let dir_diff = (4 + begin_state.dir - end_state.dir) % 4;
+        let dir_diff = (4 + end_state.dir - begin_state.dir) % 4;
         new_actions.extend_from_slice(match dir_diff {
             0 => &[],
             1 => &[Action::TurnR],
@@ -290,16 +289,21 @@ pub fn optimize_pure_move(task: &RasterizedTask, actions: &Vec<Action>) -> Vec<A
             _ => panic!(),
         });
 
-        // dbg!(new_actions);
-        dbg!((end - begin, new_actions.len()));
+        let n_original_actions = end - begin;
+        let n_new_actions = new_actions.len();
 
-        let diff3 = dsol.reactivate_range(begin, end);
-        assert_eq!(diff3, 0);
+        if n_new_actions < n_original_actions {
+            dbg!((begin, end, n_original_actions, n_new_actions));
+        }
+
+        dsol.replace(begin, end, &new_actions);
 
         begin += 1;
     }
 
-    return dsol.actions;
+    dbg!(dsol.actions.len());
+
+    dsol.actions
 }
 
 #[cfg(test)]
@@ -427,11 +431,21 @@ mod tests {
         }
     }
 
-    /*
     #[test]
     fn test_optimize() {
-        let (task, actions) = prepare_task_and_actions();
+        let (task, mut actions) = prepare_task_and_actions();
+
+        actions = actions[..100].to_vec();
+        actions.insert(1, Action::TurnR);
+        actions.insert(1, Action::TurnL);
+
+        actions.insert(10, Action::TurnR);
+        actions.insert(10, Action::TurnR);
+        actions.insert(10, Action::TurnR);
+        actions.insert(10, Action::TurnR);
+
         optimize_pure_move(&task, &actions);
+
+
     }
-    */
 }
