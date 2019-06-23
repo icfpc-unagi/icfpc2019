@@ -228,6 +228,172 @@ pub fn make_move(a2: &Vec<Action>, R: usize, L: usize, d: usize) -> Vec<Action> 
     actions
 }
 
+fn check_straight(S: &State, tx: usize, ty: usize) -> bool {
+    let d = S.p.dir;
+    let sx = S.p.x;
+    let sy = S.p.y;
+
+    if d == 0 {
+        if tx <= sx {
+            return false;
+        }
+        if get_diff(sy, ty) > 1 {
+            return false;
+        }
+        for x in sx + 1..tx {
+            if S.field[x][sy] == Square::Block {
+                return false;
+            }
+        }
+        return true;
+    } else if d == 1 {
+        if ty <= sy {
+            return false;
+        }
+        if get_diff(sx, tx) > 1 {
+            return false;
+        }
+        for x in sx + 1..tx {
+            if S.field[x][sy] == Square::Block {
+                return false;
+            }
+        }
+        return true;
+    } else if d == 2 {
+        if tx >= sx {
+            return false;
+        }
+        if get_diff(sy, ty) > 1 {
+            return false;
+        }
+        for x in tx + 1..sx {
+            if S.field[x][sy] == Square::Block {
+                return false;
+            }
+        }
+        return true;
+    } else if d == 3 {
+        if ty <= sy {
+            return false;
+        }
+        if get_diff(sx, tx) > 1 {
+            return false;
+        }
+        for x in sx + 1..tx {
+            if S.field[x][sy] == Square::Block {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    false
+}
+
+fn get_straight(S: &State, tx: usize, ty: usize) -> Vec<Action> {
+    let d = S.p.dir;
+    let sx = S.p.x;
+    let sy = S.p.y;
+
+    let mut need = 0;
+    if d % 2 == 0 {
+        need = get_diff(sx, tx) - 1;
+    } else {
+        need = get_diff(sy, ty) - 1;
+    }
+    let mut ret: Vec<Action> = Vec::with_capacity(0);
+    for i in 0..need {
+        ret.push(Action::Move(d));
+    }
+    ret
+}
+
+fn check_straight_left(S: &State, tx: usize, ty: usize) -> bool {
+    let d = S.p.dir;
+    let sx = S.p.x;
+    let sy = S.p.y;
+
+    if d == 0 {
+        if tx < sx {
+            return false;
+        }
+        if ty <= sy {
+            return false;
+        }
+        for x in sx + 1..tx {
+            if S.field[x][sy] == Square::Block {
+                return false;
+            }
+        }
+        for y in sy..ty {
+            if S.field[tx][y] == Square::Block {
+                return false;
+            }
+        }
+        return true;
+
+    } else if d == 1 {
+        if ty < sy {
+            return false;
+        }
+        if tx <= sy {
+            return false;
+        }
+
+        if get_diff(sx, tx) > 1 {
+            return false;
+        }
+        for x in sx + 1..tx {
+            if S.field[x][sy] == Square::Block {
+                return false;
+            }
+        }
+        return true;
+    } else if d == 2 {
+        if tx > sx {
+            return false;
+        }
+        if ty >= sy {
+            return false;
+        }
+        for x in tx..sx {
+            if S.field[x][sy] == Square::Block {
+                return false;
+            }
+        }
+        for y in ty..sy {
+            if S.field[tx][y] == Square::Block {
+                return false;
+            }
+        }
+        return true;
+
+    } else if d == 3 {
+        if ty < sy {
+            return false;
+        }
+        if get_diff(sx, tx) > 1 {
+            return false;
+        }
+        for x in sx + 1..tx {
+            if S.field[x][sy] == Square::Block {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    false
+}
+
+fn check_straight_right(S: &State, tx: usize, ty: usize) -> bool {
+    let d = S.p.dir;
+    let sx = S.p.x;
+    let sy = S.p.y;
+
+    false
+}
+
 const optimization_num: usize = 2; //0..OptimizationNum
 
 fn get_next_action(
@@ -310,6 +476,8 @@ fn get_next_action(
         //復帰するべき状態
         let back_state = p_state[last_act].clone();
 
+        let mut firstloop = false;
+
         for i in 0..point_list.len() {
             let target_pos = point_list[i];
 
@@ -321,6 +489,7 @@ fn get_next_action(
             }
 
             let mut actions: Vec<Action> = Vec::with_capacity(0);
+
 
             if UseOptimization == 0 {
                 let (a2, gx, gy) = bfs.search_fewest_actions_to_wrap(
@@ -451,11 +620,12 @@ fn get_next_action(
                 temp_action.push(act);
 
                 for (tx, ty) in ret.filled {
-                    if tx == target_pos.0 && ty == target_pos.1 {
+                    if tx == target_pos.0 && ty == target_pos.1 && !firstloop {
                         break 'actloop;
                     }
                 }
             }
+            firstloop = true;
         }
 
         //Actionを差し込む前の状態にちゃんと戻す
