@@ -64,18 +64,28 @@ impl DynamicMap {
         }
     }
 
-    pub fn apply(&mut self, state: &WorkerState) {
+    pub fn apply(&mut self, state: &WorkerState) -> usize {
         let cells = state.visible_manipulators_on_empty_cells(&self.initial_square_map);
+        let mut n = 0;
         for cell in cells {
+            if self.fill_count[cell.0][cell.1] == 0 {
+                n += 1;
+            }
             self.fill_count[cell.0][cell.1] += 1;
         }
+        n
     }
 
-    pub fn cancel(&mut self, state: &WorkerState) {
+    pub fn cancel(&mut self, state: &WorkerState) -> usize {
         let cells = state.visible_manipulators_on_empty_cells(&self.initial_square_map);
+        let mut n = 0;
         for cell in cells {
             self.fill_count[cell.0][cell.1] -= 1;
+            if self.fill_count[cell.0][cell.1] == 0 {
+                n += 1;
+            }
         }
+        n
     }
 
     pub fn to_square_map(&self) -> SquareMap {
@@ -98,6 +108,19 @@ impl DynamicMap {
             }
         }
         ret
+    }
+
+    pub fn num_filled_squares(&self) -> usize {
+        let (xsize, ysize) = get_xysize(&self.initial_square_map);
+        let mut n = 0;
+        for x in 0..xsize {
+            for y in 0..ysize {
+                if self.fill_count[x][y] > 0 {
+                    n += 1;
+                }
+            }
+        }
+        n
     }
 }
 
@@ -142,20 +165,37 @@ impl DynamicSolution {
         }
     }
 
-    pub fn deactivate(&mut self, begin: usize, end: usize) {
-        assert!(begin < end);
-        for state in &self.states[begin + 1..end] {
-            self.dynamic_map.cancel(state);
-        }
+    //
+    // こいつらはstate側の数え方であることに注意
+    //
+    pub fn deactivate_step(&mut self, step: usize) -> usize {
+        self.dynamic_map.cancel(&self.states[step])
     }
 
-    pub fn reactivate(&mut self, begin: usize, end: usize) {
-        assert!(begin < end);
-        for state in &self.states[begin + 1..end] {
-            self.dynamic_map.apply(state);
-        }
+    pub fn reactivate_step(&mut self, step: usize) -> usize {
+        self.dynamic_map.apply(&self.states[step])
     }
 
+    pub fn deactivate_range(&mut self, begin: usize, end: usize) -> usize {
+        // step begin, step endは踏む。その間を除く。
+        assert!(begin < end);
+        let mut n = 0;
+        for step in begin + 1..end {
+            n += self.deactivate_step(step);
+        }
+        n
+    }
+
+    pub fn reactivate_range(&mut self, begin: usize, end: usize) -> usize {
+        assert!(begin < end);
+        let mut n = 0;
+        for step in begin + 1..end {
+            n += self.reactivate_step(step);
+        }
+        n
+    }
+
+    /*
     pub fn replace(&mut self, begin: usize, end: usize, new_actions: &[Action]) {
         // new_actionsは同じ場所にたどり着くこと！！
 
@@ -201,20 +241,65 @@ impl DynamicSolution {
 
         self.reactivate(begin, begin + new_actions.len());
     }
+    */
 }
 
-pub fn optimize_local_tsp(task: &RasterizedTask, actions: &Vec<Action>) -> Vec<Action> {
+pub fn optimize_pure_move(task: &RasterizedTask, actions: &Vec<Action>) -> Vec<Action> {
+    // 全く塗ってない移動を最適化する
+    let mut dsol = DynamicSolution::new(task, actions);
+    let (xsize, ysize) = get_xysize(&task.0);
+    let mut bfs = BFS::new(xsize, ysize);
+
     /*
-    let mut dynamic_map = DynamicMap::new(task, actions);
-    let mut dynamic_solution = DynamicSolution::new(task, actions);
-
-    let k = 5;
-
-    let i = 1;
-    dynamic_map.cancel(&dynamic_solution.states[i]);
+    TODO: いじっても大丈夫そうな場所か確認する。具体的には
+    * Fastを使っていない
+    * その後でboostを使ったりしていない
     */
 
-    unimplemented!();
+    let mut begin = 0;
+    while begin < dsol.states.len() {
+        // state beginは踏んだまま。endも踏んだまま。(begin, end) を消しても、大丈夫。というところを探す。
+        let mut end = begin + 1;
+        while end + 1 <= dsol.states.len() {
+            // endをふまない、というのを試してみて大丈夫だったら進む、endは踏むことにしてbreak
+            let diff = dsol.deactivate_step(end);
+            if diff > 0 {
+                let diff2 = dsol.reactivate_step(end);
+                assert_eq!(diff, diff2);
+                break;
+            }
+            end += 1;
+        }
+        dbg!((begin, end));
+
+        // より良い移動の仕方を入手する
+        let begin_state = &dsol.states[begin];
+        let end_state = &dsol.states[end];
+        let mut new_actions = bfs.search_fewest_actions_to_move(
+            &task.0,
+            &dsol.states[begin],
+            end_state.x,
+            end_state.y,
+        );
+        let dir_diff = (4 + begin_state.dir - end_state.dir) % 4;
+        new_actions.extend_from_slice(match dir_diff {
+            0 => &[],
+            1 => &[Action::TurnR],
+            2 => &[Action::TurnR, Action::TurnR],
+            3 => &[Action::TurnL],
+            _ => panic!(),
+        });
+
+        // dbg!(new_actions);
+        dbg!((end - begin, new_actions.len()));
+
+        let diff3 = dsol.reactivate_range(begin, end);
+        assert_eq!(diff3, 0);
+
+        begin += 1;
+    }
+
+    return dsol.actions;
 }
 
 #[cfg(test)]
@@ -274,9 +359,7 @@ mod tests {
         (current_state, current_square_map)
     }
 
-    #[test]
-    fn it_works() {
-        // タスクを準備。MoveとTurnしか入ってないやつ。
+    fn prepare_task_and_actions() -> (RasterizedTask, Vec<Action>) {
         let task = load_task_002();
         let sol = parse_sol("DQWWWWWWWWEDDDESSSSSSSSQDSDDDDDDDDDDDWWWAAWWWWWDDWWWWWWDDESSASAASWWWWEEWWWWWWWEDDDDDDESSSSSSWWWAAEAEDDDDWWDDWSDSSSSSSSSQAADDQSSSSSSSSSSSSSSSQDSDDDQWWWWEDSSSDDDDQWWAWWWWQAWAEWWEDDDDQWWWWAWWSEDSDDSSSSSSDDDESEAAAAWWAAASSDSSSSSSSASAAAAAAAAAWWAAEWWWWWWWSAAAAWWSSDQQSSSSSSSSSSSEAAAQSASSSSSSSSSSEAAAEWWWWWWWDWWWWSSSSSSSSSSSASAAAAAAAWWWWWWWWWEDESSSSSSAAASSWWWWWWWAWWWWQDDAAQWWDWWWWEDDDDDDDDDDDDDESSSWAAAAAAWAAAASAS");
         assert_eq!(sol.len(), 1);
@@ -292,15 +375,20 @@ mod tests {
             }
         }
 
+        (task, actions.clone())
+    }
+
+    #[test]
+    fn test_deactivate_reactivate() {
+        let (task, actions) = prepare_task_and_actions();
+
         let n_actions = actions.len();
         let mut rng = rand::thread_rng();
-        let mut generate_random_range = || {
-            loop {
-                let (b, e) = (rng.gen_range(0, n_actions), rng.gen_range(0, n_actions));
-                let (b, e) = (usize::min(b, e), usize::max(b, e));
-                if b != e {
-                    return (b, e)
-                }
+        let mut generate_random_range = || loop {
+            let (b, e) = (rng.gen_range(0, n_actions), rng.gen_range(0, n_actions));
+            let (b, e) = (usize::min(b, e), usize::max(b, e));
+            if b != e {
+                return (b, e);
             }
         };
 
@@ -308,11 +396,11 @@ mod tests {
         for _ in 0..30 {
             let (b, e) = generate_random_range();
 
-            let (_, sm_naive) = get_filled_square_map_naive(&task, actions, b, e - 1);
+            let (_, sm_naive) = get_filled_square_map_naive(&task, &actions, b, e);
             print_map(&sm_naive);
 
-            let mut dsol = DynamicSolution::new(&task, actions);
-            dsol.deactivate(b, e);
+            let mut dsol = DynamicSolution::new(&task, &actions);
+            dsol.deactivate_range(b, e + 1);
             let sm_dynamic = dsol.dynamic_map.to_square_map();
             print_map(&sm_dynamic);
 
@@ -321,21 +409,29 @@ mod tests {
 
         // 次はdeactivate, activate連発
         {
-            let mut dsol = DynamicSolution::new(&task, actions);
+            let mut dsol = DynamicSolution::new(&task, &actions);
 
             for _ in 0..30 {
                 let (b, e) = generate_random_range();
 
-                let (_, sm_naive) = get_filled_square_map_naive(&task, actions, b, e - 1);
+                let (_, sm_naive) = get_filled_square_map_naive(&task, &actions, b, e);
                 print_map(&sm_naive);
 
-                dsol.deactivate(b, e);
+                dsol.deactivate_range(b, e + 1);
                 let sm_dynamic = dsol.dynamic_map.to_square_map();
-                dsol.reactivate(b, e);
+                dsol.reactivate_range(b, e + 1);
                 print_map(&sm_dynamic);
 
                 assert_eq!(sm_naive, sm_dynamic);
             }
         }
     }
+
+    /*
+    #[test]
+    fn test_optimize() {
+        let (task, actions) = prepare_task_and_actions();
+        optimize_pure_move(&task, &actions);
+    }
+    */
 }
