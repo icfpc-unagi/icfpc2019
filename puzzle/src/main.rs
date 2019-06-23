@@ -16,11 +16,30 @@ enum Cell {
 use Cell::*;
 
 fn main() -> std::io::Result<()> {
-    let mut rng = rand::thread_rng(); // デフォルトの乱数生成器を初期化します
     // println!("Hello, world!");
     let ipath = std::env::args().nth(1).expect("usage: args[1] = condfile(input)");
     let pinput = puzzle::read(&ipath).expect("Unable to read data");
     let opath = std::env::args().nth(2).expect("usage: args[2] = descfile(output)");
+    let bool_map = generate_raster_v1(&pinput);
+
+    let taskspec = raster_map_to_task_specification(
+        &bool_map,
+        pinput.mnum,
+        pinput.fnum,
+        pinput.dnum,
+        pinput.rnum,
+        pinput.cnum,
+        pinput.xnum,
+        );
+    // print!("{}", taskspec);
+    let mut f = File::create(opath).expect("Unable to create file");
+    f.write_all(taskspec.as_bytes()).expect("Unable to write data");
+    Ok(())
+}
+
+
+fn generate_raster_v1(pinput: &puzzle::PazzleInput) -> Vec<Vec<bool>> {
+    let mut rng = rand::thread_rng(); // デフォルトの乱数生成器を初期化します
     let puzzle::PazzleInput {tsize, vmin, vmax, isqs, osqs, ..} = pinput.clone();
     // dbg!(&osqs);
     let n = tsize + 2;
@@ -127,23 +146,10 @@ fn main() -> std::io::Result<()> {
             eprintln!();
         }
         if puzzle::check(&pinput, &bool_map) {
-            break;
+            return bool_map;
         }
         eprintln!("check failed! retrying...");
     }
-    let taskspec = raster_map_to_task_specification(
-        &bool_map,
-        pinput.mnum,
-        pinput.fnum,
-        pinput.dnum,
-        pinput.rnum,
-        pinput.cnum,
-        pinput.xnum,
-        );
-    // print!("{}", taskspec);
-    let mut f = File::create(opath).expect("Unable to create file");
-    f.write_all(taskspec.as_bytes()).expect("Unable to write data");
-    Ok(())
 }
 
 fn is_corner(map: &Vec<Vec<Cell>>, x: usize, y: usize) -> bool {
