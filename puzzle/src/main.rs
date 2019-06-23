@@ -20,7 +20,9 @@ fn main() -> std::io::Result<()> {
     let ipath = std::env::args().nth(1).expect("usage: args[1] = condfile(input)");
     let pinput = puzzle::read(&ipath).expect("Unable to read data");
     let opath = std::env::args().nth(2).expect("usage: args[2] = descfile(output)");
-    let bool_map = generate_raster_v1(&pinput);
+    let bool_map = generate_raster_marine_day(&pinput);
+    let bool_map = bool_map.unwrap_or_else(
+        || generate_raster_v1(&pinput));
 
     let taskspec = raster_map_to_task_specification(
         &bool_map,
@@ -35,6 +37,76 @@ fn main() -> std::io::Result<()> {
     let mut f = File::create(opath).expect("Unable to create file");
     f.write_all(taskspec.as_bytes()).expect("Unable to write data");
     Ok(())
+}
+
+
+fn generate_raster_marine_day(pinput: &puzzle::PazzleInput) -> Option<Vec<Vec<bool>>> {
+    let puzzle::PazzleInput {tsize, vmin, vmax, isqs, osqs, ..} = pinput.clone();
+    // dbg!(&osqs);
+    if tsize % 5 != 0 {
+        eprintln!("tsize % 5"); return None;
+    }
+    let m = tsize / 5;
+    let n = tsize + 2;
+    let mut bool_map = vec![vec![false; n]; n];
+
+    let mut map = vec![vec![Unk; n]; n];
+    for i in 0..n {
+        map[0][i] = Out;
+        map[n-1][i] = Out;
+        map[i][0] = Out;
+        map[i][n-1] = Out;
+    }
+    for &(x, y) in &osqs {
+        let x = x + 1;
+        let y = y + 1;
+        map[x][y] = Out;
+    }
+    for k in 0..m {
+        let x = 5*k+3;
+        for y in 1..n-1 {
+            if map[x][y] != Out {
+                map[x][y] = In;
+            }
+            if map[x-1][y-1] != Out && map[x-1][y] != Out && map[x-1][y+1] != Out {
+                map[x-1][y-1] = In;
+                map[x-1][y] = In;
+                map[x-1][y+1] = In;
+            }
+            if map[x+1][y-1] != Out && map[x+1][y] != Out && map[x+1][y+1] != Out {
+                map[x+1][y-1] = In;
+                map[x+1][y] = In;
+                map[x+1][y+1] = In;
+            }
+        }
+        let (y0, y1) = if k % 2 == 0 {
+            (1, n-1)
+        } else {
+            (n-1, 1)
+        };
+        for &(tx, ty) in &[(x-2, y0), (x-1, y0), (x+1, y1), (x+2, y1)] {
+            if map[tx][ty] == Out {
+                eprintln!("out: ymin or ymax"); return None;
+            }
+            map[tx][ty] = In;
+        }
+    }
+    for &(x, y) in &isqs {
+        let mut x = x + 1;
+        let y = y + 1;
+        while map[x][y] != In {
+            if map[x][y] == Out {
+                eprintln!("in: equal x with out?"); return None;
+            }
+            map[x][y] = In;
+            if x % 5 == 1 || x % 5 == 2 {
+                x += 1;
+            } else {
+                x -= 1;
+            }
+        }
+    }
+    unimplemented!()
 }
 
 
