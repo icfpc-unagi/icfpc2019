@@ -3,19 +3,48 @@ package handler
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"html/template"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/imos/icfpc2019/go/util/db"
+	"google.golang.org/appengine"
+	"google.golang.org/appengine/log"
 )
 
 func init() {
 	registerHandler("/solution", solutionHandler)
+
+	http.HandleFunc("/solution/retry", func(w http.ResponseWriter, r *http.Request) {
+		ctx := appengine.NewContext(r)
+
+		var err error
+		if r.Method != http.MethodPost {
+			http.Redirect(w, r, "/solution", http.StatusSeeOther)
+		} else if solutionID, err := strconv.ParseInt(r.PostFormValue("solution_id"), 10, 64); err != nil {
+			log.Errorf(ctx, "%+v", err)
+			http.Error(w, fmt.Sprintf("%+v", err), 500)
+		} else if ref, err := url.Parse(r.Referer()); err != nil {
+			log.Errorf(ctx, "%+v", err)
+			http.Error(w, fmt.Sprintf("%+v", err), 500)
+		} else if ref.Path != "/solution/retry" {
+			err = confirmRetry(ctx, w, r, solutionID)
+		} else {
+			err = triggerRetry(ctx, w, r, solutionID)
+		}
+		if err != nil {
+			log.Errorf(ctx, "%+v", err)
+			http.Error(w, fmt.Sprintf("%+v", err), 500)
+		}
+	})
 }
 
 var tmpl = template.Must(template.New("solution").Parse(`
-<div style="width:100%">
+{{if .SolutionLock}}
+<h2 style="background-color:red;text-align:center">RETRY REQUESTED</h2>
+{{end}}
 	<table class="table" style="width:500px;margin:auto" align="center">
 		<thead><tr><td>ID</td><td>Program</td><td>Problem</td><td>Booster</td><td>Score</td><td>Modified</td></tr></thead>
 		<tbody>
@@ -35,12 +64,18 @@ var tmpl = template.Must(template.New("solution").Parse(`
 
 	<div style="text-align:center"><img src="/solution_image?solution_id={{.SolutionID}}"></div>
 
-	<h3><a name="output">Output:</a></h3>
-	<pre>{{.SolutionDataBlob}}</pre>
+	<details><summary><h3 style="display:inline-block"><a name="output">Output:</a></h3></summary>
+	<pre>{{.SolutionDataBlob}}</pre></details>
 
 	<h3><a name="error">Error:</a></h3>
 	<pre>{{.SolutionDataError}}</pre>
-</div>
+
+{{if .SolutionLock}}{{else}}
+	<form method="POST" action="/solution/retry">
+	<input type="hidden" name="solution_id" value="{{.SolutionID}}">
+	<input type="submit" value="Retry?">
+	</form>
+{{end}}
 `))
 
 func solutionHandler(ctx context.Context, r *http.Request) (HTML, error) {
@@ -52,6 +87,7 @@ func solutionHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		SolutionID          int64   `db:"solution_id"`
 		SolutionBooster     string  `db:"solution_booster"`
 		SolutionScore       *int64  `db:"solution_score"`
+		SolutionLock        *string `db:"solution_lock"`
 		SolutionModified    *string `db:"solution_modified"`
 		SolutionDescription string  `db:"solution_description"`
 		SolutionDataBlob    string  `db:"solution_data_blob"`
@@ -66,6 +102,7 @@ func solutionHandler(ctx context.Context, r *http.Request) (HTML, error) {
 			solution_id,
 			solution_booster,
 			solution_score,
+			solution_lock,
 			solution_modified,
 			solution_description,
 			solution_data_blob,
@@ -90,4 +127,35 @@ func solutionHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		return "", err
 	}
 	return HTML(buf.String()), nil
+}
+
+var tmpl2 = template.Must(template.New("solution").Parse(`
+<!doctype html>
+<html><head></head>
+<body>
+<form method="POST" action="/solution/retry">
+<input type="hidden" name="solution_id" value="{{.}}">
+<input type="submit" value="CONFIRM RETRY">
+</form>
+</body>
+</html>
+`))
+
+func confirmRetry(ctx context.Context, w http.ResponseWriter, r *http.Request, solutionID int64) error {
+	return tmpl2.Execute(w, solutionID)
+}
+
+func triggerRetry(ctx context.Context, w http.ResponseWriter, r *http.Request, solutionID int64) error {
+	if _, err := db.Execute(ctx, `
+		UPDATE
+			solutions
+		SET
+			solution_lock = NOW() - INTERVAL 1 WEEK
+		WHERE
+			solution_id = ?
+		`, solutionID); err != nil {
+		return err
+	}
+	http.Redirect(w, r, fmt.Sprintf("/solution?solution_id=%d", solutionID), http.StatusSeeOther)
+	return nil
 }
