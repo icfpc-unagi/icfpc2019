@@ -168,6 +168,12 @@ impl DynamicSolution {
             dynamic_map.apply(state);
         }
 
+        for x in 0..xsize {
+            for y in 0..ysize {
+                assert!(square_map[x][y] == Square::Block || dynamic_map.fill_count[x][y] > 0);
+            }
+        }
+
         DynamicSolution {
             actions: actions.clone(),
             dynamic_map,
