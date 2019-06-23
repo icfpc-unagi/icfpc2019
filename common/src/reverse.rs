@@ -1,7 +1,7 @@
 use crate::*;
 
-fn reverse_actions(actions: &Vec<Action>) -> Vec<Action> {
-    let mut rev_actions = actions.clone();
+pub fn reverse_actions(actions: &[Action]) -> Vec<Action> {
+    let mut rev_actions: Vec<_> = actions.into_iter().collect();
     rev_actions.reverse();
 
     rev_actions.iter().map(

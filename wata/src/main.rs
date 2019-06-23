@@ -360,51 +360,100 @@ pub fn split_solve_sub(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster
         dists.push(compute_dist(&map, p_t_as[i].0));
     }
     eprintln!("turn: {}", max_t);
-    let mut lb = 0;
+    let mut lb = p_t_as.iter().map(|&(_, t, _)| t).max().unwrap();
     let mut ub = max_t;
-    while ub - lb > 1 {
+    let mut ps = vec![(sx0, sy0)];
+    let mut dirs = vec![0];
+    {
+        let mut state = PlayerState::new(sx0, sy0);
+        let mut map = map.clone();
+        let mut boosters = boosters.clone();
+        for &a in &best {
+            apply_action(a, &mut state, &mut map, &mut boosters);
+            ps.push((state.x, state.y));
+            dirs.push(state.dir);
+        }
+    }
+    'a: while ub - lb > 1 {
         let mid = (lb + ub) / 2;
         let mut from = 0;
         let mut used = vec![false; c + 1];
         let mut moves = vec![vec![]; c + 1];
-        // let mut mov
         for _ in 0..c+1 {
-            let mut state = PlayerState::new(sx0, sy0);
-            let mut map = map.clone();
-            let mut boosters = boosters.clone();
-            for a in 0..from {
-                apply_action(best[a], &mut state, &mut map, &mut boosters);
-            }
-            let (tx, ty) = (state.x, state.y);
+            let (tx, ty) = ps[from];
             let mut nearest = !0;
             let mut min_dist = !0;
+            let mut rev = None;
             for i in 0..c+1 {
                 if !used[i] {
                     if min_dist.setmin(dists[i][tx][ty]) {
                         nearest = i;
+                        rev = None;
+                    }
+                    let mut lb2 = 0;
+                    let mut ub2 = (mid - p_t_as[i].1 + 1).min(ps.len() - from);
+                    while ub2 - lb2 > 1 {
+                        let mid2 = (lb2 + ub2) / 2;
+                        let (x, y) = ps[from + mid2];
+                        let add_d = match dirs[from + mid2] {
+                            1 | 3 => 1,
+                            2 => 2,
+                            _ => 0
+                        };
+                        if p_t_as[i].1 + dists[i][x][y] + mid2 + add_d <= mid {
+                            lb2 = mid2;
+                        } else {
+                            ub2 = mid2;
+                        }
+                    }
+                    let (x, y) = ps[from + lb2];
+                    if min_dist.setmin(dists[i][x][y]) {
+                        nearest = i;
+                        rev = Some(from + lb2);
                     }
                 }
             }
             used[nearest] = true;
             let ((sx, sy), t, mut pre_mv) = p_t_as[nearest].clone();
-            let mut mv = bfs.search_fewest_actions_to_move(&map, &PlayerState::new(sx, sy), state.x, state.y);
-            if state.dir == 1 {
-                mv.push(Action::TurnR);
-            } else if state.dir == 2 {
-                mv.push(Action::TurnR);
-                mv.push(Action::TurnR);
-            } else if state.dir == 3 {
-                mv.push(Action::TurnL);
+            if let Some(to) = rev {
+                let mut mv = bfs.search_fewest_actions_to_move(&map, &PlayerState::new(sx, sy), ps[to].0, ps[to].1);
+                if dirs[to] == 1 {
+                    mv.push(Action::TurnR);
+                } else if dirs[to] == 2 {
+                    mv.push(Action::TurnR);
+                    mv.push(Action::TurnR);
+                } else if dirs[to] == 3 {
+                    mv.push(Action::TurnL);
+                }
+                if t + mv.len() > mid {
+                    lb = mid;
+                    continue 'a;
+                }
+                pre_mv.extend(mv);
+                pre_mv.extend(common::reverse::reverse_actions(&best[from..to]));
+                from = to;
+                moves[nearest] = pre_mv;
+            } else {
+                let mut mv = bfs.search_fewest_actions_to_move(&map, &PlayerState::new(sx, sy), tx, ty);
+                if dirs[from] == 1 {
+                    mv.push(Action::TurnR);
+                } else if dirs[from] == 2 {
+                    mv.push(Action::TurnR);
+                    mv.push(Action::TurnR);
+                } else if dirs[from] == 3 {
+                    mv.push(Action::TurnL);
+                }
+                if t + mv.len() > mid {
+                    lb = mid;
+                    continue 'a;
+                }
+                while t + mv.len() < mid && from < best.len() {
+                    mv.push(best[from]);
+                    from += 1;
+                }
+                pre_mv.extend(mv);
+                moves[nearest] = pre_mv;
             }
-            if t + mv.len() > mid {
-                lb = mid;
-            }
-            while t + mv.len() < mid && from < best.len() {
-                mv.push(best[from]);
-                from += 1;
-            }
-            pre_mv.extend(mv);
-            moves[nearest] = pre_mv;
         }
         if from >= best.len() {
             ub = mid;
