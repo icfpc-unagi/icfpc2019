@@ -76,6 +76,7 @@ fn main() {
 
     let pre_string = actions_to_string(&best_pre_action);
     let ans_string = actions_to_string(&best_ans_action);
+    best_size = best_pre_action.len() + best_ans_action.len();
 
     let mut best_string = pre_string.to_string() + &ans_string;
     eprintln!("Best: {}", best_size);

@@ -406,14 +406,36 @@ fn get_next_action(
 
                     actions = make_move(&a2, stockR, stockL, now_dir);
                 } else {
-                    let (a2, gx, gy) = bfs.search_fewest_actions_to_wrap(
-                        &current_state.field,
-                        &current_state.p,
-                        target_pos.0,
-                        target_pos.1,
-                    );
 
-                    actions = make_move(&a2, 0, 0, current_state.p.dir);
+                    // 「 型の角を見つけたら突っ込む
+                    let mut leftfront = false;
+                    let d = get_diff(current_state.p.x, target_pos.0)
+                        + get_diff(current_state.p.y, target_pos.1);
+                    let (nx, ny) =
+                        apply_move((current_state.p.x, current_state.p.y), current_state.p.dir);
+                    let (nx2, ny2) = apply_move((nx, ny), current_state.p.dir);
+                    let (nx3, ny3) = apply_move((nx2, ny2), (current_state.p.dir + 3) % 4);
+
+                    if (nx3 == target_pos.0 && ny3 == target_pos.1) {
+                        if (current_state.field[ny][nx] != Square::Block
+                            && current_state.field[ny2][nx2] != Square::Block)
+                        {
+                            leftfront = true;
+                        }
+                    }
+
+                    if !leftfront {
+                        let (a2, gx, gy) = bfs.search_fewest_actions_to_wrap(
+                            &current_state.field,
+                            &current_state.p,
+                            target_pos.0,
+                            target_pos.1,
+                        );
+                        actions = make_move(&a2, 0, 0, current_state.p.dir);
+                    } else {
+                        actions = Vec::with_capacity(0);
+                        actions.push(Action::Move(current_state.p.dir));
+                    }
                 }
             }
 
@@ -743,7 +765,7 @@ fn shortening(
             final_action = next_action;
         }
 
-        if (final_action.len() < actions.len()) {
+        if final_action.len() < actions.len() {
             eprintln!("OK ! {} => {}", actions.len(), final_action.len());
             return (true, final_action);
         }
