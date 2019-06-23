@@ -68,9 +68,10 @@ func programHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		}
 		output += `<tr><td><img src="/problem_image?problem_id=` + Escape(fmt.Sprintf("%d", problem.ProblemID)) + `">` +
 			Escape(problem.ProblemName) +
-			`</td><td><img src="/solution_image?solution_id=` + Escape(fmt.Sprintf("%d", *problem.SolutionID)) + `">` +
+			`</td><td><a href="/solution?solution_id=` + Escape(fmt.Sprintf("%d", *problem.SolutionID)) +
+			`"><img src="/solution_image?solution_id=` + Escape(fmt.Sprintf("%d", *problem.SolutionID)) + `">` +
 			Escape(score) +
-			"</td><td>" +
+			"</a></td><td>" +
 			Escape(modified) +
 			"</td></tr>"
 	}
