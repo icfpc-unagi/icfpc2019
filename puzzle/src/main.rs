@@ -48,12 +48,15 @@ fn main() -> std::io::Result<()> {
     let pinput = puzzle::read(&ipath).expect("Unable to read data");
     let opath = std::env::args().nth(2).expect("usage: args[2] = descfile(output)");
     let bool_map = generate_raster_v2(&pinput);
+    /*
     let bool_map = bool_map.or_else(
         || generate_raster_marine_day(&pinput));
     let bool_map = Some(bool_map.unwrap()); // debug!!
     let bool_map = bool_map.unwrap_or_else(
         || generate_raster_v1(&pinput));
     // let bool_map = generate_raster_v1(&pinput); // debug!!
+    */
+    let bool_map = bool_map.unwrap();
 
     let taskspec = raster_map_to_task_specification(
         &bool_map,
@@ -180,8 +183,30 @@ fn generate_raster_v2(pinput: &puzzle::PazzleInput) -> Option<Vec<Vec<bool>>> {
     let n = tsize + 2;
     let mut map = vec![vec![UOut; n]; n];
     let img = gen_unagi::gen_unagi();
+    /*
     dbg!((img.len(), img[0].len()));
-    assert!(false);
+    {
+        for i0 in 0..img.len() {
+            for i1 in 0..img[i0].len() {
+                eprint!("{}", img[i0][i1] as u8);
+            }
+            eprintln!();
+        }
+    }
+    */
+    dbg!(tsize);
+    {
+        let w = img.len();
+        let h = img[0].len();
+        for x in 0..tsize.min(w) {
+            for y in 0..tsize.min(h) {
+                if img[x][y] {
+                    map[x][h-y] = UIn;
+                }
+            }
+        }
+    }
+    // assert!(false);
     /*
     let img = [
         b"*****",
