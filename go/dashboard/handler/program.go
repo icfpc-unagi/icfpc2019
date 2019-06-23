@@ -70,7 +70,7 @@ func programHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		`<code style="border:solid 1px silver;border-radius:3px;background:white;padding:2px">` + Escape(program.ProgramCode) + `</code>` +
 		`<table class="table table-clickable">` +
 			`<thead><tr><td>Name</td><td>Booster</td>` +
-			`<td>Score</td><td>Modified</td></thead>` +
+			`<td>Score</td><td width="300">Image</td><td>Modified</td></thead>` +
 			`<tbody>`)
 	for _, problem := range problems {
 		booster := HTML("None")
@@ -78,25 +78,28 @@ func programHandler(ctx context.Context, r *http.Request) (HTML, error) {
 			booster = Escape(*problem.SolutionBooster)
 		}
 		score := HTML("-")
+		image := HTML("")
 		if problem.SolutionScore != nil {
-			score = `<a href="/solution?solution_id=` +
-				Escape(fmt.Sprintf("%d", *problem.SolutionID)) +
-				`"><img src="/solution_image?solution_id=` +
-				Escape(fmt.Sprintf("%d", *problem.SolutionID)) + `">`
 			if *problem.SolutionScore >= 100000000 {
-				score += "invalid</a>"
+				score = "invalid"
 			} else {
-				score += HTML(fmt.Sprintf("%d", *problem.SolutionScore) + "</a>")
+				score = Escape(fmt.Sprintf("%d", *problem.SolutionScore))
 			}
+			image = `<img src="/solution_image?solution_id=` + Escape(fmt.Sprintf("%d", *problem.SolutionID)) + `" style="max-width:300px;height:auto">`
 		}
 		modified := "-"
 		if problem.SolutionModified != nil {
 			modified = *problem.SolutionModified
 		}
-		output += `<tr><td><img src="/problem_image?problem_id=` +
-			Escape(fmt.Sprintf("%d", problem.ProblemID)) + `">` +
+		output += `<tr data-href="/solution?solution_id=` + Escape(fmt.Sprintf("%d", *problem.SolutionID)) + `"><td>` +
 			Escape(problem.ProblemName) +
-			"</td><td>" + booster + "</td><td>" + score + "</td><td>" +
+			"</td><td>" +
+			booster +
+			"</td><td>" +
+			score +
+			"</td><td>" +
+			image +
+			"</td><td>" +
 			Escape(modified) +
 			"</td></tr>"
 	}
