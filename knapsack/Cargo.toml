@@ -1,0 +1,15 @@
+[package]
+name = "knapsack"
+version = "0.1.0"
+authors = ["Takuya Akiba <t.akiba.65536@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+common = { path = "../common" }
+glob = "0.3.0"
+
+[profile.dev]
+overflow-checks = true
+
+[profile.test]
+overflow-checks = true

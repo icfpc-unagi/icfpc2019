@@ -1,0 +1,10 @@
+prob-001,,a,100000
+prob-001,C,b,7500
+prob-001,CC,c,5000
+prob-001,CCC,d,4000
+prob-002,,a,100000
+prob-002,C,b,7500
+prob-002,CC,c,5000
+prob-002,CCC,d,4000
+
+
