@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"html/template"
@@ -591,4 +592,20 @@ $(function(){
 
 func Escape(s string) HTML {
 	return HTML(template.HTMLEscapeString(s))
+}
+
+type HTMLBuffer bytes.Buffer
+
+func (b *HTMLBuffer) WriteHTML(s ...HTML) {
+	for _, ss := range s {
+		(*bytes.Buffer)(b).WriteString(string(ss))
+	}
+}
+
+func (b *HTMLBuffer) WriteString(s string) {
+	(*bytes.Buffer)(b).WriteString(template.HTMLEscapeString(s))
+}
+
+func (b *HTMLBuffer) HTML() HTML {
+	return HTML((*bytes.Buffer)(b).String())
 }

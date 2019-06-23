@@ -124,46 +124,60 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 	}
 
 	log.Debugf(ctx, "rendering rankings...")
-	var output HTML
-	output = `<table class="table table-clickable">` +
-		`<thead><tr><td>Problem</td><td colspan="2" align="center">Best</td>`
+	var output HTMLBuffer
+	// var output HTML
+	output.WriteHTML(
+		`<table class="table table-clickable">`,
+		`<thead><tr><td>Problem</td><td colspan="2" align="center">Best</td>`)
 	for i, programID := range programIDs {
 		if i > 30 {
 			break
 		}
-		output += `<td colspan="2" align="center">` +
-			Escape(fmt.Sprintf("%d-th", i)) +
-			`<br><a href="/program?program_id=` + Escape(fmt.Sprintf("%d", programID)) + `">` +
-			Escape(programNameByID[programID]) +
-			"</a></td>"
+		output.WriteHTML(`<td colspan="2" align="center">`)
+		output.WriteString(fmt.Sprintf("%d-th", i))
+		output.WriteHTML(`<br><a href="/program?program_id=`)
+		output.WriteString(fmt.Sprintf("%d", programID))
+		output.WriteHTML(`">`)
+		output.WriteString(programNameByID[programID])
+		output.WriteHTML("</a></td>")
 	}
-	output += `</thead><tbody>`
-	renderScore := func(s *Score, best bool) HTML {
+	output.WriteHTML(`</thead><tbody>`)
+	appendScore := func(s *Score, best bool) {
 		note := Escape(fmt.Sprintf("%d", s.ComputedScore))
 		if best {
-			note = `<a href="/program?program_id=` + Escape(fmt.Sprintf("%d", s.ProgramID)) + `">` + Escape(programNameByID[s.ProgramID]) + `</a>`
+			note = `<a href="/program?program_id=` +
+				Escape(fmt.Sprintf("%d", s.ProgramID)) + `">` +
+				Escape(programNameByID[s.ProgramID]) + `</a>`
 		}
 		if s.SolutionScore >= 100000000 {
-			return `<td align="right">invalid</td><td>(` + note + ")</td>"
+			output.WriteHTML(
+				`<td align="right">invalid</td><td>(`, note, ")</td>")
+			return
 		}
-		return `<td align="right"><a href="/solution?solution_id=` + Escape(fmt.Sprintf("%d", s.SolutionID)) + `">` +
-			Escape(fmt.Sprintf("%d", s.SolutionScore)) +
-			"</a></td><td>(" + note + ")</td>"
+		output.WriteHTML(
+			`<td align="right"><a href="/solution?solution_id=`)
+		output.WriteString(fmt.Sprintf("%d", s.SolutionID))
+		output.WriteHTML(`">`)
+		output.WriteString(fmt.Sprintf("%d", s.SolutionScore))
+		output.WriteHTML("</a></td><td>(", note, ")</td>")
 	}
 	for _, problem := range problems {
-		output += "<tr><td>" + Escape(problem.ProblemName) + "</td>"
+		output.WriteHTML("<tr><td>")
+		output.WriteString(problem.ProblemName)
+		output.WriteHTML("</td>")
 
-		output += renderScore(&scores[bestScores[problem.ProblemID]], true)
+		appendScore(&scores[bestScores[problem.ProblemID]], true)
 
 		programIDToScore := scoreTable[problem.ProblemID]
 		for i, programID := range programIDs {
 			if i > 30 {
 				break
 			}
-			output += renderScore(&scores[programIDToScore[programID]], false)
+			appendScore(&scores[programIDToScore[programID]], false)
 		}
-		output += "</tr>"
+		output.WriteHTML("</tr>")
 	}
-	output += `</tbody></table>`
-	return output, nil
+	output.WriteHTML(`</tbody></table>`)
+	log.Debugf(ctx, "finished rendering")
+	return output.HTML(), nil
 }
