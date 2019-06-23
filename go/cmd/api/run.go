@@ -193,6 +193,7 @@ func commandWithTimeout(
 	errs := make(chan error, 20)
 
 	go func() {
+		var err error
 		output, err = cmd.CombinedOutput()
 		errs <- err
 		close(done)

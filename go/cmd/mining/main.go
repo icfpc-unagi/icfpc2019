@@ -317,6 +317,12 @@ func solveTask() (string, error) {
 		&Program{
 			Command: "/nfs/programs/binary-search ${TASK_FILE} 2",
 		},
+		&Program{
+			Command: "/nfs/programs/reverse ${TASK_FILE}",
+		},
+		&Program{
+			Command: "/nfs/programs/reverse ${TASK_FILE} 2",
+		},
 	}
 
 	fmt.Fprintf(os.Stderr, "Solving tasks.\n")
