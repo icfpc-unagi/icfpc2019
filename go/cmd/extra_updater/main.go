@@ -62,15 +62,6 @@ func updateSolutionImage(ctx context.Context) bool {
 	}
 	defer os.Remove(solfile.Name())
 
-	buyfile, err := ioutil.TempFile("", "buy")
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = ioutil.WriteFile(buyfile.Name(), []byte(booster), 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.Remove(buyfile.Name())
 
 	pngfile, err := ioutil.TempFile("", "png")
 	if err != nil {
@@ -79,8 +70,7 @@ func updateSolutionImage(ctx context.Context) bool {
 	defer os.Remove(descfile.Name())
 
 	fmt.Fprintf(os.Stderr, "Run sim -g\n")
-	// TODO(sulume): Use buyfile here!!!
-	err = execute("/nfs/bin/sim", descfile.Name(), solfile.Name(), "-g", pngfile.Name())
+	err = execute("/nfs/bin/sim", descfile.Name(), solfile.Name(), booster, "-g", pngfile.Name())
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 	}
