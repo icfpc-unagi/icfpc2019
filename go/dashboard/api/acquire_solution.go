@@ -29,7 +29,7 @@ func acquireSolutionHandler(
 		acquireSolutionLock.Lock()
 		defer acquireSolutionLock.Unlock()
 		acquired, err := func() (bool, error) {
-			result, err := db.Execute(ctx, `
+			result, err := tx.ExecContext(ctx, `
 				UPDATE solutions
 				SET
 					solution_id = (@solution_id := solution_id),
@@ -63,7 +63,7 @@ func acquireSolutionHandler(
 			ProblemName     string `db:"problem_name"`
 			ProblemDataBlob []byte `db:"problem_data_blob"`
 		}{}
-		if err := db.Row(ctx, &row, `
+		if err := tx.GetContext(ctx, &row, `
 			SELECT 
 				solution_id,
 				program_id,

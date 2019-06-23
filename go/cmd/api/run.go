@@ -33,7 +33,9 @@ func run(args ...string) error {
 			AcquireSolution: &pb.Api_Request_AcquireSolution{},
 		})
 		if err != nil {
-			return err
+			fmt.Fprintf(os.Stderr, "failed to call API: %+v\n", err)
+			time.Sleep(10 * time.Second)
+			continue
 		}
 		solution := resp.GetAcquireSolution()
 		if solution.GetSolutionId() == 0 {
@@ -126,7 +128,7 @@ func runCommand(
 	fmt.Fprintf(os.Stderr, "solver finalized\n")
 
 	var output []byte
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 2; i++ {
 		var timeout bool
 		output, timeout, err = commandWithTimeout("/nfs/programs/scorer",
 			path.Join(dir, "task"),
@@ -134,6 +136,8 @@ func runCommand(
 		if !timeout {
 			break
 		}
+		fmt.Fprintf(os.Stderr, "scorer failed: %s: %s: %+v\n",
+			output, solution.GetProgramCode(), err)
 	}
 	result.SolutionDataError = append(
 		result.GetSolutionDataError(), []byte(output)...)
@@ -157,9 +161,11 @@ func runCommand(
 }
 
 func commandWithTimeout(
-	name string, arg ...string,
+	name string, args ...string,
 ) (output []byte, timeout bool, err error) {
-	cmd := exec.Command(name, arg...)
+	fmt.Fprintf(os.Stderr, "running %s %v\n", name, args)
+
+	cmd := exec.Command(name, args...)
 	done := make(chan struct{}, 1)
 	errs := make(chan error, 20)
 
@@ -167,6 +173,15 @@ func commandWithTimeout(
 		output, err = cmd.CombinedOutput()
 		errs <- err
 		close(done)
+	}()
+
+	go func() {
+		select {
+		case <-done:
+		case <-time.After(time.Second * 120):
+			timeout = true
+			cmd.Process.Kill()
+		}
 	}()
 
 	go func() {
