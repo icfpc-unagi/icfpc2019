@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"math"
 	"os"
 	"os/exec"
 	"path"
@@ -30,8 +29,7 @@ func run(args ...string) error {
 
 	ctx := context.Background()
 	canceled := false
-	for threadID := 0; float64(threadID) <
-		math.Sqrt(float64(*parallel)/3); threadID++ {
+	for threadID := 0; threadID*16 < int(*parallel); threadID++ {
 		go func() {
 			for {
 				queue <- struct{}{}
@@ -138,9 +136,10 @@ func runCommand(
 		return errors.WithStack(err)
 	}
 	script := fmt.Sprintf(
-		"task='%s'; buy='%s'; solution='%s'; %s",
+		"task='%s'; buy='%s'; buy_string='%s'; solution='%s'; %s",
 		path.Join(dir, "task"),
 		path.Join(dir, "buy"),
+		solution.GetSolutionBooster(),
 		path.Join(dir, "solution"),
 		solution.GetProgramCode())
 	cmd := exec.Command("bash", "-c", script)

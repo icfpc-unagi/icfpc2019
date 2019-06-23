@@ -236,6 +236,7 @@ RUN touch /UNAGI_IMAGE
 ################################################################################
 
 ENV CARGO_TARGET_DIR=/work/build
+ENV RUST_BACKTRACE=1
 
 ENV SHELL=/bin/bash
 RUN echo 'PS1="\e[0;32m\]\u@unagi\[\e[m\]:\e[0;34m\]\w\[\e[m\]# "' \

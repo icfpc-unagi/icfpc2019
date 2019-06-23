@@ -1,0 +1,123 @@
+#!/usr/bin/env bash
+# Usage: compute
+
+zones=(
+  asia-east1-a
+  asia-east1-b
+  asia-east1-c
+  asia-southeast1-a
+  asia-southeast1-b
+  asia-southeast1-c
+)
+num_zones="${#zones[@]}"
+default_zone="${zones[$(( RANDOM % num_zones ))]}"
+
+source "$(dirname "${BASH_SOURCE}")/imosh" || exit 1
+DEFINE_string instance 'auto' 'Instance ID'
+DEFINE_bool dryrun false 'Enable dryrun mode'
+DEFINE_int cpu 96 '# of CPUs'
+DEFINE_int memory 0 'Size of memory'
+DEFINE_int disk 300 'Size of disk'
+DEFINE_string project 'icfpc-compute' 'GCP project'
+DEFINE_string zone "${default_zone}" 'GCP zone'
+
+compute::create() {
+  LOG INFO "Creating an instance for ${FLAGS_instance}..."
+
+  local cpu="${FLAGS_cpu}"
+  if (( cpu < 1 )); then cpu=1; fi
+  if (( 1 < cpu && cpu % 2 == 1 )); then cpu="$(( cpu + 1 ))"; fi
+  if (( cpu > 96 )); then LOG FATAL "Too many CPUs requested: ${cpu}"; fi
+
+  local memory="${FLAGS_memory}"
+  if (( memory < 4 )); then memory=4; fi
+  if (( memory < cpu )); then memory="${cpu}"; fi
+  if (( memory > cpu * 6 )); then
+    LOG FATAL "Too much memory requested: ${memory} > ${cpu} * 6"
+  fi
+  memory="$(( memory * 1024 ))"
+
+  local disk="${FLAGS_disk}"
+  disk="$(( disk + 20 ))"
+
+  startup_script="
+      sudo -H -u guest --login -- unagi --force \
+          /nfs/bin/api --parallel=$(( cpu + cpu / 2 )) run \
+          >/dev/console 2>/dev/console;
+      shutdown -h now"
+  metadata="serial-port-logging-enable=true,startup-script=${startup_script}"
+
+  args=(
+      gcloud compute --project="${FLAGS_project}"
+      instances create "${FLAGS_instance}"
+
+      # Zone.
+      --zone="${FLAGS_zone}"
+
+      # Preemptible.
+      --no-restart-on-failure
+      --maintenance-policy=TERMINATE
+      --preemptible
+
+      # Machine spec
+      --machine-type="custom-${cpu}-${memory}"
+
+      # Disk.
+      --boot-disk-size="${disk}GB"
+      --boot-disk-type=pd-standard
+      --boot-disk-device-name="${FLAGS_instance}"
+
+      # Image.
+      --image=image-20190616c
+      --image-project=icfpc-primary
+
+      # Network
+      --subnet=default
+      --network-tier=PREMIUM
+
+      # Metadata
+      --metadata="${metadata}"
+  )
+
+  execute "${args[@]}"
+}
+
+execute() {
+  local args=()
+  local arg=''
+  for arg in "$@"; do
+    func::escapeshellarg arg
+    args+=("${arg}")
+  done
+  LOG INFO "Command: ${args[*]}"
+  if (( FLAGS_dryrun )); then
+    echo "${args[*]}"
+  else
+    "$@"
+  fi
+}
+
+if sub::is_main; then
+  IMOSH_PREDICATE=2 eval "${IMOSH_INIT}"
+  if [ "${FLAGS_instance}" == 'auto' ]; then
+    FLAGS_instance="compute-$(sub::date 'mdHi')-$(
+        sub::substr "$(sub::md5 "$RANDOM.$RANDOM.$RANDOM.$RANDOM")" 0 6
+    )-${HOST_USER:-unknown}"
+    FLAGS_create=1
+    FLAGS_delete=1
+    LOG INFO "Instance ID is generated: ${FLAGS_instance}"
+  fi
+  LOG INFO "Arguments: $*"
+  if [ "$#" -eq 0 ] || [ "${1}" = 'help' ]; then
+    imosh::help
+    exit
+  fi
+  COMMAND="${1}"
+  shift
+  case "${COMMAND}" in
+    'create' | 'clean' | 'list' )
+      "compute::${COMMAND}" "$@";;
+    *)
+      LOG FATAL "Unknown command: ${COMMAND}";;
+  esac
+fi

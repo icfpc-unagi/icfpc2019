@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"os"
 	"regexp"
 	"sort"
 
 	"github.com/imos/icfpc2019/go/util/db"
+	"github.com/imos/icfpc2019/go/util/metadata"
 	"google.golang.org/appengine/log"
 )
 
@@ -23,17 +25,25 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 
 	log.Debugf(ctx, "fetching problems...")
 	problems := []struct {
-		ProblemID   int64  `db:"problem_id"`
-		ProblemName string `db:"problem_name"`
+		ProblemID       int64  `db:"problem_id"`
+		ProblemName     string `db:"problem_name"`
+		ProblemDataBlob string `db:"problem_data_blob"`
 	}{}
 	if err := db.Select(ctx, &problems, `
-		SELECT problem_id, problem_name FROM problems
+		SELECT problem_id, problem_name, problem_data_blob FROM problems NATURAL JOIN problem_data
 		ORDER BY problem_name`); err != nil {
 		return "", err
 	}
 	problemNameByID := map[int64]string{}
+	problemSizeByID := map[int64]int64{}
 	for _, problem := range problems {
 		problemNameByID[problem.ProblemID] = problem.ProblemName
+		md, err := metadata.GetTaskMetadata(problem.ProblemDataBlob)
+		if err != nil {
+			return "", err
+		}
+		fmt.Fprintf(os.Stderr, "%v", md)
+		problemSizeByID[problem.ProblemID] = md.MaxX * md.MaxY
 		scoreTable[problem.ProblemID] = map[int64]int{}
 	}
 
@@ -66,7 +76,7 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 			problem_id,
 			MAX(solution_id) AS solution_id,
 			MIN(solution_score) AS solution_score
-		FROM solutions
+		FROM solutions NATURAL JOIN problem_data
 		WHERE
 			solution_score IS NOT NULL AND
 			solution_booster = ""
@@ -92,8 +102,9 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 	for idx, score := range scores {
 		bestScore := scores[bestScores[score.ProblemID]].SolutionScore
 		myScore := score.SolutionScore
+		size := problemSizeByID[score.ProblemID]
 		computedScore := int64(
-			math.Ceil(1000 * float64(bestScore) / float64(myScore)))
+			math.Ceil(1000 * math.Log2(float64(size)) * float64(bestScore) / float64(myScore)))
 		if myScore >= 100000000 {
 			computedScore = 0
 		}
@@ -149,15 +160,15 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 				Escape(fmt.Sprintf("%d", s.ProgramID)) + `">` +
 				Escape(programNameByID[s.ProgramID]) + `</a>`
 		}
-		if s.SolutionScore >= 100000000 {
-			output.WriteHTML(
-				`<td align="right">invalid</td><td>(`, note, ")</td>")
-			return
-		}
 		output.WriteHTML(
 			`<td align="right"><a href="/solution?solution_id=`)
 		output.WriteString(fmt.Sprintf("%d", s.SolutionID))
 		output.WriteHTML(`">`)
+		if s.SolutionScore >= 100000000 {
+			output.WriteHTML(
+				`invalid</a></td><td>(`, note, ")</td>")
+			return
+		}
 		output.WriteString(fmt.Sprintf("%d", s.SolutionScore))
 		output.WriteHTML("</a></td><td>(", note, ")</td>")
 	}
