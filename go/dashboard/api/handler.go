@@ -106,6 +106,9 @@ func apiHandler(
 	if err := updateSolutionExtraHandler(ctx, req, resp); err != nil {
 		return err
 	}
+	if err := extendSolutionHandler(ctx, req, resp); err != nil {
+		return err
+	}
 	return nil
 }
 

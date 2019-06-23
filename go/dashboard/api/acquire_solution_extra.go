@@ -39,7 +39,7 @@ func acquireSolutionExtraHandler(
 				NATURAL LEFT JOIN problem_data
 				NATURAL LEFT JOIN solution_data
 			WHERE
-				solution_data_blob IS NOT NULL AND
+				LENGTH(solution_data_blob) > 0 AND
 				solution_data_image IS NULL
 			ORDER BY RAND()
 			LIMIT 1`); err != nil {

@@ -49,6 +49,7 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 	type Score struct {
 		ProblemID     int64 `db:"problem_id"`
 		ProgramID     int64 `db:"program_id"`
+		SolutionID    int64 `db:"solution_id"`
 		SolutionScore int64 `db:"solution_score"`
 		ComputedScore int64
 	}
@@ -57,6 +58,7 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		SELECT
 			program_id,
 			problem_id,
+			MAX(solution_id) AS solution_id,
 			MIN(solution_score) AS solution_score
 		FROM solutions
 		WHERE solution_score IS NOT NULL
@@ -112,14 +114,14 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 	renderScore := func(s *Score, best bool) HTML {
 		note := Escape(fmt.Sprintf("%d", s.ComputedScore))
 		if best {
-			note = Escape(programNameByID[s.ProgramID])
+			note = `<a href="/program?program_id=` + Escape(fmt.Sprintf("%d", s.ProgramID)) + `">` + Escape(programNameByID[s.ProgramID]) + `</a>`
 		}
 		if s.SolutionScore >= 100000000 {
 			return `<td align="right">invalid</td><td>(` + note + ")</td>"
 		}
-		return `<td align="right">` +
+		return `<td align="right"><a href="/solution?solution_id=` + Escape(fmt.Sprintf("%d", s.SolutionID)) + `">` +
 			Escape(fmt.Sprintf("%d", s.SolutionScore)) +
-			"</td><td>(" + note + ")</td>"
+			"</a></td><td>(" + note + ")</td>"
 	}
 	for _, problem := range problems {
 		output += "<tr><td>" + Escape(problem.ProblemName) + "</td>"

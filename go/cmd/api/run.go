@@ -47,15 +47,38 @@ func run(args ...string) error {
 		go func() {
 			defer func() { <-queue }()
 			defer wg.Done()
-			if err := runOnce(solution); err != nil {
+			if err := runOnce(ctx, solution); err != nil {
 				fmt.Fprintf(os.Stderr, "%+v\n", err)
 			}
 		}()
 	}
 }
 
-func runOnce(solution *pb.Api_Response_AcquireSolution) error {
-	ctx := context.Background()
+func runOnce(
+	ctx context.Context, solution *pb.Api_Response_AcquireSolution) error {
+	done := make(chan struct{}, 1)
+	defer close(done)
+	go func() {
+		for {
+			select {
+			case <-time.After(time.Second * 60):
+				fmt.Fprintf(os.Stderr,
+					"extending solution: %d\n", solution.GetSolutionId())
+				_, err := apiutil.Call(ctx, &pb.Api_Request{
+					ExtendSolution: &pb.Api_Request_ExtendSolution{
+						SolutionId: solution.GetSolutionId(),
+					},
+				})
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "failed to extend lock: %+v", err)
+					return
+				}
+			case <-done:
+				return
+			}
+		}
+	}()
+
 	fmt.Fprintf(os.Stderr, "starting solution: %d\n", solution.GetSolutionId())
 	result := &pb.Api_Request_UpdateSolution{
 		SolutionId: solution.GetSolutionId(),
@@ -136,8 +159,8 @@ func runCommand(
 		if !timeout {
 			break
 		}
-		fmt.Fprintf(os.Stderr, "scorer failed: %s: %s: %+v\n",
-			output, solution.GetProgramCode(), err)
+		fmt.Fprintf(os.Stderr, "scorer failed: %s: %d: %s: %+v\n",
+			output, solution.GetSolutionId(), solution.GetProgramCode(), err)
 	}
 	result.SolutionDataError = append(
 		result.GetSolutionDataError(), []byte(output)...)

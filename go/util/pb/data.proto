@@ -74,6 +74,12 @@ message Api {
       string solution_data_modified = 3;
     }
     UpdateSolutionExtra update_solution_extra = 10;
+
+    // ロックの延長を行います
+    message ExtendSolution {
+      int64 solution_id = 1;
+    }
+    ExtendSolution extend_solution = 11;
   }
 
   // API Response defition.
@@ -131,5 +137,8 @@ message Api {
 
     message UpdateSolutionExtra {}
     UpdateSolutionExtra update_solution_extra = 10;
+
+    message ExtendSolution {}
+    ExtendSolution extend_solution = 11;
   }
 }

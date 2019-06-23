@@ -305,6 +305,12 @@ func solveTask() (string, error) {
 		&Program{
 			Command: "/nfs/programs/chokudai-012 ${TASK_FILE}",
 		},
+		&Program{
+			Command: "/nfs/programs/extend-optimize3 ${TASK_FILE}",
+		},
+		&Program{
+			Command: "/nfs/programs/extend-optimize3 ${TASK_FILE} 2",
+		},
 	}
 
 	fmt.Fprintf(os.Stderr, "Solving tasks.\n")
