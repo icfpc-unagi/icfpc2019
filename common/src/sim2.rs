@@ -1,4 +1,3 @@
-
 use crate::sim::{swap_remove_one_from_vec, within_mine};
 use crate::*;
 use std::collections::*;
@@ -72,10 +71,18 @@ impl WorkersState {
             shared: SharedState::default(),
         }
     }
-    pub fn new_t0_with_options(x: usize, y: usize, map: &mut SquareMap, init_boosters: Vec<Booster>) -> WorkersState {
-        eprintln!("Buy: [{}]", String::from_iter(init_boosters.iter().map(|b| b.to_string())));
+    pub fn new_t0_with_options(
+        x: usize,
+        y: usize,
+        map: &mut SquareMap,
+        init_boosters: Vec<Booster>,
+    ) -> WorkersState {
+        eprintln!(
+            "Buy: [{}]",
+            String::from_iter(init_boosters.iter().map(|b| b.to_string()))
+        );
         WorkersState {
-            shared: SharedState{
+            shared: SharedState {
                 unused_boosters: init_boosters,
                 ..Default::default()
             },
@@ -264,6 +271,34 @@ pub fn apply_multi_action(
     Update { filled, num_cloned }
 }
 
+pub fn apply_multi_actions(
+    map: &mut SquareMap,
+    booster: &mut BoosterMap,
+    state: &mut WorkersState,
+    solution: &Vec<Vec<Action>>,
+) {
+    let mut solution_iters = solution
+        .iter()
+        .map(|actions| actions.iter())
+        .collect::<Vec<_>>();
+    loop {
+        let num_workers = state.locals.len();
+        let mut actions: Vec<Option<&Action>> = vec![];
+        for i in 0..num_workers {
+            actions.push(solution_iters[i].next());
+        }
+        if actions.iter().all(|a| a.is_none()) {
+            break;
+        }
+        let actions = actions
+            .into_iter()
+            .map(|a| *a.unwrap_or(&Action::Nothing))
+            .collect::<Vec<_>>();
+
+        let upd = apply_multi_action(&actions, state, map, booster);
+        // eprintln!("{:?}", state);
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -282,27 +317,9 @@ mod tests {
         let solution = read_sol(sol_path);
         let mut state = WorkersState::new_t0(init_x, init_y, &mut map);
 
-        let mut solution_iters = solution
-            .iter()
-            .map(|actions| actions.iter())
-            .collect::<Vec<_>>();
-        loop {
-            let num_workers = state.locals.len();
-            let mut actions: Vec<Option<&Action>> = vec![];
-            for i in 0..num_workers {
-                actions.push(solution_iters[i].next());
-            }
-            if actions.iter().all(|a| a.is_none()) {
-                break;
-            }
-            let actions = actions
-                .into_iter()
-                .map(|a| *a.unwrap_or(&Action::Nothing))
-                .collect::<Vec<_>>();
-            let upd = apply_multi_action(&actions, &mut state, &mut map, &mut booster);
-            eprintln!("{:?}", state);
-        }
+        apply_multi_actions(&mut map, &mut booster, &mut state, &solution);
         // print_task(&(map.clone(), booster.clone(), worker.x, worker.y));
         assert!(map.iter().all(|v| v.iter().all(|&s| s != Square::Empty)));
     }
+
 }
