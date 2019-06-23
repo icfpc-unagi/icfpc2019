@@ -31,7 +31,7 @@ pub fn read(path: &str) -> std::io::Result<PazzleInput> {
 		cnum: num[9],
 		xnum: num[10],
 		isqs: parse_map(&ss[1]),
-		osqs: parse_map(&ss[1]),
+		osqs: parse_map(&ss[2]),
 	})
 }
 
