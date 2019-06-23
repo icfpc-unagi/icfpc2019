@@ -87,6 +87,14 @@ fn main() -> std::io::Result<()> {
                     let (tx, ty) = apply_move((x, y), d);
                     if map[tx][ty] == Out {
                         cnt += 1;
+                        // こういうのも駄目なので除外
+                        // ?.#
+                        // #..
+                        // ?.?
+                        let (sx, sy) = apply_move(apply_move((x, y), (d+2)%4), (d+1)%4);
+                        if map[sx][sy] == Out { cnt += 10; }
+                        let (sx, sy) = apply_move(apply_move((x, y), (d+2)%4), (d+3)%4);
+                        if map[sx][sy] == Out { cnt += 10; }
                     }
                 }
                 if cnt != 1 {
