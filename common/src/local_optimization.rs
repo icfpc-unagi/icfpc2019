@@ -50,8 +50,8 @@ fn get_initial_state(task: &RasterizedTask) -> WorkerState {
 //
 
 pub struct DynamicMap {
-    initial_square_map: SquareMap,
-    fill_count: Vec<Vec<usize>>,
+    pub initial_square_map: SquareMap,
+    pub fill_count: Vec<Vec<usize>>,
 }
 
 impl DynamicMap {
@@ -125,11 +125,11 @@ impl DynamicMap {
 }
 
 pub struct DynamicSolution {
-    actions: Vec<Action>,
-    states: Vec<WorkerState>,
-    dynamic_map: DynamicMap,
-    dummy_square_map: SquareMap,   // めちゃくちゃになる
-    dummy_booster_map: BoosterMap, // めちゃくちゃになる
+    pub actions: Vec<Action>,
+    pub states: Vec<WorkerState>,
+    pub dynamic_map: DynamicMap,
+    pub dummy_square_map: SquareMap,   // めちゃくちゃになる
+    pub dummy_booster_map: BoosterMap, // めちゃくちゃになる
 }
 
 impl DynamicSolution {
