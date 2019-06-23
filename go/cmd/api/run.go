@@ -103,28 +103,24 @@ func runCommand(
 	cmd := exec.Command("bash", "-c", script)
 	cmd.Stderr = stderr
 	done := make(chan struct{}, 1)
-	var cmdErr error
+	errChan := make(chan error, 5)
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
 	go func() {
-		defer wg.Done()
-		cmdErr = cmd.Run()
+		errChan <- cmd.Run()
 		fmt.Fprintf(os.Stderr, "solver finished\n")
 		close(done)
 	}()
 
-	wg.Add(1)
 	go func() {
-		defer wg.Done()
 		select {
 		case <-done:
 		case <-time.After(time.Second * 600):
+			errChan <- errors.New("deadline exceeded")
 			cmd.Process.Kill()
 		}
 	}()
-	wg.Wait()
 
+	cmdErr := <-errChan
 	result.SolutionDataError, _ = ioutil.ReadFile(path.Join(dir, "stderr"))
 	result.SolutionDataBlob, _ = ioutil.ReadFile(path.Join(dir, "solution"))
 	fmt.Fprintf(os.Stderr, "solver finalized\n")
