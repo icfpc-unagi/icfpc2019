@@ -9,6 +9,7 @@ import (
 	"sort"
 
 	"github.com/imos/icfpc2019/go/util/db"
+	"google.golang.org/appengine/log"
 )
 
 func init() {
@@ -16,9 +17,11 @@ func init() {
 }
 
 func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
+	log.Debugf(ctx, "starting ranking handler...")
 	// problem_id, program_id => index of scores
 	scoreTable := map[int64]map[int64]int{}
 
+	log.Debugf(ctx, "fetching problems...")
 	problems := []struct {
 		ProblemID   int64  `db:"problem_id"`
 		ProblemName string `db:"problem_name"`
@@ -34,6 +37,7 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		scoreTable[problem.ProblemID] = map[int64]int{}
 	}
 
+	log.Debugf(ctx, "fetching programs...")
 	programs := []struct {
 		ProgramID   int64  `db:"program_id"`
 		ProgramName string `db:"program_name"`
@@ -47,6 +51,7 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		programNameByID[program.ProgramID] = program.ProgramName
 	}
 
+	log.Debugf(ctx, "fetching solutions...")
 	type Score struct {
 		ProblemID     int64 `db:"problem_id"`
 		ProgramID     int64 `db:"program_id"`
@@ -68,6 +73,8 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		GROUP BY program_id, problem_id`); err != nil {
 		return "", err
 	}
+
+	log.Debugf(ctx, "calculating best scores...")
 	// problem_id => index of scores for best score
 	bestScores := map[int64]int{}
 	for idx, score := range scores {
@@ -78,6 +85,8 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 			bestScores[score.ProblemID] = idx
 		}
 	}
+
+	log.Debugf(ctx, "calculating total scores...")
 	// program_id => sum(ComputedScore)
 	totalScores := map[int64]int64{}
 	for idx, score := range scores {
@@ -92,6 +101,7 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		totalScores[score.ProgramID] += computedScore
 	}
 
+	log.Debugf(ctx, "listing program IDs...")
 	programIDs := []int64{}
 	for programID := range totalScores {
 		programIDs = append(programIDs, programID)
@@ -113,6 +123,7 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		programIDs = append(programIDs, programID)
 	}
 
+	log.Debugf(ctx, "rendering rankings...")
 	var output HTML
 	output = `<table class="table table-clickable">` +
 		`<thead><tr><td>Problem</td><td colspan="2" align="center">Best</td>`
