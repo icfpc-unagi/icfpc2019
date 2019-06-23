@@ -16,11 +16,198 @@ enum Cell {
 use Cell::*;
 
 fn main() -> std::io::Result<()> {
-    let mut rng = rand::thread_rng(); // デフォルトの乱数生成器を初期化します
     // println!("Hello, world!");
     let ipath = std::env::args().nth(1).expect("usage: args[1] = condfile(input)");
     let pinput = puzzle::read(&ipath).expect("Unable to read data");
     let opath = std::env::args().nth(2).expect("usage: args[2] = descfile(output)");
+    let bool_map = generate_raster_marine_day(&pinput);
+    // let bool_map = Some(bool_map.unwrap()); // debug!!
+    let bool_map = bool_map.unwrap_or_else(
+        || generate_raster_v1(&pinput));
+
+    let taskspec = raster_map_to_task_specification(
+        &bool_map,
+        pinput.mnum,
+        pinput.fnum,
+        pinput.dnum,
+        pinput.rnum,
+        pinput.cnum,
+        pinput.xnum,
+        );
+    // print!("{}", taskspec);
+    let mut f = File::create(opath).expect("Unable to create file");
+    f.write_all(taskspec.as_bytes()).expect("Unable to write data");
+    Ok(())
+}
+
+
+fn generate_raster_marine_day(pinput: &puzzle::PazzleInput) -> Option<Vec<Vec<bool>>> {
+    let puzzle::PazzleInput {tsize, vmin, vmax, isqs, osqs, ..} = pinput.clone();
+    // dbg!(&osqs);
+    if tsize % 5 != 0 {
+        eprintln!("tsize % 5"); return None;
+    }
+    let m = tsize / 5;
+    let n = tsize + 2;
+
+    let mut map = vec![vec![Unk; n]; n];
+    for i in 0..n {
+        map[0][i] = Out;
+        map[n-1][i] = Out;
+        map[i][0] = Out;
+        map[i][n-1] = Out;
+    }
+    for &(x, y) in &osqs {
+        let x = x + 1;
+        let y = y + 1;
+        map[x][y] = Out;
+    }
+    for k in 0..m {
+        let x = 5*k+3;
+        if k != 0 {
+            let mut ok = false;
+            'h: for h in 0..n-2 {
+                let y = if k % 2 == 0 {
+                    1 + h
+                } else {
+                    n-2 - h
+                };
+                for dx in 1..=4 {
+                    if map[x-dx][y] == Out {
+                        continue 'h
+                    }
+                }
+                for dx in 1..=4 {
+                    map[x-dx][y] = In;
+                }
+                ok = true;
+                break;
+            }
+            if !ok {
+                eprintln!("horizontal conn"); return None;
+            }
+        }
+        for y in 1..n-1 {
+            if map[x][y] != Out {
+                map[x][y] = In;
+                continue;
+            }
+            if map[x-1][y-1] != Out && map[x-1][y] != Out && map[x-1][y+1] != Out {
+                map[x-1][y-1] = In;
+                map[x-1][y] = In;
+                map[x-1][y+1] = In;
+                continue;
+            }
+            if map[x+1][y-1] != Out && map[x+1][y] != Out && map[x+1][y+1] != Out {
+                map[x+1][y-1] = In;
+                map[x+1][y] = In;
+                map[x+1][y+1] = In;
+                continue;
+            }
+            eprintln!("cannot avoid out"); return None;
+        }
+    }
+    for &(x, y) in &isqs {
+        let mut x = x + 1;
+        let y = y + 1;
+        while map[x][y] != In {
+            if map[x][y] == Out {
+                eprintln!("in: equal x with out?"); return None;
+            }
+            map[x][y] = In;
+            if x % 5 == 1 || x % 5 == 2 {
+                x += 1;
+            } else {
+                x -= 1;
+            }
+        }
+    }
+        {
+            let mut rng = rand::thread_rng(); // デフォルトの乱数生成器を初期化します
+            // vertex wo fuyasu
+            let mut n_vertex = 0;
+            for x in 0..(n-1) {
+                for y in 0..(n-1) {
+                    if is_corner_rev(&map, x, y) {
+                        n_vertex += 1;
+                    }
+                }
+            }
+            assert!(n_vertex <= vmax);
+            while n_vertex < vmin {
+                dbg!((n_vertex, vmin));
+                let x: usize = rng.gen::<usize>() % (n-2) + 1;
+                let y: usize = rng.gen::<usize>() % (n-2) + 1;
+                if map[x][y] != Unk {
+                    continue;
+                }
+                let mut cnt = 0;
+                for d in 0..4 {
+                    let (tx, ty) = apply_move((x, y), d);
+                    if map[tx][ty] == In {
+                        cnt += 1;
+                        // こういうのも駄目なので除外
+                        // ?.#
+                        // #..
+                        // ?.?
+                        let (sx, sy) = apply_move(apply_move((x, y), (d+2)%4), (d+1)%4);
+                        if map[sx][sy] == In { cnt += 10; }
+                        let (sx, sy) = apply_move(apply_move((x, y), (d+2)%4), (d+3)%4);
+                        if map[sx][sy] == In { cnt += 10; }
+                    }
+                }
+                if cnt != 1 {
+                    continue;
+                }
+                for dx in 0..2 { for dy in 0..2 {
+                    if is_corner_rev(&map, x-dx, y-dy) {
+                        n_vertex -= 1;
+                    }
+                }}
+                map[x][y] = In;
+                for dx in 0..2 { for dy in 0..2 {
+                    if is_corner_rev(&map, x-dx, y-dy) {
+                        n_vertex += 1;
+                    }
+                }}
+                // todo(tos)
+            }
+        }
+
+
+    let mut bool_map = vec![vec![false; n]; n];
+    for x in 0..n {
+        for y in 0..n {
+            bool_map[x][y] = (map[x][y] == In);
+        }
+    }
+        for x in 0..n {
+            for y in 0..n {
+                eprint!("{}", if bool_map[x][y] { '.' } else { '#' });
+            }
+            eprintln!();
+        }
+        if puzzle::check(&pinput, &bool_map) {
+            return Some(bool_map);
+        }
+        eprintln!("check failed!"); return None;
+}
+
+fn is_corner_rev(map: &Vec<Vec<Cell>>, x: usize, y: usize) -> bool {
+    let mut cnt = 0;
+    for dx in 0..2 {
+        for dy in 0..2 {
+            if map[x+dx][y+dy] == In {
+                cnt += 1;
+            }
+        }
+    }
+    cnt % 2 == 1
+}
+
+
+fn generate_raster_v1(pinput: &puzzle::PazzleInput) -> Vec<Vec<bool>> {
+    let mut rng = rand::thread_rng(); // デフォルトの乱数生成器を初期化します
     let puzzle::PazzleInput {tsize, vmin, vmax, isqs, osqs, ..} = pinput.clone();
     // dbg!(&osqs);
     let n = tsize + 2;
@@ -127,23 +314,10 @@ fn main() -> std::io::Result<()> {
             eprintln!();
         }
         if puzzle::check(&pinput, &bool_map) {
-            break;
+            return bool_map;
         }
         eprintln!("check failed! retrying...");
     }
-    let taskspec = raster_map_to_task_specification(
-        &bool_map,
-        pinput.mnum,
-        pinput.fnum,
-        pinput.dnum,
-        pinput.rnum,
-        pinput.cnum,
-        pinput.xnum,
-        );
-    // print!("{}", taskspec);
-    let mut f = File::create(opath).expect("Unable to create file");
-    f.write_all(taskspec.as_bytes()).expect("Unable to write data");
-    Ok(())
 }
 
 fn is_corner(map: &Vec<Vec<Cell>>, x: usize, y: usize) -> bool {
