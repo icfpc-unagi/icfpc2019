@@ -20,6 +20,7 @@ func init() {
 	http.HandleFunc("/solution/retry", func(w http.ResponseWriter, r *http.Request) {
 		ctx := appengine.NewContext(r)
 
+		w.Header().Add("Cache-Control", "no-store")
 		var err error
 		if r.Method != http.MethodPost {
 			http.Redirect(w, r, "/solution", http.StatusSeeOther)
