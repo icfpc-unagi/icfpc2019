@@ -230,6 +230,274 @@ pub fn make_move(a2: &Vec<Action>, R: usize, L: usize, d: usize) -> Vec<Action> 
 
 const optimization_num: usize = 2; //0..OptimizationNum
 
+fn get_next_action(
+    first_state: &State,
+    UseOptimization: usize,
+    final_action: &Vec<Action>,
+    bfs: &mut BFS,
+) -> Vec<Action> {
+    let H = first_state.field.len();
+    let W = first_state.field[0].len();
+    let FX = first_state.p.x;
+    let FY = first_state.p.y;
+    let mut current_state = first_state.clone();
+
+    let mut LastActionTable = vec![vec![!0; W]; H];
+
+    for dxy in &first_state.p.manipulators {
+        let nx = FX + dxy.0 as usize;
+        let ny = FY + dxy.1 as usize;
+
+        if is_visible(&first_state.field, (first_state.p.x, first_state.p.y), *dxy) {
+            LastActionTable[nx][ny] = 0;
+            current_state.field[nx][ny] = Square::Filled;
+        }
+    }
+
+    let mut p_state: Vec<WorkerState> = Vec::with_capacity(0);
+    p_state.push(current_state.p.clone());
+
+    let mut action_cnt = 0;
+    for act in final_action {
+        action_cnt += 1;
+        let upd = apply_action(
+            *act,
+            &mut current_state.p,
+            &mut current_state.field,
+            &mut current_state.item_field,
+        );
+        for p in upd.filled {
+            LastActionTable[p.0][p.1] = action_cnt;
+            //eprintln!("{}", action_cnt);
+        }
+        p_state.push(current_state.p.clone());
+    }
+
+    let mut empty_cell = 0;
+    for x in 0..H {
+        for y in 0..W {
+            if current_state.field[x][y] == Square::Empty {
+                empty_cell += 1;
+            }
+        }
+    }
+    //eprintln!("empty : {}  Len : {}", empty_cell, final_action.len());
+
+    let mut point_sum = 0;
+
+    let mut AddActions: Vec<Vec<Action>> = vec![Vec::with_capacity(0); action_cnt + 1];
+
+    loop {
+        let (last_act, point_list) =
+            make_easy_target_list(&current_state, H, W, &LastActionTable, UseOptimization);
+
+        //eprintln!("List : {}", point_list.len());
+        if point_list.len() == 0 {
+            break;
+        }
+
+        if last_act == action_cnt && AddActions[action_cnt].len() != 0 {
+            break;
+        }
+
+        point_sum += point_list.len();
+
+
+        current_state.p = p_state[last_act].clone();
+
+        let mut temp_action: Vec<Action> = Vec::with_capacity(0);
+
+        //復帰するべき状態
+        let back_state = p_state[last_act].clone();
+
+        for i in 0..point_list.len() {
+            let target_pos = point_list[i];
+
+            //eprintln!("check: {} {}", target_pos.0, target_pos.1);
+            //塗り済みであるかの検出
+            if current_state.field[target_pos.0][target_pos.1] != Square::Empty {
+                //eprintln!("skip");
+                continue;
+            }
+
+            let mut actions: Vec<Action> = Vec::with_capacity(0);
+
+            if UseOptimization == 0 {
+                let (a2, gx, gy) = bfs.search_fewest_actions_to_wrap(
+                    &current_state.field,
+                    &current_state.p,
+                    target_pos.0,
+                    target_pos.1,
+                );
+
+                actions = make_move(&a2, 0, 0, current_state.p.dir);
+            } else if UseOptimization == 1 || UseOptimization == 2 {
+                //２連塗チェック
+                let mut use_double_position = ((!0, !0), !0);
+
+                if i != point_list.len() - 1 {
+                    let next_target_pos = point_list[i + 1];
+                    if current_state.field[next_target_pos.0][next_target_pos.1] == Square::Empty {
+                        let diff = get_diff(target_pos.0, next_target_pos.0)
+                            + get_diff(target_pos.1, next_target_pos.1);
+                        if diff == 1 {
+                            let mut pos = (!0, !0);
+                            let mut d = !0;
+                            if target_pos.0 != next_target_pos.0 {
+                                if target_pos.0 < next_target_pos.0 {
+                                    if current_state.field[target_pos.0][target_pos.1 - 1]
+                                        != Square::Block
+                                    {
+                                        pos = (target_pos.0 - 1, target_pos.1 - 1);
+                                        d = 0;
+                                    }
+                                } else {
+                                    if current_state.field[target_pos.0][target_pos.1 + 1]
+                                        != Square::Block
+                                    {
+                                        pos = (target_pos.0 + 1, target_pos.1 + 1);
+                                        d = 2;
+                                    }
+                                }
+                            } else {
+                                if target_pos.1 < next_target_pos.1 {
+                                    if current_state.field[target_pos.0][target_pos.1 + 1]
+                                        != Square::Block
+                                    {
+                                        pos = (target_pos.0 + 1, target_pos.1 - 1);
+                                        d = 3;
+                                    }
+                                } else {
+                                    if current_state.field[target_pos.0][target_pos.1 - 1]
+                                        != Square::Block
+                                    {
+                                        pos = (target_pos.0 - 1, target_pos.1 + 1);
+                                        d = 1;
+                                    }
+                                }
+                            }
+                            if d != !0 && current_state.field[pos.0][pos.1] != Square::Block {
+                                use_double_position = (pos, d);
+                            }
+
+                        }
+
+                    }
+                }
+
+                if use_double_position.1 != !0 && point_list.len() >= 4 {
+                    let mut a2 = bfs.search_fewest_actions_to_move(
+                        &current_state.field,
+                        &current_state.p,
+                        (use_double_position.0).0,
+                        (use_double_position.0).1,
+                    );
+                    let mut now_dir = current_state.p.dir;
+                    let mut stockR = 0;
+                    let mut stockL = 0;
+
+                    if (now_dir + 1) % 4 == use_double_position.1 {
+                        stockR = 1;
+                    } else if (now_dir + 2) % 4 == use_double_position.1 {
+                        stockR = 2;
+                    } else if (now_dir + 3) % 4 == use_double_position.1 {
+                        stockL = 1;
+                    }
+
+                    actions = make_move(&a2, stockR, stockL, now_dir);
+                } else {
+                    let (a2, gx, gy) = bfs.search_fewest_actions_to_wrap(
+                        &current_state.field,
+                        &current_state.p,
+                        target_pos.0,
+                        target_pos.1,
+                    );
+
+                    actions = make_move(&a2, 0, 0, current_state.p.dir);
+                }
+            }
+
+
+            'actloop: for act in actions {
+                // apply_action で field と item_field も更新する
+                let ret = apply_action(
+                    act,
+                    &mut current_state.p,
+                    &mut current_state.field,
+                    &mut current_state.item_field,
+                );
+                temp_action.push(act);
+
+                for (tx, ty) in ret.filled {
+                    if tx == target_pos.0 && ty == target_pos.1 {
+                        break 'actloop;
+                    }
+                }
+            }
+        }
+
+        //Actionを差し込む前の状態にちゃんと戻す
+        if last_act != final_action.len() {
+            let a2 = bfs.search_fewest_actions_to_move(
+                &current_state.field,
+                &current_state.p,
+                back_state.x,
+                back_state.y,
+            );
+
+            for act in a2 {
+                // apply_action で field と item_field も更新する
+                apply_action(
+                    act,
+                    &mut current_state.p,
+                    &mut current_state.field,
+                    &mut current_state.item_field,
+                );
+                temp_action.push(act);
+            }
+
+            let now_dir = current_state.p.dir;
+
+            let mut a3: Vec<Action> = Vec::with_capacity(0);
+            if (now_dir + 1) % 4 == back_state.dir {
+                a3.push(Action::TurnR);
+            } else if (now_dir + 2) % 4 == back_state.dir {
+                a3.push(Action::TurnR);
+                a3.push(Action::TurnR);
+            } else if (now_dir + 3) % 4 == back_state.dir {
+                a3.push(Action::TurnL);
+            }
+
+
+            for act in a3 {
+                // apply_action で field と item_field も更新する
+                apply_action(
+                    act,
+                    &mut current_state.p,
+                    &mut current_state.field,
+                    &mut current_state.item_field,
+                );
+                temp_action.push(act);
+            }
+        }
+
+        for act in temp_action {
+            AddActions[last_act].push(act);
+        }
+    }
+    let mut next_action: Vec<Action> = Vec::with_capacity(0);
+    for i in 0..final_action.len() {
+        for act in &AddActions[i] {
+            next_action.push(*act);
+        }
+        next_action.push(final_action[i]);
+    }
+    for act in &AddActions[final_action.len()] {
+        next_action.push(*act);
+    }
+    next_action
+}
+
 pub fn make_action_by_state(first_state: &State, UseOptimization: usize) -> Vec<Action> {
     let H = first_state.field.len();
     let W = first_state.field[0].len();
@@ -242,280 +510,70 @@ pub fn make_action_by_state(first_state: &State, UseOptimization: usize) -> Vec<
     let mut final_action: Vec<Action> = Vec::with_capacity(0);
 
     loop {
-        //eprintln!("start!");
-
-        let mut current_state = first_state.clone();
-
-
-        let mut LastActionTable = vec![vec![!0; W]; H];
-
-        LastActionTable[FX][FY] = 0;
-        current_state.field[FX][FY] = Square::Filled;
-
-        let mut p_state: Vec<WorkerState> = Vec::with_capacity(0);
-        p_state.push(current_state.p.clone());
-
-        let mut action_cnt = 0;
-        for act in &final_action {
-            action_cnt += 1;
-            let upd = apply_action(
-                *act,
-                &mut current_state.p,
-                &mut current_state.field,
-                &mut current_state.item_field,
-            );
-            for p in upd.filled {
-                LastActionTable[p.0][p.1] = action_cnt;
-                //eprintln!("{}", action_cnt);
-            }
-            p_state.push(current_state.p.clone());
-        }
-
-        let mut empty_cell = 0;
-        for x in 0..H {
-            for y in 0..W {
-                if current_state.field[x][y] == Square::Empty {
-                    empty_cell += 1;
-                }
-            }
-        }
-        eprintln!("empty : {}  Len : {}", empty_cell, final_action.len());
-
-        let mut point_sum = 0;
-
-        let mut AddActions: Vec<Vec<Action>> = vec![Vec::with_capacity(0); action_cnt + 1];
-
-        loop {
-            let (last_act, point_list) =
-                make_easy_target_list(&current_state, H, W, &LastActionTable, UseOptimization);
-
-            //eprintln!("List : {}", point_list.len());
-            if point_list.len() == 0 {
-                break;
-            }
-
-            if last_act == action_cnt && AddActions[action_cnt].len() != 0 {
-                break;
-            }
-
-            point_sum += point_list.len();
-
-
-            current_state.p = p_state[last_act].clone();
-
-            let mut temp_action: Vec<Action> = Vec::with_capacity(0);
-
-            //復帰するべき状態
-            let back_state = p_state[last_act].clone();
-
-            for i in 0..point_list.len() {
-                let target_pos = point_list[i];
-
-                //eprintln!("check: {} {}", target_pos.0, target_pos.1);
-                //塗り済みであるかの検出
-                if current_state.field[target_pos.0][target_pos.1] != Square::Empty {
-                    //eprintln!("skip");
-                    continue;
-                }
-
-                let mut actions: Vec<Action> = Vec::with_capacity(0);
-
-                if UseOptimization == 0 {
-                    let (a2, gx, gy) = bfs.search_fewest_actions_to_wrap(
-                        &current_state.field,
-                        &current_state.p,
-                        target_pos.0,
-                        target_pos.1,
-                    );
-
-                    actions = a2;
-                } else if UseOptimization == 1 || UseOptimization == 2 {
-                    //２連塗チェック
-                    let mut use_double_position = ((!0, !0), !0);
-
-                    if i != point_list.len() - 1 {
-                        let next_target_pos = point_list[i + 1];
-                        if current_state.field[next_target_pos.0][next_target_pos.1]
-                            == Square::Empty
-                        {
-                            let diff = get_diff(target_pos.0, next_target_pos.0)
-                                + get_diff(target_pos.1, next_target_pos.1);
-                            if diff == 1 {
-                                let mut pos = (!0, !0);
-                                let mut d = !0;
-                                if target_pos.0 != next_target_pos.0 {
-                                    if target_pos.0 < next_target_pos.0 {
-                                        if current_state.field[target_pos.0][target_pos.1 - 1]
-                                            != Square::Block
-                                        {
-                                            pos = (target_pos.0 - 1, target_pos.1 - 1);
-                                            d = 0;
-                                        }
-                                    } else {
-                                        if current_state.field[target_pos.0][target_pos.1 + 1]
-                                            != Square::Block
-                                        {
-                                            pos = (target_pos.0 + 1, target_pos.1 + 1);
-                                            d = 2;
-                                        }
-                                    }
-                                } else {
-                                    if target_pos.1 < next_target_pos.1 {
-                                        if current_state.field[target_pos.0][target_pos.1 + 1]
-                                            != Square::Block
-                                        {
-                                            pos = (target_pos.0 + 1, target_pos.1 - 1);
-                                            d = 3;
-                                        }
-                                    } else {
-                                        if current_state.field[target_pos.0][target_pos.1 - 1]
-                                            != Square::Block
-                                        {
-                                            pos = (target_pos.0 - 1, target_pos.1 + 1);
-                                            d = 1;
-                                        }
-                                    }
-                                }
-                                if d != !0 && current_state.field[pos.0][pos.1] != Square::Block {
-                                    use_double_position = (pos, d);
-                                }
-
-                            }
-
-                        }
-                    }
-
-                    if use_double_position.1 != !0 && point_list.len() >= 4 {
-                        let mut a2 = bfs.search_fewest_actions_to_move(
-                            &current_state.field,
-                            &current_state.p,
-                            (use_double_position.0).0,
-                            (use_double_position.0).1,
-                        );
-                        let mut now_dir = current_state.p.dir;
-                        let mut stockR = 0;
-                        let mut stockL = 0;
-
-                        if (now_dir + 1) % 4 == use_double_position.1 {
-                            stockR = 1;
-                        } else if (now_dir + 2) % 4 == use_double_position.1 {
-                            stockR = 2;
-                        } else if (now_dir + 3) % 4 == use_double_position.1 {
-                            stockL = 1;
-                        }
-
-                        actions = make_move(&a2, stockR, stockL, now_dir);
-                    } else {
-                        let (a2, gx, gy) = bfs.search_fewest_actions_to_wrap(
-                            &current_state.field,
-                            &current_state.p,
-                            target_pos.0,
-                            target_pos.1,
-                        );
-
-                        actions = make_move(&a2, 0, 0, current_state.p.dir);
-                    }
-                }
-
-
-                'actloop: for act in actions {
-                    // apply_action で field と item_field も更新する
-                    let ret = apply_action(
-                        act,
-                        &mut current_state.p,
-                        &mut current_state.field,
-                        &mut current_state.item_field,
-                    );
-                    temp_action.push(act);
-
-                    for (tx, ty) in ret.filled {
-                        if tx == target_pos.0 && ty == target_pos.1 {
-                            break 'actloop;
-                        }
-                    }
-                }
-            }
-
-            //Actionを差し込む前の状態にちゃんと戻す
-            if last_act != final_action.len() {
-                let a2 = bfs.search_fewest_actions_to_move(
-                    &current_state.field,
-                    &current_state.p,
-                    back_state.x,
-                    back_state.y,
-                );
-
-                for act in a2 {
-                    // apply_action で field と item_field も更新する
-                    apply_action(
-                        act,
-                        &mut current_state.p,
-                        &mut current_state.field,
-                        &mut current_state.item_field,
-                    );
-                    temp_action.push(act);
-                }
-
-                let now_dir = current_state.p.dir;
-
-                let mut a3: Vec<Action> = Vec::with_capacity(0);
-                if (now_dir + 1) % 4 == back_state.dir {
-                    a3.push(Action::TurnR);
-                } else if (now_dir + 2) % 4 == back_state.dir {
-                    a3.push(Action::TurnR);
-                    a3.push(Action::TurnR);
-                } else if (now_dir + 3) % 4 == back_state.dir {
-                    a3.push(Action::TurnL);
-                }
-
-
-                for act in a3 {
-                    // apply_action で field と item_field も更新する
-                    apply_action(
-                        act,
-                        &mut current_state.p,
-                        &mut current_state.field,
-                        &mut current_state.item_field,
-                    );
-                    temp_action.push(act);
-                }
-            }
-
-            for act in temp_action {
-                AddActions[last_act].push(act);
-            }
-        }
-        if point_sum == 0 {
+        let next_action = get_next_action(first_state, UseOptimization, &final_action, &mut bfs);
+        if next_action.len() == final_action.len() {
             break;
         }
-        let mut next_action: Vec<Action> = Vec::with_capacity(0);
-        for i in 0..final_action.len() {
-            for act in &AddActions[i] {
-                next_action.push(*act);
-            }
-            next_action.push(final_action[i]);
-        }
-        for act in &AddActions[final_action.len()] {
-            next_action.push(*act);
-        }
-
         final_action = next_action;
     }
-
-
     final_action
 }
 
+///○秒まで頑張って回す
+pub fn optimization_actions(
+    first_state: &State,
+    actions: &Vec<Action>,
+    Seconds: usize,
+) -> (bool, Vec<Action>) {
+
+    let mut ans: Vec<Action> = actions.clone();
+
+    let start = Instant::now();
+
+    loop {
+        let end = start.elapsed();
+        let time = end.as_secs();
+        if time >= Seconds as u64 {
+            break;
+        }
+        let (flag, act) = shortening_actions(first_state, &ans, (Seconds as u64 - time) as usize);
+        if flag {
+            ans = act;
+        }
+    }
+
+    if ans.len() == actions.len() {
+        return (false, ans);
+    }
+
+    (true, ans)
+}
+
+///○秒の更新がある間は回す
 ///返り値：成功フラグ、新しいAction列
 pub fn shortening_actions(
     first_state: &State,
     actions: &Vec<Action>,
     Seconds: usize,
 ) -> (bool, Vec<Action>) {
+    if actions.len() < 3 {
+        return (false, Vec::with_capacity(0));
+    }
+
     let start = Instant::now();
 
-    let minimum_range = 10;
-    let maximum_range = 100;
+    let mut minimum_range = std::cmp::min(5, actions.len() / 2);
+    let mut maximum_range = std::cmp::min(actions.len() - 2, std::cmp::max(30, minimum_range));
+    while minimum_range >= maximum_range {
+        minimum_range = std::cmp::min(5, actions.len() / 2);
+        maximum_range = std::cmp::min(actions.len() - 2, std::cmp::max(30, minimum_range));
+    }
+
+    let H = first_state.field.len();
+    let W = first_state.field[0].len();
+
+
+    let mut bfs = BFS::new(H, W);
 
     loop {
         let end = start.elapsed();
@@ -531,7 +589,8 @@ pub fn shortening_actions(
         let start_action = rng.gen::<usize>() % (actions.len() - action_range);
         let end_action = start_action + action_range;
 
-        let (flag, act) = shortening(&first_state, actions, start_action, end_action);
+        //println!("{} {} {}", start_action, end_action, actions.len());
+        let (flag, act) = shortening(&first_state, actions, start_action, end_action, &mut bfs);
 
         if flag {
             return (true, act);
@@ -546,7 +605,9 @@ fn shortening(
     acts: &Vec<Action>,
     start: usize,
     end: usize,
+    bfs: &mut BFS,
 ) -> (bool, Vec<Action>) {
+
     let H = first_state.field.len();
     let W = first_state.field[0].len();
     let actions = acts.clone();
@@ -621,16 +682,12 @@ fn shortening(
         }
     }
 
-    eprintln!("RemoveRange : {}", end - start);
-    eprintln!("EmptyCell : {}", empty_cells);
-    eprintln!("range : ({}, {}) to ({}, {})", min_x, min_y, max_x, max_y);
+    //eprintln!("RemoveRange : {}", end - start);
+    //eprintln!("EmptyCell : {}", empty_cells);
+    //eprintln!("range : ({}, {}) to ({}, {})", min_x, min_y, max_x, max_y);
 
-    let x_move = max_x - min_x
-        + (max_x - std::cmp::max(start_position.x, end_position.x)
-            + (std::cmp::min(start_position.x, end_position.x) - min_x));
-    let y_move = max_y - min_y
-        + (max_y - std::cmp::max(start_position.y, end_position.y)
-            + (std::cmp::min(start_position.y, end_position.y) - min_y));
+    let x_move = get_diff(start_position.x, end_position.x);
+    let y_move = get_diff(start_position.y, end_position.y);
     let mut need_to_move = x_move + y_move;
     if start_position.dir != end_position.dir {
         if start_position.dir == (end_position.dir + 2) % 4 {
@@ -640,8 +697,58 @@ fn shortening(
         }
     }
 
-    eprintln!("needToMove : {}", need_to_move);
-    eprintln!("");
+    //eprintln!("needToMove : {}", need_to_move);
+    //eprintln!("");
+
+    //とりあえず適当にまっすぐ繋いでみた後、上手い事回収する
+    {
+        let mut now_state = check_state.clone();
+        let mut acts = bfs.search_fewest_actions_to_move(
+            &now_state.field,
+            &now_state.p,
+            end_position.x,
+            end_position.y,
+        );
+        let mut stockR = 0;
+        let mut stockL = 0;
+
+        if end_position.dir == (start_position.dir + 1) % 4 {
+            stockR = 1;
+        } else if end_position.dir == (start_position.dir + 2) % 4 {
+            stockR = 2;
+        } else if end_position.dir == (start_position.dir + 3) % 4 {
+            stockL = 1;
+        }
+        let a2 = make_move(&acts, stockR, stockL, start_position.dir);
+
+        let mut now_actions: Vec<Action> = Vec::with_capacity(0);
+        for i in 0..start {
+            let act = actions[i];
+            now_actions.push(act);
+        }
+        for a in a2 {
+            now_actions.push(a);
+        }
+        for i in end..actions.len() {
+            let act = actions[i];
+            now_actions.push(act);
+        }
+
+        let mut final_action = now_actions;
+        loop {
+            let next_action = get_next_action(&first_state, 1, &final_action, bfs);
+            if final_action.len() == next_action.len() {
+                break;
+            }
+            final_action = next_action;
+        }
+
+        if (final_action.len() < actions.len()) {
+            eprintln!("OK ! {} => {}", actions.len(), final_action.len());
+            return (true, final_action);
+        }
+    }
+
 
     (false, Vec::with_capacity(0))
 }
