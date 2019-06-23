@@ -38,6 +38,7 @@ func main() {
 			time.Sleep(10 * time.Second)
 			return nil
 		}
+		notify("#mining", fmt.Sprintf("Starting block number: %d", blockNumber))
 		fmt.Fprintf(os.Stderr, "Fetching task...\n")
 		task, err := getMiningInfo("task")
 		if err != nil {
@@ -128,9 +129,15 @@ func main() {
 			[]byte(command), 0644); err != nil {
 			return errors.Errorf("failed to write command: %s", err)
 		}
+		notify("#mining", fmt.Sprintf(
+			"Going to run `%s` in 60 seconds...", command))
+		time.Sleep(time.Minute)
 		stdout, stderr, err := execute("bash", "-c", command)
 		fmt.Fprintf(os.Stderr, "%s\n", strings.TrimSpace(stdout))
 		fmt.Fprintf(os.Stderr, "%s\n", strings.TrimSpace(stderr))
+		notify("#mining", fmt.Sprintf(
+			"Command result:\n- STDOUT: %s\n- STDERR: %s\n- Result: %s",
+			strings.TrimSpace(stdout), strings.TrimSpace(stderr), err))
 		if err != nil {
 			return err
 		}
@@ -264,11 +271,17 @@ func solveTask() (string, error) {
 		&Program{
 			Command: "/nfs/programs/wata-extend ${TASK_FILE} all",
 		},
+		// &Program{
+		// 	Command: "/nfs/programs/extend-fast ${TASK_FILE}",
+		// },
+		// &Program{
+		// 	Command: "/nfs/programs/extend-fast ${TASK_FILE} all",
+		// },
 		&Program{
-			Command: "/nfs/programs/extend-fast ${TASK_FILE}",
+			Command: "/nfs/programs/extend-optimize ${TASK_FILE}",
 		},
 		&Program{
-			Command: "/nfs/programs/extend-fast ${TASK_FILE} all",
+			Command: "/nfs/programs/chokudai-012 ${TASK_FILE}",
 		},
 	}
 
@@ -350,10 +363,13 @@ func solveTask() (string, error) {
 	if programs[0].Score <= 0 {
 		return "", errors.New("task is not solved")
 	}
+	message := ""
 	for idx, program := range programs {
-		fmt.Fprintf(os.Stderr, "#%d score=%d (%s)\n",
+		message += fmt.Sprintf("#%d score=%d (%s)\n",
 			idx, program.Score, program.Command)
 	}
+	fmt.Fprintf(os.Stderr, "%s\n", strings.TrimSpace(message))
+	notify("#mining", fmt.Sprintf("Mining results:\n%s", message))
 	return programs[0].Output, nil
 }
 
