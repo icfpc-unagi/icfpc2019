@@ -18,6 +18,19 @@ func programHandler(ctx context.Context, r *http.Request) (HTML, error) {
 	if err != nil {
 		return "", err
 	}
+	program := struct{
+		ProgramName    string `db:"program_name"`
+		ProgramCode    string `db:"program_code"`
+	}{}
+	if err := db.Row(ctx, &program,
+		`SELECT
+			program_name,
+			program_code
+		FROM programs
+		WHERE program_id = ?
+		LIMIT 1`, programID); err != nil {
+		return "", err
+	}
 	problems := []struct {
 		ProblemID        int64   `db:"problem_id"`
 		ProblemName      string  `db:"problem_name"`
@@ -53,6 +66,8 @@ func programHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		return "", err
 	}
 	output := HTML(
+		`<h2 style="display:inline-block;margin-right:10px">` + Escape(program.ProgramName) + `</h2>` +
+		`<code style="border:solid 1px silver;border-radius:3px;background:white;padding:2px">` + Escape(program.ProgramCode) + `</code>` +
 		`<table class="table table-clickable">` +
 			`<thead><tr><td>Name</td><td>Booster</td>` +
 			`<td>Score</td><td>Modified</td></thead>` +
