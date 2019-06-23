@@ -338,6 +338,12 @@ func solveTask() (string, error) {
 		&Program{
 			Command: "/nfs/programs/mining ${TASK_FILE} 2",
 		},
+		&Program{
+			Command: "/nfs/programs/akiba-opt2 ${TASK_FILE}",
+		},
+		&Program{
+			Command: "/nfs/programs/akiba-opt2 ${TASK_FILE} 2",
+		},
 	}
 
 	fmt.Fprintf(os.Stderr, "Solving tasks.\n")
