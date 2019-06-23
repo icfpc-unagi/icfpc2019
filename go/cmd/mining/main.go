@@ -339,10 +339,10 @@ func solveTask() (string, error) {
 			Command: "/nfs/programs/mining ${TASK_FILE} 2",
 		},
 		&Program{
-			Command: "/nfs/programs/akiba-opt2 ${TASK_FILE}",
+			Command: "/nfs/programs/akiba-opt2 ${TASK_FILE} ''",
 		},
 		&Program{
-			Command: "/nfs/programs/akiba-opt2 ${TASK_FILE} 2",
+			Command: "/nfs/programs/akiba-opt2 ${TASK_FILE} '' 2",
 		},
 	}
 
