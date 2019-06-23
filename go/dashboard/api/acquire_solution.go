@@ -25,7 +25,7 @@ func acquireSolutionHandler(
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	if err := func() error {
+	solutionID, err := func() (int64, error) {
 		acquireSolutionLock.Lock()
 		defer acquireSolutionLock.Unlock()
 		acquired, err := func() (bool, error) {
@@ -48,10 +48,29 @@ func acquireSolutionHandler(
 			return affected > 0, nil
 		}()
 		if err != nil {
-			return err
+			return 0, err
 		}
 		if !acquired {
 			log.Infof(ctx, "no solution is acquired")
+			return 0, nil
+		}
+		row := struct {
+			SolutionID int64 `db:"solution_id"`
+		}{}
+		if err := tx.GetContext(
+			ctx, &row, `SELECT @solution_id AS solution_id`); err != nil {
+			return 0, err
+		}
+		return row.SolutionID, nil
+	}()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+
+	if err := func() error {
+		if solutionID == 0 {
 			return nil
 		}
 		row := struct {
@@ -79,8 +98,8 @@ func acquireSolutionHandler(
 				NATURAL LEFT JOIN programs
 				NATURAL LEFT JOIN problems
 				NATURAL LEFT JOIN problem_data
-			WHERE solution_id = @solution_id
-			LIMIT 1`); err != nil {
+			WHERE solution_id = ?
+			LIMIT 1`, solutionID); err != nil {
 			return err
 		}
 		resp.SolutionId = row.SolutionID
@@ -93,9 +112,8 @@ func acquireSolutionHandler(
 		resp.ProblemDataBlob = row.ProblemDataBlob
 		return nil
 	}(); err != nil {
-		tx.Rollback()
 		return err
 	}
 	apiResp.AcquireSolution = resp
-	return tx.Commit()
+	return nil
 }
