@@ -6,6 +6,7 @@ import (
 	"html"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
@@ -145,19 +146,21 @@ func insertProgramHandler(
 			return errors.WithStack(err)
 		}
 		resp.ProgramId = id
-		result, err = tx.ExecContext(
-			ctx,
-			`INSERT IGNORE INTO
-				solutions(program_id, problem_id, solution_lock)
+		for _, booster := range strings.Split(req.GetProgramBoosters(), ",") {
+			_, err = tx.ExecContext(ctx, `
+				INSERT IGNORE INTO solutions(
+					program_id, solution_booster, problem_id, solution_lock)
 				SELECT
 					? AS program_id,
+					? AS solution_booster,
 					problem_id,
 					NOW() - INTERVAL (RAND() + 1) * 24 * 60 * 60 SECOND
 						AS solution_lock
 				FROM problems`,
-			id)
-		if err != nil {
-			return errors.WithStack(err)
+				id, booster)
+			if err != nil {
+				return errors.WithStack(err)
+			}
 		}
 		return nil
 	}(); err != nil {

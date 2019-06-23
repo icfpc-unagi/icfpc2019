@@ -17,12 +17,13 @@ func init() {
 var tmpl = template.Must(template.New("solution").Parse(`
 <div style="width:100%">
 	<table class="table" style="width:500px;margin:auto" align="center">
-		<thead><tr><td>ID</td><td>Program</td><td>Problem</td><td>Score</td><td>Modified</td></tr></thead>
+		<thead><tr><td>ID</td><td>Program</td><td>Problem</td><td>Booster</td><td>Score</td><td>Modified</td></tr></thead>
 		<tbody>
 			<tr>
 				<td>{{.SolutionID}}</td>
 				<td>{{.ProgramName}} ({{.ProgramID}})</td>
 				<td>{{.ProblemName}} ({{.ProblemID}})</td>
+				<td>{{.SolutionBooster}}</td>
 				<td>{{.SolutionScore}}</td>
 				<td>{{.SolutionModified}}</td>
 			</tr>
@@ -49,6 +50,7 @@ func solutionHandler(ctx context.Context, r *http.Request) (HTML, error) {
 	}
 	solution := struct {
 		SolutionID          int64   `db:"solution_id"`
+		SolutionBooster     string  `db:"solution_booster"`
 		SolutionScore       *int64  `db:"solution_score"`
 		SolutionModified    *string `db:"solution_modified"`
 		SolutionDescription string  `db:"solution_description"`
@@ -62,6 +64,7 @@ func solutionHandler(ctx context.Context, r *http.Request) (HTML, error) {
 	if err := db.Row(ctx, &solution, `
 		SELECT
 			solution_id,
+			solution_booster,
 			solution_score,
 			solution_modified,
 			solution_description,
