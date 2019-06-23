@@ -76,29 +76,43 @@ impl BFS {
         actions
     }
 
-    fn search<F: Fn(usize, usize) -> bool>(
+    // ！！！！！！cost_to_finishは0から3までしか返さない！！！！！！！！！
+    fn search<F: Fn(usize, usize) -> usize>(
         &mut self,
         map: &Vec<Vec<Square>>,
         player_state: &WorkerState,
-        condition_func: F,
+        cost_to_finish: F,
     ) -> (Vec<Action>, usize, usize) {
         self.que_vec.push((player_state.x, player_state.y));
         self.pot[player_state.x][player_state.y].0 = 0;
 
-        let mut x = !0;
-        let mut y = !0;
+        let evaluate = |distance_from_start: usize, cost_to_finish: usize | {
+            (distance_from_start + cost_to_finish) * 4 + cost_to_finish
+        };
+
+        let (mut gx, mut gy, mut ge) = (!0, !0, !0);
 
         while self.que_head < self.que_vec.len() {
-            x = self.que_vec[self.que_head].0;
-            y = self.que_vec[self.que_head].1;
+            let x = self.que_vec[self.que_head].0;
+            let y = self.que_vec[self.que_head].1;
+            let c = self.pot[x][y].0;
+            let e = c * 4;
             self.que_head += 1;
 
-            if condition_func(x, y) {
-                // eprintln!("{}", self.flg[x][y].0);
-                break;
+            if e > ge {
+                break
             }
 
-            let c = self.pot[x][y].0;
+            let ctf = cost_to_finish(x, y);
+            if ctf != !0 {
+                let e = evaluate(c, ctf);
+                if e < ge {
+                    gx = x;
+                    gy = y;
+                    ge = e;
+                }
+            }
+
             for d in 0..4 {
                 let (tx, ty) = apply_move((x, y), d);
 
@@ -111,7 +125,7 @@ impl BFS {
             }
         }
 
-        (self.construct_actions(x, y), x, y)
+        (self.construct_actions(gx, gy), gx, gy)
     }
 
     pub fn search_with_goals(
@@ -122,7 +136,16 @@ impl BFS {
         // Search
         let mut is_goal = vec![];
         std::mem::swap(&mut is_goal, &mut self.is_goal);
-        let f = |x: usize, y: usize| is_goal[x][y] != !0;
+
+        let f = |x: usize, y: usize| {
+            let g = is_goal[x][y];
+            if g == !0 {
+                !0
+            } else {
+                usize::min(g, 4 - g)
+            }
+        };
+
         let (mut actions, x, y) = self.search(map, player_state, f);
         std::mem::swap(&mut is_goal, &mut self.is_goal);
         drop(is_goal);
@@ -152,7 +175,17 @@ impl BFS {
         player_state: &WorkerState,
         condition_func: F,
     ) -> (Vec<Action>, usize, usize) {
-        let ret = self.search(map, player_state, condition_func);
+        let ret = self.search(
+            map,
+            player_state,
+            |x, y| {
+                if condition_func(x, y) {
+                    0
+                } else {
+                    !0
+                }
+            },
+        );
         self.clean_up();
         ret
     }
@@ -170,6 +203,10 @@ impl BFS {
 
     // 現状の実相だと、1, 2ぐらいsuboptimalな可能性がある
     // 真面目な実装にするためにはコストがかかるがそれがペイするならやる
+    //
+    // BFSで同じ手数のときできれば回転しないという要望が来たのでやる
+    // できれば回転しない = コストを (手数, 回転の回数) だと思えば良い、
+    // (手数 * 4 + 回転の回数) で管理してもよいのでそうする
     pub fn search_fewest_actions_to_wrap(
         &mut self,
         map: &Vec<Vec<Square>>,
@@ -202,6 +239,22 @@ impl BFS {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn it_works() {
+        let t = load_task_001();
+        let a = WorkerState::new(t.2, t.3);
+
+        let mut bfs = BFS::new(t.0.len(), t.0[0].len());
+        let actions = bfs.search_fewest_actions_to_wrap(&t.0, &a, 2, 2);
+        dbg!(&actions);
+
+        let actions = bfs.search_fewest_actions_to_wrap(&t.0, &a, 3, 3);
+        dbg!(&actions);
+
+        let actions = bfs.search_fewest_actions_to_wrap(&t.0, &a, 1, 2);
+        dbg!(&actions);
+    }
 
     #[test]
     fn move_stress() {
@@ -291,7 +344,7 @@ mod tests {
                 let mut f = false;
                 for m in ps.manipulators.iter() {
                     if (ps.x + (m.0 as usize), ps.y + (m.1 as usize)) == (tx, ty) {
-                        dbg!(m);
+                        // dbg!(m);
                         f = true;
                         assert!(is_visible(map, (ps.x, ps.y), *m));
                     }
