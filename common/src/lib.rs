@@ -12,6 +12,7 @@ pub mod bootstrap_clone;
 pub mod vectorize;
 pub mod task2;
 pub mod fast;
+pub mod reverse;
 
 pub use reach::*;
 pub use task::*;
@@ -27,6 +28,7 @@ pub use bootstrap_clone::*;
 pub use vectorize::*;
 pub use task2::*;
 pub use fast::*;
+pub use reverse::*;
 
 #[macro_export]
 macro_rules! mat {

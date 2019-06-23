@@ -288,8 +288,7 @@ mod tests {
                 let mut m = map.clone();
                 let mut b = booster.clone();
                 for a in actions.iter() {
-                    if let Action::Move(_) = a {
-                    } else {
+                    if let Action::Move(_) = a {} else {
                         assert!(false);
                     }
 
