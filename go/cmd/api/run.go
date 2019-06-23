@@ -136,8 +136,8 @@ func runCommand(
 		if !timeout {
 			break
 		}
-		fmt.Fprintf(os.Stderr, "scorer failed: %s: %s: %+v\n",
-			output, solution.GetProgramCode(), err)
+		fmt.Fprintf(os.Stderr, "scorer failed: %s: %d: %s: %+v\n",
+			output, solution.GetSolutionId(), solution.GetProgramCode(), err)
 	}
 	result.SolutionDataError = append(
 		result.GetSolutionDataError(), []byte(output)...)
