@@ -8,6 +8,6 @@ fn main() {
     let original_actions = &sol[0];
 
     let optimized_actions = common::optimize_pure_move(&task, original_actions);
-    eprintln!("{} -> {}", original_actions.len(), optimized_actions.len());
-    println!("{}", common::actions_to_string(&optimized_actions));
+    println!("{} -> {}", original_actions.len(), optimized_actions.len());
+    // println!("{}", common::actions_to_string(&optimized_actions));
 }

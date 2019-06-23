@@ -233,7 +233,7 @@ impl DynamicSolution {
         }
 
         {
-            eprintln!("{:?} {:?}", &self.actions[begin..end], new_actions);
+            // eprintln!("{:?} {:?}", &self.actions[begin..end], new_actions);
 
             let mut new_full_actions = vec![];
             new_full_actions.extend_from_slice(&self.actions[..begin]);
@@ -298,7 +298,8 @@ pub fn optimize_pure_move(task: &RasterizedTask, actions: &Vec<Action>) -> Vec<A
         let n_new_actions = new_actions.len();
 
         if n_new_actions < n_original_actions {
-            dbg!((begin, end, n_original_actions, n_new_actions));
+            // dbg!((begin, end, n_original_actions, n_new_actions));
+            eprintln!("{} -> {}", n_original_actions, n_new_actions);
             dsol.replace(begin, end, &new_actions);
         } else {
             let diff3 = dsol.reactivate_range(begin, end);
