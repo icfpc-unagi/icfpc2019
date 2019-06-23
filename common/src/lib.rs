@@ -13,6 +13,7 @@ pub mod vectorize;
 pub mod task2;
 pub mod fast;
 pub mod reverse;
+pub mod local_optimization;
 
 pub use reach::*;
 pub use task::*;
@@ -29,6 +30,7 @@ pub use vectorize::*;
 pub use task2::*;
 pub use fast::*;
 pub use reverse::*;
+pub use local_optimization::*;
 
 #[macro_export]
 macro_rules! mat {
