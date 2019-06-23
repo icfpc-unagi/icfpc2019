@@ -56,6 +56,7 @@ func acquireSolutionHandler(
 		}
 		row := struct {
 			SolutionID      int64  `db:"solution_id"`
+			SolutionBooster string `db:"solution_booster"`
 			ProgramID       int64  `db:"program_id"`
 			ProgramName     string `db:"program_name"`
 			ProgramCode     string `db:"program_code"`
@@ -66,6 +67,7 @@ func acquireSolutionHandler(
 		if err := tx.GetContext(ctx, &row, `
 			SELECT 
 				solution_id,
+				solution_booster,
 				program_id,
 				program_name,
 				program_code,
@@ -82,6 +84,7 @@ func acquireSolutionHandler(
 			return err
 		}
 		resp.SolutionId = row.SolutionID
+		resp.SolutionBooster = row.SolutionBooster
 		resp.ProgramId = row.ProgramID
 		resp.ProgramName = row.ProgramName
 		resp.ProgramCode = row.ProgramCode

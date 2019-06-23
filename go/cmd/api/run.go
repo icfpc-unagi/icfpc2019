@@ -116,13 +116,18 @@ func runCommand(
 		solution.GetProblemDataBlob(), 0644); err != nil {
 		return errors.WithStack(err)
 	}
+	if err := ioutil.WriteFile(path.Join(dir, "buy"),
+		[]byte(solution.GetSolutionBooster()), 0644); err != nil {
+		return errors.WithStack(err)
+	}
 	stderr, err := os.Create(path.Join(dir, "stderr"))
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	script := fmt.Sprintf(
-		"task='%s'; solution='%s'; %s",
+		"task='%s'; buy='%s'; solution='%s'; %s",
 		path.Join(dir, "task"),
+		path.Join(dir, "buy"),
 		path.Join(dir, "solution"),
 		solution.GetProgramCode())
 	cmd := exec.Command("bash", "-c", script)

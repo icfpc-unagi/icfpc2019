@@ -44,7 +44,9 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 					problem_id,
 					MIN(solution_score) AS solution_score
 				FROM solutions
-				WHERE solution_score IS NOT NULL
+				WHERE
+					solution_score IS NOT NULL AND
+					solution_booster = ""
 				GROUP BY problem_id) AS t
 				NATURAL JOIN solutions
 			GROUP BY problem_id) AS t

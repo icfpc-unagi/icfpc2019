@@ -61,7 +61,9 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 			MAX(solution_id) AS solution_id,
 			MIN(solution_score) AS solution_score
 		FROM solutions
-		WHERE solution_score IS NOT NULL
+		WHERE
+			solution_score IS NOT NULL AND
+			solution_booster = ""
 		GROUP BY program_id, problem_id`); err != nil {
 		return "", err
 	}

@@ -34,6 +34,7 @@ func updateSolutionImage(ctx context.Context) bool {
 	}
 	fmt.Fprintf(os.Stderr, "AcquireSolutionExtra: %s\n", resp)
 	id := resp.GetAcquireSolutionExtra().GetSolutionId()
+	booster := resp.GetAcquireSolutionExtra().GetSolutionBooster()
 	desc := resp.GetAcquireSolutionExtra().GetProblemDataBlob()
 	sol := resp.GetAcquireSolutionExtra().GetSolutionDataBlob()
 	modified := resp.GetAcquireSolutionExtra().GetSolutionDataModified()
@@ -61,6 +62,16 @@ func updateSolutionImage(ctx context.Context) bool {
 	}
 	defer os.Remove(solfile.Name())
 
+	buyfile, err := ioutil.TempFile("", "buy")
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = ioutil.WriteFile(buyfile.Name(), []byte(booster), 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(buyfile.Name())
+
 	pngfile, err := ioutil.TempFile("", "png")
 	if err != nil {
 		log.Fatal(err)
@@ -68,6 +79,7 @@ func updateSolutionImage(ctx context.Context) bool {
 	defer os.Remove(descfile.Name())
 
 	fmt.Fprintf(os.Stderr, "Run sim -g\n")
+	// TODO(sulume): Use buyfile here!!!
 	err = execute("/nfs/bin/sim", descfile.Name(), solfile.Name(), "-g", pngfile.Name())
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)

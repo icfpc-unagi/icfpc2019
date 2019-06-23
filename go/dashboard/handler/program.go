@@ -23,18 +23,21 @@ func programHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		ProblemName      string  `db:"problem_name"`
 		SolutionID       *int64  `db:"solution_id"`
 		SolutionScore    *int64  `db:"solution_score"`
+		SolutionBooster  *string `db:"solution_booster"`
 		SolutionModified *string `db:"solution_modified"`
 	}{}
 	if err := db.Select(ctx, &problems, `
 		SELECT
 			problem_id,
 			problem_name,
+			solution_booster,
 			MAX(solution_id) AS solution_id,
 			solution_score,
 			MAX(solution_modified) AS solution_modified
 		FROM (
 			SELECT
 				problem_id,
+				solution_booster,
 				problem_name,
 				MIN(solution_score) AS solution_score
 			FROM
@@ -42,22 +45,29 @@ func programHandler(ctx context.Context, r *http.Request) (HTML, error) {
 				NATURAL LEFT JOIN problems
 				NATURAL LEFT JOIN solutions
 			WHERE program_id = ?
-			GROUP BY problem_id
+			GROUP BY problem_id, solution_booster
 			ORDER BY solution_score DESC) AS t
 			NATURAL LEFT JOIN solutions
-		GROUP BY problem_id, solution_score
-		ORDER BY problem_name`, programID); err != nil {
+		GROUP BY problem_id, solution_booster, solution_score
+		ORDER BY problem_name, solution_booster`, programID); err != nil {
 		return "", err
 	}
 	output := HTML(
 		`<table class="table table-clickable">` +
-			`<thead><tr><td>Name</td><td>Score</td><td>Modified</td></thead>` +
+			`<thead><tr><td>Name</td><td>Booster</td>` +
+			`<td>Score</td><td>Modified</td></thead>` +
 			`<tbody>`)
 	for _, problem := range problems {
+		booster := HTML("None")
+		if problem.SolutionBooster != nil && *problem.SolutionBooster != "" {
+			booster = Escape(*problem.SolutionBooster)
+		}
 		score := HTML("-")
 		if problem.SolutionScore != nil {
-			score = `<a href="/solution?solution_id=` + Escape(fmt.Sprintf("%d", *problem.SolutionID)) +
-				`"><img src="/solution_image?solution_id=` + Escape(fmt.Sprintf("%d", *problem.SolutionID)) + `">`
+			score = `<a href="/solution?solution_id=` +
+				Escape(fmt.Sprintf("%d", *problem.SolutionID)) +
+				`"><img src="/solution_image?solution_id=` +
+				Escape(fmt.Sprintf("%d", *problem.SolutionID)) + `">`
 			if *problem.SolutionScore >= 100000000 {
 				score += "invalid</a>"
 			} else {
@@ -68,9 +78,10 @@ func programHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		if problem.SolutionModified != nil {
 			modified = *problem.SolutionModified
 		}
-		output += `<tr><td><img src="/problem_image?problem_id=` + Escape(fmt.Sprintf("%d", problem.ProblemID)) + `">` +
+		output += `<tr><td><img src="/problem_image?problem_id=` +
+			Escape(fmt.Sprintf("%d", problem.ProblemID)) + `">` +
 			Escape(problem.ProblemName) +
-			"</td><td>" + score + "</td><td>" +
+			"</td><td>" + booster + "</td><td>" + score + "</td><td>" +
 			Escape(modified) +
 			"</td></tr>"
 	}
