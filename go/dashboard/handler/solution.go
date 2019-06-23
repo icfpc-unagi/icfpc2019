@@ -42,8 +42,10 @@ func init() {
 }
 
 var tmpl = template.Must(template.New("solution").Parse(`
-{{if and .SolutionScore .SolutionLock}}
-<h2 style="background-color:red;text-align:center">RETRY REQUESTED</h2>
+{{if .SolutionRunning}}
+<h2 style="background-color:aqua;border-radius:5px;text-align:center">RUNNING</h2>
+{{else if and (not .SolutionDone) .SolutionScore}}
+<h2 style="background-color:red;border-radius:5px;text-align:center">RETRY REQUESTED</h2>
 {{end}}
 	<table class="table" style="width:500px;margin:auto" align="center">
 		<thead><tr><td>ID</td><td>Program</td><td>Problem</td><td>Booster</td><td>Score</td><td>Modified</td></tr></thead>
@@ -69,7 +71,7 @@ var tmpl = template.Must(template.New("solution").Parse(`
 	<h3><a name="error">Error:</a></h3>
 	<pre>{{.SolutionDataError}}</pre>
 
-{{if not .SolutionLock}}
+{{if .SolutionDone}}
 	<form method="POST" action="/solution/retry">
 	<input type="hidden" name="solution_id" value="{{.SolutionID}}">
 	<input type="submit" value="Retry?">
@@ -86,7 +88,8 @@ func solutionHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		SolutionID          int64   `db:"solution_id"`
 		SolutionBooster     string  `db:"solution_booster"`
 		SolutionScore       *int64  `db:"solution_score"`
-		SolutionLock        *string `db:"solution_lock"`
+		SolutionDone        bool    `db:"solution_done"`
+		SolutionRunning     bool    `db:"solution_running"`
 		SolutionModified    *string `db:"solution_modified"`
 		SolutionDescription string  `db:"solution_description"`
 		SolutionDataBlob    string  `db:"solution_data_blob"`
@@ -101,7 +104,8 @@ func solutionHandler(ctx context.Context, r *http.Request) (HTML, error) {
 			solution_id,
 			solution_booster,
 			solution_score,
-			solution_lock,
+			solution_lock IS NULL AS solution_done,
+			IFNULL(solution_lock > NOW(), false) AS solution_running,
 			solution_modified,
 			solution_description,
 			solution_data_blob,
