@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"math"
+	"net/http"
 	"os"
 	"os/exec"
 	"path"
@@ -30,6 +33,9 @@ func main() {
 		if _, err := os.Stat(
 			fmt.Sprintf("/nfs/lock/%d", blockNumber)); err == nil {
 			fmt.Fprintf(os.Stderr, "Block was already submitted.\n")
+			notify("#mining", fmt.Sprintf(
+				"Block number %d is already mined.", blockNumber))
+			time.Sleep(10 * time.Second)
 			return nil
 		}
 		fmt.Fprintf(os.Stderr, "Fetching task...\n")
@@ -61,21 +67,34 @@ func main() {
 
 		puzzleOutput := ""
 		taskOutput := ""
+		var solverErr error
 
 		wg := sync.WaitGroup{}
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			puzzleOutput = generatePuzzle()
+			if output, err := generatePuzzle(); err != nil {
+				solverErr = err
+			} else {
+				puzzleOutput = output
+			}
 			fmt.Fprintf(os.Stderr, "Puzzle solver finished.\n")
 		}()
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			taskOutput = solveTask()
+			if output, err := solveTask(); err != nil {
+				solverErr = err
+			} else {
+				taskOutput = output
+			}
 			fmt.Fprintf(os.Stderr, "Task solver finished.\n")
 		}()
 		wg.Wait()
+
+		if solverErr != nil {
+			return solverErr
+		}
 
 		fmt.Fprintf(os.Stderr, "Puzzle output: %s\n", puzzleOutput)
 		fmt.Fprintf(os.Stderr, "Task output: %s\n", taskOutput)
@@ -93,10 +112,14 @@ func main() {
 		}
 		if err := ioutil.WriteFile(
 			path.Join(submitDir, "task.sol"),
-			[]byte(puzzleOutput), 0644); err != nil {
+			[]byte(taskOutput), 0644); err != nil {
 			return errors.Errorf("failed to write task output: %s", err)
 		}
-		command := fmt.Sprintf("lambda-client submit %d %s %s",
+		ioutil.WriteFile(
+			path.Join(submitDir, "task_input.desc"), []byte(task), 0644)
+		ioutil.WriteFile(
+			path.Join(submitDir, "puzzle_input.cond"), []byte(puzzle), 0644)
+		command := fmt.Sprintf("/nfs/bin/lambda-client submit %d %s %s",
 			blockNumber,
 			path.Join(submitDir, "task.sol"),
 			path.Join(submitDir, "puzzle.desc"))
@@ -108,14 +131,23 @@ func main() {
 		stdout, stderr, err := execute("echo", command)
 		fmt.Fprintf(os.Stderr, "%s\n", strings.TrimSpace(stdout))
 		fmt.Fprintf(os.Stderr, "%s\n", strings.TrimSpace(stderr))
-		return err
+		if err != nil {
+			return err
+		}
+		os.MkdirAll(fmt.Sprintf("/nfs/lock/%d", blockNumber), 0755)
+		notify("#mining", fmt.Sprintf(
+			"Successfully mined for block number %d\nFor more details, see %s.",
+			blockNumber, submitDir))
+		return nil
 	}(); err != nil {
+		notify("#general", "FAILED TO MINE!!! HELP ME!!!")
+		time.Sleep(time.Minute)
 		panic(fmt.Sprintf("%+v", err))
 	}
 	fmt.Fprintf(os.Stderr, "Mining successfully finished.\n")
 }
 
-func generatePuzzle() string {
+func generatePuzzle() (string, error) {
 	type Program struct {
 		Command string
 		Output  string
@@ -148,12 +180,42 @@ func generatePuzzle() string {
 	wg.Wait()
 
 	fmt.Fprintf(os.Stderr, "Validating puzzles.\n")
-	// TODO(imos): Add validation.
 	for _, program := range programs {
-		if program.Output != "" {
-			program.Score = 1
+		program := program
+		if program.Output == "" {
+			continue
 		}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			dir, err := ioutil.TempDir("", "validator")
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%v\n", err)
+				return
+			}
+			solution := path.Join(dir, "output.desc")
+			ioutil.WriteFile(solution, []byte(program.Output), 0644)
+			stdout, stderr, err := execute(
+				"bash", "-c",
+				"/nfs/bin/puzzle_checker ${PUZZLE_FILE} "+solution)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%s\n", strings.TrimSpace(stderr))
+				fmt.Fprintf(
+					os.Stderr, "Scorerer failed: %s: %s\n",
+					program.Command, err)
+				return
+			}
+			if regexp.MustCompile(`Success!`).MatchString(stdout) {
+				program.Score = 1
+			} else {
+				fmt.Fprintf(os.Stderr, "%s\n", strings.TrimSpace(stdout))
+				fmt.Fprintf(os.Stderr, "%s\n", strings.TrimSpace(stderr))
+				fmt.Fprintf(
+					os.Stderr, "Validation failed for %s", program.Command)
+			}
+		}()
 	}
+	wg.Wait()
 
 	sort.SliceStable(programs, func(i, j int) bool {
 		is := programs[i].Score
@@ -168,12 +230,12 @@ func generatePuzzle() string {
 	})
 
 	if programs[0].Score <= 0 {
-		panic(fmt.Sprintf("no puzzle generated"))
+		return "", errors.New("no puzzle generated")
 	}
-	return programs[0].Output
+	return programs[0].Output, nil
 }
 
-func solveTask() string {
+func solveTask() (string, error) {
 	type Program struct {
 		Command string
 		Output  string
@@ -195,6 +257,18 @@ func solveTask() string {
 		},
 		&Program{
 			Command: "/nfs/programs/wata-k-split2 ${TASK_FILE}",
+		},
+		&Program{
+			Command: "/nfs/programs/wata-extend ${TASK_FILE}",
+		},
+		&Program{
+			Command: "/nfs/programs/wata-extend ${TASK_FILE} all",
+		},
+		&Program{
+			Command: "/nfs/programs/extend-fast ${TASK_FILE}",
+		},
+		&Program{
+			Command: "/nfs/programs/extend-fast ${TASK_FILE} all",
 		},
 	}
 
@@ -218,7 +292,6 @@ func solveTask() string {
 	wg.Wait()
 
 	fmt.Fprintf(os.Stderr, "Validating tasks.\n")
-	// TODO(imos): Add validation.
 	for _, program := range programs {
 		program := program
 		if program.Output == "" {
@@ -229,7 +302,8 @@ func solveTask() string {
 			defer wg.Done()
 			dir, err := ioutil.TempDir("", "validator")
 			if err != nil {
-				panic(err)
+				fmt.Fprintf(os.Stderr, "%v\n", err)
+				return
 			}
 			solution := path.Join(dir, "output.sol")
 			ioutil.WriteFile(solution, []byte(program.Output), 0644)
@@ -274,13 +348,13 @@ func solveTask() string {
 	})
 
 	if programs[0].Score <= 0 {
-		panic(fmt.Sprintf("task is not solved"))
+		return "", errors.New("task is not solved")
 	}
 	for idx, program := range programs {
 		fmt.Fprintf(os.Stderr, "#%d score=%d (%s)\n",
 			idx, program.Score, program.Command)
 	}
-	return programs[0].Output
+	return programs[0].Output, nil
 }
 
 func getBlockNumber() (int64, error) {
@@ -353,4 +427,36 @@ func execute(
 
 	err = <-result
 	return
+}
+
+func notify(channel string, text string) {
+	type Payload struct {
+		Channel  string `json:"channel"`
+		Username string `json:"username"`
+		Text     string `json:"text"`
+	}
+	jsonBuf, err := json.Marshal(Payload{
+		Channel:  channel,
+		Username: "miningbot",
+		Text:     text,
+	})
+	if err != nil {
+		panic(err)
+	}
+	req, err := http.NewRequest(
+		"POST",
+		"https://hooks.slack.com/services/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",
+		bytes.NewBuffer(jsonBuf),
+	)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
 }

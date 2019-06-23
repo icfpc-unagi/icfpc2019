@@ -12,7 +12,7 @@ clean:
 ../../build/puzzle_checker: main.js lambda.js
 	npm install
 	xshar --output=../../build/puzzle_checker \
-		--command="nodejs $${XSHAR_ROOT}$$(pwd)/main.js" \
+		--command='nodejs $${XSHAR_ROOT}'"$$(pwd)"'/main.js' \
 		main.js lambda.js node_modules
 
 lambda.js: ../lambda.js
