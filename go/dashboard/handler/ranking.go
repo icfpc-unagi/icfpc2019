@@ -112,7 +112,7 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 	renderScore := func(s *Score, best bool) HTML {
 		note := Escape(fmt.Sprintf("%d", s.ComputedScore))
 		if best {
-			note = Escape(programNameByID[s.ProgramID])
+			note = `<a href="/program?program_id=` + Escape(fmt.Sprintf("%d", s.ProgramID)) + `">` + Escape(programNameByID[s.ProgramID]) + `</a>`
 		}
 		if s.SolutionScore >= 100000000 {
 			return `<td align="right">invalid</td><td>(` + note + ")</td>"
