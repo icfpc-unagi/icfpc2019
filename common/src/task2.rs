@@ -39,13 +39,15 @@ pub fn raster_map_to_task_specification(
         .flatten()
         .filter(|(x, y)| raster_map[*x][*y]);
 
-    let initial_position = empty_cells.next().unwrap();
+    let mut empty_cells = empty_cells.collect::<std::collections::VecDeque<_>>();
+
+    let initial_position = empty_cells.pop_front().unwrap();
     dbg!(initial_position);
 
     let mut boosters = vec![];
     let mut doit = |num, booster| {
         for _ in 0..num {
-            let (x, y) = empty_cells.next().unwrap();
+            let (x, y) = empty_cells.pop_back().unwrap();
             boosters.push((booster, x, y));
         }
     };
