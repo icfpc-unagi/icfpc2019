@@ -557,6 +557,7 @@ $(function(){
 <a href="/ranking/" title="Ranking">Ranking</a>
 <a href="/problems/" title="Problems">Problems</a>
 <a href="/programs/" title="Programs">Programs</a>
+<a href="/status/" title="Status">Status</a>
 </span>
 <span>
 	
