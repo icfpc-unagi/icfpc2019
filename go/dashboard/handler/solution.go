@@ -42,7 +42,7 @@ func init() {
 }
 
 var tmpl = template.Must(template.New("solution").Parse(`
-{{if .SolutionLock}}
+{{if and .SolutionScore .SolutionLock}}
 <h2 style="background-color:red;text-align:center">RETRY REQUESTED</h2>
 {{end}}
 	<table class="table" style="width:500px;margin:auto" align="center">
@@ -70,7 +70,7 @@ var tmpl = template.Must(template.New("solution").Parse(`
 	<h3><a name="error">Error:</a></h3>
 	<pre>{{.SolutionDataError}}</pre>
 
-{{if .SolutionLock}}{{else}}
+{{if not .SolutionLock}}
 	<form method="POST" action="/solution/retry">
 	<input type="hidden" name="solution_id" value="{{.SolutionID}}">
 	<input type="submit" value="Retry?">
