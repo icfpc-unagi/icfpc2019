@@ -195,13 +195,19 @@ impl DynamicSolution {
         n
     }
 
-    pub fn replace(&mut self, begin: usize, end: usize, new_actions: &[Action]) {
+    pub fn replace(&mut self, begin: usize, end: usize, mut new_actions: &[Action]) {
+        // TODO: nothing使うと多分だいぶ楽になるのでnothing使ったほうが良い
+
         // step beginとstep endは踏む。つまり、stepは(begin, end)が置き換わる。
         // actionでいうと[begin, end)が置き換わる。
         // (begin, end) は既にdeactivateされていること！
 
         assert!(begin < end);
         assert!(end <= self.actions.len());
+
+        if new_actions.len() == 0 {
+            new_actions = &[Action::Nothing];
+        }
 
         let mut new_states = vec![];
         let mut state = self.states[begin].clone();
@@ -244,6 +250,12 @@ impl DynamicSolution {
 
         self.reactivate_range(begin, begin + new_actions.len());
     }
+}
+
+pub fn optimize_remove_nothing(actions: &Vec<Action>) -> Vec<Action> {
+    actions.iter().filter(|action| **action != Action::Nothing).map(
+        |a| *a
+    ).collect()
 }
 
 pub fn optimize_pure_move(task: &RasterizedTask, actions: &Vec<Action>) -> Vec<Action> {
@@ -310,8 +322,10 @@ pub fn optimize_pure_move(task: &RasterizedTask, actions: &Vec<Action>) -> Vec<A
     }
 
     eprintln!("Optimization till: {}", begin);
-    dbg!(dsol.actions.len());
-    dsol.actions
+    let optimized_actions1 = &dsol.actions;
+    let optimized_actions2 = optimize_remove_nothing(&optimized_actions1);
+    eprintln!("{} -> {} -> {}", actions.len(), optimized_actions1.len(), optimized_actions2.len());
+    optimized_actions2
 }
 
 #[cfg(test)]
