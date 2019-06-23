@@ -1,4 +1,3 @@
-
 use crate::sol;
 use crate::*;
 use reach::*;
@@ -28,7 +27,9 @@ impl WorkerState {
             ..Default::default()
         }
     }
-    #[deprecated(note="これを使うと最初のturnでboosterを使えない可能性あり。 `new3` を使って。")]
+    #[deprecated(
+        note = "これを使うと最初のturnでboosterを使えない可能性あり。 `new3` を使って。"
+    )]
     pub fn new2(x: usize, y: usize, map: &mut SquareMap) -> WorkerState {
         let w = WorkerState::new(x, y);
         w.fill(map);
@@ -57,6 +58,20 @@ impl WorkerState {
         }
         filled
     }
+
+    pub fn visible_manipulators_on_empty_cells(&self, map: &SquareMap) -> Vec<(usize, usize)> {
+        self.manipulators
+            .iter()
+            .filter(|manipulator| is_visible(map, self.pos(), **manipulator))
+            .map(|manipulator| {
+                (
+                    (self.x as i32 + manipulator.0) as usize,
+                    (self.y as i32 + manipulator.1) as usize,
+                )
+            })
+            .collect()
+    }
+
     pub fn pos(&self) -> (usize, usize) {
         (self.x, self.y)
     }
@@ -82,7 +97,6 @@ pub fn apply_action(
     }
     upd
 }
-
 
 // もとの実装
 fn apply_action_old(
