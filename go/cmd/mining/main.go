@@ -306,10 +306,10 @@ func solveTask() (string, error) {
 			Command: "/nfs/programs/chokudai-012 ${TASK_FILE}",
 		},
 		&Program{
-			Command: "/nfs/programs/extend-optimize2 ${TASK_FILE}",
+			Command: "/nfs/programs/extend-optimize3 ${TASK_FILE}",
 		},
 		&Program{
-			Command: "/nfs/programs/extend-optimize2 ${TASK_FILE} 2",
+			Command: "/nfs/programs/extend-optimize3 ${TASK_FILE} 2",
 		},
 	}
 
