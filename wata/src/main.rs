@@ -260,10 +260,17 @@ pub fn optimize(map: &Vec<Vec<Square>>, target: &Vec<Vec<bool>>, boosters: &Vec<
 
 
 
-pub fn split_solve_sub(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx, sy): (usize, usize), c: usize, ex: usize, optimize: bool) -> (usize, Vec<Vec<Action>>) {
+pub fn split_solve_sub(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx, sy): (usize, usize),
+                        c: usize, ex: usize, buy_c: usize, buy_ex: usize, optimize: bool) -> (usize, Vec<Vec<Action>>) {
     let n = map.len();
     let m = map[0].len();
-    let mut p_t_as = bootstrap_clone(&(map.clone(), boosters.clone(), sx, sy), c);
+    let mut p_t_as = bootstrap_clone(&(map.clone(), boosters.clone(), sx, sy), c, buy_c);
+    let mut pre_map = map.clone();
+    let mut pre_boosters = boosters.clone();
+    let pre_actions: Vec<_> = p_t_as.iter().map(|(_, _, acts)| acts.clone()).collect();
+    let buy_boosters: Vec<_> = (0..buy_c).map(|_| Booster::CloneWorker).chain((0..buy_ex).map(|_| Booster::Extension)).collect();
+    let mut pre_state = WorkersState::new_t0_with_options(sx, sy, &mut pre_map, buy_boosters);
+    sim2::apply_multi_actions(&mut pre_map, &mut pre_boosters, &mut pre_state, &pre_actions);
     let mut bfs = BFS::new(n, m);
     let mut boosters = boosters.clone();
     let mut get_time = vec![];
@@ -313,21 +320,27 @@ pub fn split_solve_sub(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster
         manipulators.push((1, -2 - e as i32));
     }
     let mut best = vec![];
+    let mut best_op = chokudai::ChokudaiOptions::default();
     let (sx0, sy0) = p_t_as[0].0;
-    for op in 0..2 {
+    for op in chokudai::ChokudaiOptions::small() {
         let mut state = chokudai::get_first_state(map.clone(), boosters.clone(), sx0, sy0);
         state.p.manipulators = manipulators.clone();
-        let act = chokudai::make_action_by_state(&state, op);
-        let act = optimize_pure_move(&(map.clone(), boosters.clone(), sx0, sy0), &act);
-        if op == 0 || best.len() > act.len() {
+        let act = chokudai::make_action_by_state(&state, &op);
+        let mut state = PlayerState::new(sx0, sy0);
+        state.manipulators = manipulators.clone();
+        let act = optimize_pure_move(&pre_map.clone(), &boosters.clone(), &state, &act);
+        if best.len() == 0 || best.len() > act.len() {
             best = act;
+            best_op = op;
         }
     }
     if optimize {
+        let mut state = PlayerState::new(sx0, sy0);
+        state.manipulators = manipulators.clone();
+        best = optimize_pure_move(&pre_map.clone(), &boosters.clone(), &state, &best);
         let mut state = chokudai::get_first_state(map.clone(), boosters.clone(), sx0, sy0);
         state.p.manipulators = manipulators.clone();
-        best = chokudai::optimization_actions(&state, &best, 60).1;
-        best = optimize_pure_move(&(map.clone(), boosters.clone(), sx0, sy0), &best);
+        best = chokudai::optimization_actions(&state, &best, 60, &best_op).1;
     }
     let mut max_t = 0;
     let mut best_moves = vec![];
@@ -472,7 +485,7 @@ pub fn split_solve_sub(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster
     (ub, best_moves)
 }
 
-pub fn split_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx, sy): (usize, usize), all: i32) -> Vec<Vec<Action>> {
+pub fn split_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx, sy): (usize, usize), buy: &str, all: i32) -> Vec<Vec<Action>> {
     let n = map.len();
     let m = map[0].len();
     let mut count_x = 0;
@@ -489,6 +502,15 @@ pub fn split_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>,
                 count_extend += 1;
                 pos_extend.push((i, j));
             }
+        }
+    }
+    let mut buy_clone = 0;
+    let mut buy_extend = 0;
+    for c in buy.chars() {
+        if c == 'C' {
+            buy_clone += 1;
+        } else if c == 'B' {
+            buy_extend += 1;
         }
     }
     if count_x == 0 {
@@ -508,14 +530,15 @@ pub fn split_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>,
             continue;
         }
         results.push(vec![]);
-        for ex in 0..=count_extend / (c + 1) {
-            if ex != 0 && ex != count_extend / (c + 1) && all != 2 {
+        let ex_max = (count_extend + buy_extend) / (c + buy_clone + 1);
+        for ex in 0..=ex_max {
+            if ex != 0 && ex != ex_max {
                 continue;
             }
-            if ex != count_extend / (c + 1) && all == 0 {
+            if ex != ex_max && all == 0 {
                 continue;
             }
-            let (max_t, moves) = split_solve_sub(map, boosters, (sx, sy), c, ex, false);
+            let (max_t, moves) = split_solve_sub(map, boosters, (sx, sy), c, ex, buy_clone, buy_extend, false);
             if min_t.setmin(max_t) {
                 ret = moves;
                 best_c = c;
@@ -526,7 +549,7 @@ pub fn split_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>,
         }
     }
     dbg!(results);
-    let (max_t, moves) = split_solve_sub(map, boosters, (sx, sy), best_c, best_ex, true);
+    let (max_t, moves) = split_solve_sub(map, boosters, (sx, sy), best_c, best_ex, buy_clone, buy_extend, true);
     if min_t.setmin(max_t) {
         ret = moves;
     }
@@ -536,10 +559,10 @@ pub fn split_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>,
 
 fn main() {
     let taskfile = std::env::args().nth(1).expect("usage: args[1] = taskfile");
-    let all: i32 = std::env::args().nth(2).unwrap_or("0".to_owned()).parse().unwrap();
+    let buy = std::env::args().nth(2).expect("usage: args[2] = buy");
+    let all: i32 = std::env::args().nth(3).unwrap_or("0".to_owned()).parse().unwrap();
     let (map, boosters, sx, sy) = read_task(&taskfile);
-    let moves = split_solve(&map, &boosters, (sx, sy), all);
-    // let moves = clone_solve(&map, &boosters, (sx, sy));
+    let moves = split_solve(&map, &boosters, (sx, sy), &buy, all);
     let moves = solution_to_string(&moves);
     println!("{}", moves);
 }

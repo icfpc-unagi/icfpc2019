@@ -27,7 +27,7 @@ impl Default for ChokudaiOptions {
 }
 
 impl ChokudaiOptions {
-    fn small() -> Vec<ChokudaiOptions> {
+    pub fn small() -> Vec<ChokudaiOptions> {
         vec![
             ChokudaiOptions {
                 OptType: 1,
