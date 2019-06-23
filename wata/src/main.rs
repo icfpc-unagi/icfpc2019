@@ -379,7 +379,7 @@ fn clone_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx
     ret
 }
 
-pub fn split_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx, sy): (usize, usize), all: bool) -> Vec<Vec<Action>> {
+pub fn split_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx, sy): (usize, usize), all: i32) -> Vec<Vec<Action>> {
     let n = map.len();
     let m = map[0].len();
     let mut count_x = 0;
@@ -406,12 +406,18 @@ pub fn split_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>,
     let mut min_t = !0;
     let mut results = vec![];
     for c in 0..=count_clone {
-        if c != 0 && c != count_clone && !all {
+        if c != 0 && c != count_clone && all != 2 {
+            continue;
+        }
+        if c != count_clone && all == 0 {
             continue;
         }
         results.push(vec![]);
         for ex in 0..=count_extend / (c + 1) {
-            if ex != 0 && ex != count_extend / (c + 1) && !all {
+            if ex != 0 && ex != count_extend / (c + 1) && all != 2 {
+                continue;
+            }
+            if ex != count_extend / (c + 1) && all == 0 {
                 continue;
             }
             let mut p_t_as = bootstrap_clone(&(map.clone(), boosters.clone(), sx, sy), c);
@@ -473,6 +479,12 @@ pub fn split_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>,
                     best = act;
                 }
             }
+            if all == 0 {
+                let mut state = chokudai::get_first_state(map.clone(), boosters.clone(), sx0, sy0);
+                state.p.manipulators = manipulators.clone();
+                best = chokudai::optimization_actions(&state, &best, 60).1;
+            }
+
             // let mut lb = 0;
             // let mut ub = n * m * 10;
             // while ub - lb > 1 {
@@ -546,7 +558,7 @@ pub fn hoge() {
 
 fn main() {
     let taskfile = std::env::args().nth(1).expect("usage: args[1] = taskfile");
-    let all = std::env::args().nth(2) == Some("all".to_owned());
+    let all: i32 = std::env::args().nth(2).unwrap_or("0".to_owned()).parse().unwrap();
     let (map, boosters, sx, sy) = read_task(&taskfile);
     let moves = split_solve(&map, &boosters, (sx, sy), all);
     // let moves = clone_solve(&map, &boosters, (sx, sy));
