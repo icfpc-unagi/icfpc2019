@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"math"
 	"os"
 	"os/exec"
 	"path"
@@ -30,8 +29,7 @@ func run(args ...string) error {
 
 	ctx := context.Background()
 	canceled := false
-	for threadID := 0; float64(threadID) <
-		math.Sqrt(float64(*parallel)/3); threadID++ {
+	for threadID := 0; threadID*16 < int(*parallel); threadID++ {
 		go func() {
 			for {
 				queue <- struct{}{}
