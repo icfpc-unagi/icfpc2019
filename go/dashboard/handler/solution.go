@@ -32,15 +32,7 @@ var tmpl = template.Must(template.New("solution").Parse(`
 	<a href="#output">Output</a> <a href="#error">Error</a>
 	<p>{{.SolutionDescription}}</p>
 
-	<table style="width:60%;text-align:center;margin:auto">
-		<tbody>
-			<tr>
-				<td><img src="/problem_image?problem_id={{.ProblemID}}"></td>
-				<td><img src="/solution_image?solution_id={{.SolutionID}}"></td>
-			</tr>
-		</tbody>
-	</table>
-	</div>
+	<div style="text-align:center"><img src="/solution_image?solution_id={{.SolutionID}}"></div>
 
 	<h3><a name="output">Output:</a></h3>
 	<pre>{{.SolutionDataBlob}}</pre>
