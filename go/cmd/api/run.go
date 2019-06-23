@@ -128,7 +128,7 @@ func runCommand(
 	fmt.Fprintf(os.Stderr, "solver finalized\n")
 
 	var output []byte
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 2; i++ {
 		var timeout bool
 		output, timeout, err = commandWithTimeout("/nfs/programs/scorer",
 			path.Join(dir, "task"),
@@ -136,7 +136,8 @@ func runCommand(
 		if !timeout {
 			break
 		}
-		fmt.Fprintf(os.Stderr, "scorer failed: %s: %+v\n", output, err)
+		fmt.Fprintf(os.Stderr, "scorer failed: %s: %s: %+v\n",
+			output, solution.GetProgramCode(), err)
 	}
 	result.SolutionDataError = append(
 		result.GetSolutionDataError(), []byte(output)...)
@@ -172,6 +173,15 @@ func commandWithTimeout(
 		output, err = cmd.CombinedOutput()
 		errs <- err
 		close(done)
+	}()
+
+	go func() {
+		select {
+		case <-done:
+		case <-time.After(time.Second * 120):
+			timeout = true
+			cmd.Process.Kill()
+		}
 	}()
 
 	go func() {
