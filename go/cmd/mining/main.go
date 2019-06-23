@@ -147,8 +147,8 @@ func main() {
 			blockNumber, submitDir))
 		return nil
 	}(); err != nil {
-		notify("#general", "FAILED TO MINE!!! HELP ME!!!")
-		time.Sleep(time.Minute)
+		notify("#mining", fmt.Sprintf("@channel Mining failed %+v", err))
+		notify("#general", "@channel FAILED TO MINE!!! HELP ME!!!")
 		panic(fmt.Sprintf("%+v", err))
 	}
 	fmt.Fprintf(os.Stderr, "Mining successfully finished.\n")
@@ -164,6 +164,21 @@ func generatePuzzle() (string, error) {
 	programs := []*Program{
 		&Program{
 			Command: "/nfs/programs/puzzle-001 ${PUZZLE_FILE} /dev/stdout",
+		},
+		&Program{
+			Command: "/nfs/programs/puzzle-001 ${PUZZLE_FILE} /dev/stdout",
+		},
+		&Program{
+			Command: "/nfs/programs/puzzle-001 ${PUZZLE_FILE} /dev/stdout",
+		},
+		&Program{
+			Command: "/nfs/programs/puzzle-002 ${PUZZLE_FILE} /dev/stdout",
+		},
+		&Program{
+			Command: "/nfs/programs/puzzle-002 ${PUZZLE_FILE} /dev/stdout",
+		},
+		&Program{
+			Command: "/nfs/programs/puzzle-002 ${PUZZLE_FILE} /dev/stdout",
 		},
 	}
 
@@ -239,6 +254,13 @@ func generatePuzzle() (string, error) {
 	if programs[0].Score <= 0 {
 		return "", errors.New("no puzzle generated")
 	}
+	message := ""
+	for idx, program := range programs {
+		message += fmt.Sprintf("#%d score=%d (%s)\n",
+			idx, program.Score, program.Command)
+	}
+	fmt.Fprintf(os.Stderr, "%s\n", strings.TrimSpace(message))
+	notify("#mining", fmt.Sprintf("Puzzle results:\n%s", message))
 	return programs[0].Output, nil
 }
 

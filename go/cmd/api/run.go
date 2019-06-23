@@ -161,28 +161,25 @@ func commandWithTimeout(
 ) (output []byte, timeout bool, err error) {
 	cmd := exec.Command(name, arg...)
 	done := make(chan struct{}, 1)
-	wg := sync.WaitGroup{}
+	errs := make(chan error, 20)
 
-	wg.Add(1)
 	go func() {
-		defer wg.Done()
 		output, err = cmd.CombinedOutput()
+		errs <- err
 		close(done)
 	}()
 
-	wg.Add(1)
 	go func() {
-		defer wg.Done()
 		select {
 		case <-done:
 		case <-time.After(time.Second * 180):
-			err = errors.New("deadline exceeded")
 			timeout = true
+			errs <- errors.New("deadline exceeded")
 			time.Sleep(time.Second)
 			cmd.Process.Kill()
 		}
 	}()
 
-	wg.Wait()
+	err = <-errs
 	return
 }
