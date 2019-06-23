@@ -23,7 +23,7 @@ fn main() {
             task.1[i][j] = Some(Booster::Extension);
         }
     }
-    let sol = local_optimization::DynamicSolution::new(&task, &actions);
+    let sol = local_optimization::DynamicSolution::new(&task.0, &task.1, &local_optimization::get_initial_state(&task), &actions);
     let png = std::fs::File::create(&args[3])
         .unwrap_or_else(|e| panic!("failed to open {}: {}", &args[3], e));
     gen_png(

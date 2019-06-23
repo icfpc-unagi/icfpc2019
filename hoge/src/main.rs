@@ -7,7 +7,7 @@ fn main() {
     assert_eq!(sol.len(), 1);
     let original_actions = &sol[0];
 
-    let optimized_actions = common::optimize_pure_move(&task, original_actions);
+    let optimized_actions = common::optimize_pure_move_old(&task, original_actions);
     //println!("{} -> {}", original_actions.len(), optimized_actions.len());
     println!("{}", common::actions_to_string(&optimized_actions));
 }

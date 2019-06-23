@@ -41,7 +41,7 @@ fn print_map(square_map: &SquareMap) {
     }
 }
 
-fn get_initial_state(task: &RasterizedTask) -> WorkerState {
+pub fn get_initial_state(task: &RasterizedTask) -> WorkerState {
     WorkerState::new3(task.2, task.3, &mut task.0.clone(), &mut task.1.clone())
 }
 
@@ -55,12 +55,19 @@ pub struct DynamicMap {
 }
 
 impl DynamicMap {
-    pub fn new(task: &RasterizedTask) -> DynamicMap {
-        let (xsize, ysize) = get_xysize(&task.0);
+    pub fn new(square_map: &SquareMap) -> DynamicMap {
+        let (xsize, ysize) = get_xysize(&square_map);
 
         DynamicMap {
-            initial_square_map: task.0.clone(),
-            fill_count: mat![0; xsize; ysize],
+            initial_square_map: square_map.clone(),
+            fill_count: square_map
+                .iter()
+                .map(|col| {
+                    col.iter()
+                        .map(|c| if *c == Square::Filled { 1 } else { 0 })
+                        .collect()
+                })
+                .collect(),
         }
     }
 
@@ -133,13 +140,19 @@ pub struct DynamicSolution {
 }
 
 impl DynamicSolution {
-    pub fn new(task: &RasterizedTask, actions: &Vec<Action>) -> DynamicSolution {
-        let (xsize, ysize) = get_xysize(&task.0);
+    pub fn new(
+        square_map: &SquareMap,
+        booster_map: &BoosterMap,
+        initial_state: &WorkerState,
+        actions: &Vec<Action>,
+    ) -> DynamicSolution {
+        let (xsize, ysize) = get_xysize(square_map);
+        let mut dynamic_map = DynamicMap::new(square_map);
 
-        let mut dummy_square_map = task.0.clone();
-        let mut dummy_booster_map = task.1.clone();
+        let mut dummy_square_map = square_map.clone();
+        let mut dummy_booster_map = booster_map.clone();
 
-        let mut state = get_initial_state(&task);
+        let mut state = initial_state.clone();
         let mut states = vec![state.clone()];
         for action in actions {
             apply_action(
@@ -151,7 +164,6 @@ impl DynamicSolution {
             states.push(state.clone());
         }
 
-        let mut dynamic_map = DynamicMap::new(task);
         for state in &states {
             dynamic_map.apply(state);
         }
@@ -253,18 +265,25 @@ impl DynamicSolution {
 }
 
 pub fn optimize_remove_nothing(actions: &Vec<Action>) -> Vec<Action> {
-    actions.iter().filter(|action| **action != Action::Nothing).map(
-        |a| *a
-    ).collect()
+    actions
+        .iter()
+        .filter(|action| **action != Action::Nothing)
+        .map(|a| *a)
+        .collect()
 }
 
-pub fn optimize_pure_move(task: &RasterizedTask, actions: &Vec<Action>) -> Vec<Action> {
+pub fn optimize_pure_move(
+    square_map: &SquareMap,
+    booster_map: &BoosterMap,
+    initial_state: &WorkerState,
+    actions: &Vec<Action>,
+) -> Vec<Action> {
     // 全く塗ってない移動を最適化する
-    let mut dsol = DynamicSolution::new(task, actions);
-    let (xsize, ysize) = get_xysize(&task.0);
+    let mut dsol = DynamicSolution::new(square_map, booster_map, initial_state, actions);
+    let (xsize, ysize) = get_xysize(square_map);
     let mut bfs = BFS::new(xsize, ysize);
 
-    // 後ろからやっていって、extensionを踏んだらやめる。
+    // 後ろからやっていって、extensionを踏んだらやめる
     let mut begin = dsol.states.len() - 2;
     while begin != !0 {
         match dsol.actions[begin] {
@@ -292,7 +311,7 @@ pub fn optimize_pure_move(task: &RasterizedTask, actions: &Vec<Action>) -> Vec<A
         let begin_state = &dsol.states[begin];
         let end_state = &dsol.states[end];
         let mut new_actions = bfs.search_fewest_actions_to_move(
-            &task.0,
+            square_map,
             &dsol.states[begin],
             end_state.x,
             end_state.y,
@@ -324,8 +343,25 @@ pub fn optimize_pure_move(task: &RasterizedTask, actions: &Vec<Action>) -> Vec<A
     eprintln!("Optimization till: {}", begin);
     let optimized_actions1 = &dsol.actions;
     let optimized_actions2 = optimize_remove_nothing(&optimized_actions1);
-    eprintln!("{} -> {} -> {}", actions.len(), optimized_actions1.len(), optimized_actions2.len());
-    optimized_actions2
+    eprintln!(
+        "{} -> {} -> {}",
+        actions.len(),
+        optimized_actions1.len(),
+        optimized_actions2.len()
+    );
+
+    if optimized_actions2.len() < actions.len() {
+        optimize_pure_move(square_map, booster_map, initial_state, &optimized_actions2)
+    } else {
+        optimized_actions2
+    }
+}
+
+pub fn optimize_pure_move_old(task: &RasterizedTask, actions: &Vec<Action>) -> Vec<Action> {
+    let mut square_map = task.0.clone();
+    let mut booster_map = task.1.clone();
+    let initial_state = WorkerState::new3(task.2, task.3, &mut square_map, &mut booster_map);
+    optimize_pure_move(&square_map, &booster_map, &initial_state, actions)
 }
 
 #[cfg(test)]
@@ -425,7 +461,7 @@ mod tests {
             let (_, sm_naive) = get_filled_square_map_naive(&task, &actions, b, e);
             print_map(&sm_naive);
 
-            let mut dsol = DynamicSolution::new(&task, &actions);
+            let mut dsol = DynamicSolution::new(&task.0, &task.1, &get_initial_state(&task), &actions);
             dsol.deactivate_range(b, e + 1);
             let sm_dynamic = dsol.dynamic_map.to_square_map();
             print_map(&sm_dynamic);
@@ -435,7 +471,7 @@ mod tests {
 
         // 次はdeactivate, activate連発
         {
-            let mut dsol = DynamicSolution::new(&task, &actions);
+            let mut dsol = DynamicSolution::new(&task.0, &task.1, &get_initial_state(&task), &actions);
 
             for _ in 0..30 {
                 let (b, e) = generate_random_range();
@@ -476,7 +512,7 @@ mod tests {
                 actions.insert(i, Action::TurnR);
             }
 
-            let optimized_actions = optimize_pure_move(&task, &actions);
+            let optimized_actions = optimize_pure_move_old(&task, &actions);
 
             //  dbg!(&actions);
             // dbg!(&optimized_actions);
