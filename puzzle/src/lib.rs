@@ -17,6 +17,7 @@ pub struct PazzleInput {
 
 pub fn read(path: &str) -> std::io::Result<PazzleInput> {
     let s = std::fs::read_to_string(path).expect("cannot read cond file");
+    let s = s.trim();
     let ss: Vec<_> = s.split('#').collect();
     assert_eq!(ss.len(), 3);
     let num: Vec<_> = ss[0].split(',').map(|n| n.parse::<usize>().unwrap()).collect();
