@@ -160,15 +160,15 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 				Escape(fmt.Sprintf("%d", s.ProgramID)) + `">` +
 				Escape(programNameByID[s.ProgramID]) + `</a>`
 		}
-		if s.SolutionScore >= 100000000 {
-			output.WriteHTML(
-				`<td align="right">invalid</td><td>(`, note, ")</td>")
-			return
-		}
 		output.WriteHTML(
 			`<td align="right"><a href="/solution?solution_id=`)
 		output.WriteString(fmt.Sprintf("%d", s.SolutionID))
 		output.WriteHTML(`">`)
+		if s.SolutionScore >= 100000000 {
+			output.WriteHTML(
+				`invalid</a></td><td>(`, note, ")</td>")
+			return
+		}
 		output.WriteString(fmt.Sprintf("%d", s.SolutionScore))
 		output.WriteHTML("</a></td><td>(", note, ")</td>")
 	}
