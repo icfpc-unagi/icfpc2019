@@ -54,7 +54,6 @@ func programHandler(ctx context.Context, r *http.Request) (HTML, error) {
 			`<thead><tr><td>Name</td><td>Score</td><td>Modified</td></thead>` +
 			`<tbody>`)
 	for _, problem := range problems {
-		id := Escape(fmt.Sprintf("%d", problem.ProblemID))
 		score := "-"
 		if problem.SolutionScore != nil {
 			if *problem.SolutionScore >= 100000000 {
@@ -67,9 +66,9 @@ func programHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		if problem.SolutionModified != nil {
 			modified = *problem.SolutionModified
 		}
-		output += `<tr><td><img src="/problem_image?problem_id=` + id + `">` +
+		output += `<tr><td><img src="/problem_image?problem_id=` + Escape(fmt.Sprintf("%d", problem.ProblemID)) + `">` +
 			Escape(problem.ProblemName) +
-			"</td><td>" +
+			`</td><td><img src="/solution_image?solution_id=` + Escape(fmt.Sprintf("%d", *problem.SolutionID)) + `">` +
 			Escape(score) +
 			"</td><td>" +
 			Escape(modified) +
