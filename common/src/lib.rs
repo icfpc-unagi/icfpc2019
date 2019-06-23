@@ -11,6 +11,7 @@ pub mod subtask;
 pub mod bootstrap_clone;
 pub mod vectorize;
 pub mod task2;
+pub mod gen_unagi;
 pub mod fast;
 pub mod reverse;
 pub mod local_optimization;

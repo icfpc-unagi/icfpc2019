@@ -6,6 +6,7 @@ use rand::seq::SliceRandom;
 
 use common::{parse_map, apply_move};
 use common::task2::*;
+use common::gen_unagi;
 
 #[derive(Copy, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 enum Cell {
@@ -178,6 +179,8 @@ fn generate_raster_v2(pinput: &puzzle::PazzleInput) -> Option<Vec<Vec<bool>>> {
     // dbg!(&osqs);
     let n = tsize + 2;
     let mut map = vec![vec![UOut; n]; n];
+    let img = gen_unagi::gen_unagi();
+    /*
     let img = [
         b"*****",
         b"*.*.*",
@@ -194,6 +197,7 @@ fn generate_raster_v2(pinput: &puzzle::PazzleInput) -> Option<Vec<Vec<bool>>> {
             }
         }
     }
+    */
 
     // generate a polygon
     for i in 0..n {
