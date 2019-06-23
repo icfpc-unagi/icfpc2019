@@ -41,8 +41,8 @@ func updateSolutionHandler(
 				solution_data_error)
 			VALUES (?, ?, ?)`,
 			req.GetSolutionId(),
-			req.GetSolutionDataBlob(),
-			req.GetSolutionDataError())
+			nonEmptyBytes(req.GetSolutionDataBlob()),
+			nonEmptyBytes(req.GetSolutionDataError()))
 		if err != nil {
 			return err
 		}
@@ -53,4 +53,11 @@ func updateSolutionHandler(
 	}
 	apiResp.UpdateSolution = resp
 	return tx.Commit()
+}
+
+func nonEmptyBytes(b []byte) []byte {
+	if b != nil {
+		return b
+	}
+	return []byte{}
 }
