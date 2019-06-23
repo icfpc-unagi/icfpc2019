@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path"
 	"time"
 
 	"github.com/imos/icfpc2019/go/util/apiutil"
@@ -20,88 +19,139 @@ func main() {
 	flag.Parse()
 
 	ctx := context.Background()
-	for {
-		resp, err := apiutil.Call(ctx, &pb.Api_Request{
-			AcquireProblemExtra: &pb.Api_Request_AcquireProblemExtra{},
-		})
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Fprintf(os.Stderr, "AcquireProblemExtra: %s\n", resp)
-		id := resp.GetAcquireProblemExtra().GetProblemId()
-		desc := resp.GetAcquireProblemExtra().GetProblemDataBlob()
-		if resp.AcquireProblemExtra == nil {
-			fmt.Fprintf(os.Stderr, "Nothing to do...\n")
-			time.Sleep(60 * time.Second)
-			continue
-		}
-
-		descfile, err := ioutil.TempFile("", "desc")
-		if err != nil {
-			log.Fatal(err)
-		}
-		err = ioutil.WriteFile(descfile.Name(), desc, 0644)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer os.Remove(descfile.Name())
-
-		pngfile, err := ioutil.TempFile("", "png")
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer os.Remove(descfile.Name())
-
-		fmt.Fprintf(os.Stderr, "Run render_task\n")
-		_, _, err = execute("/nfs/bin/render_task", descfile.Name(), pngfile.Name())
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		png, err := ioutil.ReadFile(pngfile.Name())
-		if err != nil {
-			log.Fatal(err)
-		}
-		resp2, err := apiutil.Call(ctx, &pb.Api_Request{
-			UpdateProblemExtra: &pb.Api_Request_UpdateProblemExtra{
-				ProblemId:        id,
-				ProblemDataImage: png,
-			},
-		})
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Fprintf(os.Stderr, "UpdateProblemExtra: %s\n", resp2)
-
-		fmt.Fprintf(os.Stderr, "Written for problem %d (%d bytes)\n", id, len(png))
+	for updateProblemImage(ctx) {
+	}
+	for updateSolutionImage(ctx) {
 	}
 }
 
-func execute(
-	name string, args ...string,
-) (stdout string, stderr string, err error) {
-	dir, err := ioutil.TempDir("", "upd")
+func updateSolutionImage(ctx context.Context) bool {
+	resp, err := apiutil.Call(ctx, &pb.Api_Request{
+		AcquireSolutionExtra: &pb.Api_Request_AcquireSolutionExtra{},
+	})
 	if err != nil {
-		return "", "", errors.Errorf(
-			"failed to create a temporary directory: %s", err)
+		log.Fatal(err)
 	}
-	defer func() {
-		stdoutBuf, _ := ioutil.ReadFile(path.Join(dir, "stdout"))
-		stderrBuf, _ := ioutil.ReadFile(path.Join(dir, "stderr"))
-		stdout = string(stdoutBuf)
-		stderr = string(stderrBuf)
-	}()
+	fmt.Fprintf(os.Stderr, "AcquireSolutionExtra: %s\n", resp)
+	id := resp.GetAcquireSolutionExtra().GetSolutionId()
+	desc := resp.GetAcquireSolutionExtra().GetProblemDataBlob()
+	sol := resp.GetAcquireSolutionExtra().GetSolutionDataBlob()
+	modified := resp.GetAcquireSolutionExtra().GetSolutionDataModified()
+	if desc == nil {
+		return false
+	}
+
+	descfile, err := ioutil.TempFile("", "desc")
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = ioutil.WriteFile(descfile.Name(), desc, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(descfile.Name())
+
+	solfile, err := ioutil.TempFile("", "sol")
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = ioutil.WriteFile(solfile.Name(), sol, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(solfile.Name())
+
+	pngfile, err := ioutil.TempFile("", "png")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(descfile.Name())
+
+	fmt.Fprintf(os.Stderr, "Run sim -g\n")
+	err = execute("/nfs/bin/sim", descfile.Name(), solfile.Name(), "-g", pngfile.Name())
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v", err)
+	}
+
+	png, err := ioutil.ReadFile(pngfile.Name())
+	if err != nil {
+		log.Fatal(err)
+	}
+	resp2, err := apiutil.Call(ctx, &pb.Api_Request{
+		UpdateSolutionExtra: &pb.Api_Request_UpdateSolutionExtra{
+			SolutionId:           id,
+			SolutionDataImage:    png,
+			SolutionDataModified: modified,
+		},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Fprintf(os.Stderr, "UpdateSolutionExtra: %s\n", resp2)
+
+	fmt.Fprintf(os.Stderr, "Written for solution %d (%d bytes)\n", id, len(png))
+	return true
+}
+
+func updateProblemImage(ctx context.Context) bool {
+	resp, err := apiutil.Call(ctx, &pb.Api_Request{
+		AcquireProblemExtra: &pb.Api_Request_AcquireProblemExtra{},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Fprintf(os.Stderr, "AcquireProblemExtra: %s\n", resp)
+	id := resp.GetAcquireProblemExtra().GetProblemId()
+	desc := resp.GetAcquireProblemExtra().GetProblemDataBlob()
+	if desc == nil {
+		return false
+	}
+
+	descfile, err := ioutil.TempFile("", "desc")
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = ioutil.WriteFile(descfile.Name(), desc, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(descfile.Name())
+
+	pngfile, err := ioutil.TempFile("", "png")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(descfile.Name())
+
+	fmt.Fprintf(os.Stderr, "Run render_task\n")
+	err = execute("/nfs/bin/render_task", descfile.Name(), pngfile.Name())
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v", err)
+	}
+
+	png, err := ioutil.ReadFile(pngfile.Name())
+	if err != nil {
+		log.Fatal(err)
+	}
+	resp2, err := apiutil.Call(ctx, &pb.Api_Request{
+		UpdateProblemExtra: &pb.Api_Request_UpdateProblemExtra{
+			ProblemId:        id,
+			ProblemDataImage: png,
+		},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Fprintf(os.Stderr, "UpdateProblemExtra: %s\n", resp2)
+
+	fmt.Fprintf(os.Stderr, "Written for problem %d (%d bytes)\n", id, len(png))
+	return true
+}
+
+func execute(name string, args ...string) (err error) {
 	cmd := exec.Command(name, args...)
-	cmd.Stdout, err = os.Create(path.Join(dir, "stdout"))
-	if err != nil {
-		return "", "", errors.Errorf(
-			"failed to create stdout file: %s", err)
-	}
-	cmd.Stderr, err = os.Create(path.Join(dir, "stderr"))
-	if err != nil {
-		return "", "", errors.Errorf(
-			"failed to create stderr file: %s", err)
-	}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
 	done := make(chan struct{}, 1)
 	result := make(chan error, 2)
