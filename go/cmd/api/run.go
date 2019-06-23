@@ -136,9 +136,10 @@ func runCommand(
 		return errors.WithStack(err)
 	}
 	script := fmt.Sprintf(
-		"task='%s'; buy='%s'; solution='%s'; %s",
+		"task='%s'; buy='%s'; buy_string='%s'; solution='%s'; %s",
 		path.Join(dir, "task"),
 		path.Join(dir, "buy"),
+		solution.GetSolutionBooster(),
 		path.Join(dir, "solution"),
 		solution.GetProgramCode())
 	cmd := exec.Command("bash", "-c", script)
