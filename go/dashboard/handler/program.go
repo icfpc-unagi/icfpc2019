@@ -59,9 +59,9 @@ func programHandler(ctx context.Context, r *http.Request) (HTML, error) {
 			score = `<a href="/solution?solution_id=` + Escape(fmt.Sprintf("%d", *problem.SolutionID)) +
 				`"><img src="/solution_image?solution_id=` + Escape(fmt.Sprintf("%d", *problem.SolutionID)) + `">`
 			if *problem.SolutionScore >= 100000000 {
-				score = "invalid</a>"
+				score += "invalid</a>"
 			} else {
-				score = HTML(fmt.Sprintf("%d", *problem.SolutionScore) + "</a>")
+				score += HTML(fmt.Sprintf("%d", *problem.SolutionScore) + "</a>")
 			}
 		}
 		modified := "-"
