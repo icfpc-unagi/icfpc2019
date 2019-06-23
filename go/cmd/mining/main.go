@@ -128,7 +128,7 @@ func main() {
 			[]byte(command), 0644); err != nil {
 			return errors.Errorf("failed to write command: %s", err)
 		}
-		stdout, stderr, err := execute("echo", command)
+		stdout, stderr, err := execute("bash", "-c", command)
 		fmt.Fprintf(os.Stderr, "%s\n", strings.TrimSpace(stdout))
 		fmt.Fprintf(os.Stderr, "%s\n", strings.TrimSpace(stderr))
 		if err != nil {
