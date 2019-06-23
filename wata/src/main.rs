@@ -106,6 +106,11 @@ fn bfs_multi(map: &Vec<Vec<Square>>, ps: &[(usize, usize)]) -> Vec<Vec<(usize, u
     ds
 }
 
+fn bfs(map: &Vec<Vec<Square>>, (sx, sy): (usize, usize)) -> Vec<Vec<usize>> {
+    let n = map.len();
+    unimplemented!()
+}
+
 pub fn tsp(map: &Vec<Vec<Square>>, ps: &Vec<(usize, usize)>, s: usize) -> Vec<usize> {
     let k = ps.len();
     let mut g = mat![0; k; k];
@@ -468,6 +473,17 @@ pub fn split_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>,
                     best = act;
                 }
             }
+            // let mut lb = 0;
+            // let mut ub = n * m * 10;
+            // while ub - lb > 1 {
+            //     let max_t = (lb + ub) / 2;
+            //     let mut used = vec![false; c + 1];
+            //     let mut from = 0;
+            //     for _ in 0..=c {
+                    
+            //     }
+            // }
+            
             let mut max_t = 0;
             let mut moves = vec![];
             for i in 0..=c {
@@ -500,11 +516,32 @@ pub fn split_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>,
                 ret = moves;
             }
             results.last_mut().unwrap().push(max_t);
+            eprintln!("{}, {}: {}", c, ex, max_t);
         }
     }
     dbg!(results);
     eprintln!("turn: {}", min_t);
     ret
+}
+
+pub fn hoge() {
+    let mut score = 0;
+    let mut count = 0;
+    for &dir in &["../data/part-1-initial", "../data/part-2-teleports", "../data/part-3-clones"] {
+        for f in std::path::Path::new(dir).read_dir().unwrap() {
+            let name = f.unwrap().file_name().into_string().unwrap();
+            if name.ends_with(".desc") {
+                count += 1;
+                eprintln!("{}", name);
+                let (map, _, _, _) = read_task(&format!("{}/{}", dir, name));
+                let n = map.len() - 2;
+                let m = map[0].len() - 2;
+                score += (1000.0 * f64::log(n as f64 * m as f64, 2.0)).ceil() as i64;
+            }
+        }
+    }
+    println!("count: {}", count);
+    println!("score: {}", score);
 }
 
 fn main() {
