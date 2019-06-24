@@ -237,6 +237,27 @@ impl DynamicSolution {
         n
     }
 
+        /*
+    pub fn deactivate_range2(&mut self, begin: usize, end: usize) -> Vec<(usize, usize)> {
+        // step begin, step endは踏む。その間を除く。
+        assert!(begin < end);
+        let mut n = 0;
+        for step in begin + 1..end {
+            n += self.deactivate_step(step);
+        }
+        n
+    }
+
+    pub fn reactivate_range2(&mut self, begin: usize, end: usize) -> Vec<(usize, usize)> {
+        assert!(begin < end);
+        let mut n = 0;
+        for step in begin + 1..end {
+            n += self.reactivate_step(step);
+        }
+        n
+    }
+    */
+
     pub fn replace(&mut self, begin: usize, end: usize, mut new_actions: &[Action]) {
         // TODO: nothing使うと多分だいぶ楽になるのでnothing使ったほうが良い
 
@@ -433,9 +454,9 @@ pub fn get_best_chokudai_range(
             if n_unfilled_squares + dif1 > max_unfilled_squares {
                 let dif2 = dsol.reactivate_step(end);
                 assert_eq!(dif1, dif2);
-                n_unfilled_squares -= dif2;
                 break;
             } else {
+                n_unfilled_squares += dif1;
                 end += 1;
             }
         }
