@@ -87,14 +87,13 @@ async function main() {
     }
     await sleep(1000);
     document.getElementById("execute_solution").click();
-    await sleep(100);
-    while (document.getElementById("output").innerHTML ==
-        "Done uploading solution") {
-        await sleep(500);
-        document.getElementById("execute_solution").click();
-    }
+    await sleep(500);
     while (true) {
         var output = document.getElementById("output").innerHTML;
+        if (output == "Done uploading solution") {
+            document.getElementById("execute_solution").click();
+            await sleep(1000);
+        }
         if (output != "Pre-processing and validating the task...") {
             break;
         }
