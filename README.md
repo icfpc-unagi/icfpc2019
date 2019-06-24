@@ -100,4 +100,8 @@ interesting and/or hard tasks for mining puzzles.
 
 ## Self-nomination for judges’ prize
 
+Our mining puzzle solver creates beautiful tasks.
+The following is our task,
+which is officially selected for block 83.
 
+![Our puzzle task for block 83](83.png)
