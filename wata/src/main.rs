@@ -22,9 +22,6 @@ fn compute_dist(map: &Vec<Vec<Square>>, (sx, sy): (usize, usize)) -> Vec<Vec<usi
 
 pub fn split_solve_sub(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx, sy): (usize, usize),
                         c: usize, ex: usize, buy_c: usize, buy_ex: usize, optimize: bool) -> (usize, Vec<Vec<Action>>) {
-    if buy_ex > 0 {
-        unimplemented!();
-    }
     let n = map.len();
     let m = map[0].len();
     let mut p_t_as = bootstrap_clone(&(map.clone(), boosters.clone(), sx, sy), c, buy_c);
@@ -32,7 +29,10 @@ pub fn split_solve_sub(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster
     let mut bfs = BFS::new(n, m);
     let mut boosters = boosters.clone();
     let mut get_time = vec![];
-    for _ in 0..ex * (c + 1) {
+    for _ in 0..buy_ex {
+        get_time.push((0, 0));
+    }
+    for _ in buy_ex..ex * (c + 1) {
         let mut min_t = !0;
         let mut min_i = !0;
         let mut min_mv = vec![];
