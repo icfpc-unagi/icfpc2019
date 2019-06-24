@@ -3,10 +3,12 @@ use std::io::BufRead;
 
 pub mod knapsack_problem;
 pub mod problem_sizes;
+pub mod scoring;
 
 use crate::KnapsackProblem;
 pub use knapsack_problem::*;
 pub use problem_sizes::*;
+pub use scoring::*;
 
 //
 // 基本の構造体 ＋ 読み込みなど
@@ -89,29 +91,6 @@ pub fn get_solution_sets(solutions: &Vec<Solution>) -> Vec<Vec<Solution>> {
     solution_sets
 }
 
-pub fn get_original_score(xt: usize, yt: usize, t_best: i32, t_team: i32) -> f64 {
-    let (xt, yt, t_best) = (xt as f64, yt as f64, t_best as f64);
-    let t_team = t_team as f64;
-    f64::ceil(1000.0 * f64::log2(xt * yt) * t_best / t_team)
-}
-
-pub fn get_scores(
-    solution_set: &Vec<Solution>,
-    problem_sizes: &HashMap<String, (usize, usize)>,
-) -> Vec<f64> {
-    let problem_name = &solution_set[0].problem_name;
-    let &(xt, yt) = problem_sizes.get(problem_name).unwrap();
-
-    let times = solution_set.iter().map(|s| s.time);
-    let t_best = times.clone().min().unwrap();
-
-    times
-        .map(|t_team| {
-            get_original_score(xt, yt, t_best, t_team)
-        })
-        .collect()
-}
-
 //
 // ナップサック問題関連
 //
@@ -119,13 +98,14 @@ pub fn get_scores(
 pub fn get_knapsack_problem(
     solution_sets: &Vec<Vec<Solution>>,
     budget: usize,
-    problem_sizes: &HashMap<String, (usize, usize)>,
 ) -> KnapsackProblem {
+    let problem_sizes = get_problem_sizes();
+
     KnapsackProblem {
         item_sets: solution_sets
             .iter()
             .map(|solutions| {
-                let scores = get_scores(solutions, problem_sizes);
+                let scores = get_scores(solutions, &problem_sizes);
                 solutions
                     .iter()
                     .map(|solution| solution.cost100d())
@@ -140,11 +120,10 @@ pub fn get_knapsack_problem(
 pub fn solve(
     solutions: &Vec<Solution>,
     budget: usize,
-    problem_sizes: &HashMap<String, (usize, usize)>,
 ) -> Vec<Solution> {
     let solution_sets = get_solution_sets(solutions);
 
-    let knapsack_problem = get_knapsack_problem(&solution_sets, budget, &problem_sizes);
+    let knapsack_problem = get_knapsack_problem(&solution_sets, budget);
     let selection = solve_knapsack_problem(&knapsack_problem);
 
     let mut selected_solutions = vec![];
