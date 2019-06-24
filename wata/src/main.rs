@@ -161,6 +161,16 @@ pub fn split_solve_sub(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster
         state.p.manipulators = manipulators.clone();
         best = chokudai::optimization_actions(&state, &best, 6, &best_op).1;
         // best = chokudai::optimization_actions(&state, &best, 60, &best_op).1;
+        
+        dbg!();
+        let mut state = PlayerState::new(sx0, sy0);
+        state.manipulators = manipulators.clone();
+        best = optimize_pure_move2(&pre_map.clone(), &boosters.clone(), &state, &best, 5, 10);
+        
+        dbg!();
+        let mut state = PlayerState::new(sx0, sy0);
+        state.manipulators = manipulators.clone();
+        best = optimize_pure_move(&pre_map.clone(), &boosters.clone(), &state, &best);
     }
     
     let mut max_t = 0;

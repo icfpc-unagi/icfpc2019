@@ -49,6 +49,7 @@ pub fn get_initial_state(task: &RasterizedTask) -> WorkerState {
 // 構造体いろいろ
 //
 
+#[derive(PartialEq, Eq, Clone, Debug)]
 pub struct DynamicMap {
     pub initial_square_map: SquareMap,
     pub fill_count: Vec<Vec<usize>>,
@@ -535,6 +536,140 @@ pub fn get_best_chokudai_range(
     }
 
     (best_range.1, best_range.2)
+}
+
+pub fn optimize_pure_move2(
+    square_map: &SquareMap,
+    booster_map: &BoosterMap,
+    initial_state: &WorkerState,
+    actions: &Vec<Action>,
+    w: usize,
+    tle: u64,
+) -> Vec<Action> {
+    let mut dsol = DynamicSolution::new(square_map, booster_map, initial_state, actions);
+    let (xsize, ysize) = get_xysize(square_map);
+    let start = std::time::Instant::now();
+    use rand::Rng;
+    let mut rng = rand::thread_rng();
+    const INF: usize = 123456789;
+    let mut dist = mat![INF; xsize; ysize];
+    let mut loop_count = 0;
+    loop {
+        let end = start.elapsed();
+        let time = end.as_secs();
+        if time >= tle {
+            break;
+        }
+        loop_count += 1;
+        let start = rng.gen_range(0, dsol.actions.len() - 5);
+        let end = start + w;
+        let num_empty = dsol.deactivate_range(start, end);
+        let mut best: Vec<_> = dsol.actions[start..end].iter().cloned().collect();
+        let mut state = dsol.states[start].clone();
+        let to_pos = (dsol.states[end].x, dsol.states[end].y);
+        let to_dir = dsol.states[end].dir;
+        let near = compute_dist_at_most_k(&square_map, to_pos, w, &mut dist);
+        dfs(&mut dsol.dynamic_map, &mut state, num_empty, &mut vec![], &mut best, to_pos, to_dir, &dist);
+        for (x, y) in near {
+            dist[x][y] = INF;
+        }
+        if best.len() < w {
+            eprintln!("{} -> {}", w, best.len());
+            dsol.replace(start, end, &best);
+        } else {
+            dsol.reactivate_range(start, end);
+        }
+    }
+    dbg!(loop_count);
+    dsol.actions
+}
+
+fn dfs(dmap: &mut DynamicMap, state: &mut WorkerState, num_empty: usize,
+        acts: &mut Vec<Action>, best: &mut Vec<Action>,
+        to_pos: (usize, usize), to_dir: usize, dist: &Vec<Vec<usize>>) {
+    let mut need = dist[state.x][state.y];
+    if state.dir != to_dir {
+        need += 1;
+        if (state.dir + 2) % 4 == to_dir {
+            need += 1;
+        }
+    }
+    if acts.len() + need >= best.len() {
+        return;
+    }
+    if state.pos() == to_pos && state.dir == to_dir && num_empty == 0 {
+        *best = acts.clone();
+        return;
+    }
+    for dir in 0..4 {
+        let pos = apply_move(state.pos(), dir);
+        state.x = pos.0;
+        state.y = pos.1;
+        let c = dmap.apply(state);
+        acts.push(Action::Move(dir));
+        dfs(dmap, state, num_empty - c, acts, best, to_pos, to_dir, dist);
+        acts.pop();
+        dmap.cancel(state);
+        let pos = apply_move(state.pos(), (dir + 2) % 4);
+        state.x = pos.0;
+        state.y = pos.1;
+    }
+    for &rot in &[1, 3] {
+        if rot == 1 {
+            for m in &mut state.manipulators {
+                let p = *m;
+                m.0 = p.1;
+                m.1 = -p.0;
+            }
+        } else {
+            for m in &mut state.manipulators {
+                let p = *m;
+                m.0 = -p.1;
+                m.1 = p.0;
+            }
+        }
+        state.dir = (state.dir + rot) % 4;
+        let c = dmap.apply(state);
+        acts.push(if rot == 1 { Action::TurnR } else { Action::TurnL });
+        dfs(dmap, state, num_empty - c, acts, best, to_pos, to_dir, dist);
+        acts.pop();
+        dmap.cancel(state);
+        if rot == 1 {
+            for m in &mut state.manipulators {
+                let p = *m;
+                m.0 = -p.1;
+                m.1 = p.0;
+            }
+        } else {
+            for m in &mut state.manipulators {
+                let p = *m;
+                m.0 = p.1;
+                m.1 = -p.0;
+            }
+        }
+        state.dir = (state.dir + 4 - rot) % 4;
+    }
+}
+
+fn compute_dist_at_most_k(map: &Vec<Vec<Square>>, (sx, sy): (usize, usize), k: usize, dist: &mut Vec<Vec<usize>>) -> Vec<(usize, usize)> {
+    let mut que = vec![];
+    let mut qs = 0;
+    dist[sx][sy] = 0;
+    que.push((sx, sy));
+    while qs < que.len() {
+        let p = que[qs];
+        qs += 1;
+        let di = dist[p.0][p.1];
+        if di < k {
+            for d in 0..4 {
+                let (x, y) = apply_move(p, d);
+                if map[x][y] != Square::Block && dist[x][y].setmin(di + 1) {
+                    que.push((x, y));
+                }
+            }
+        }
+    }
+    que
 }
 
 #[cfg(test)]
