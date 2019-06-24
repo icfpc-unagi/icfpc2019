@@ -31,10 +31,7 @@ cd knapsack
 cargo run --bin main knapsack-in.txt 748091 > knapsack-out.txt
 ```
 
-Each line of `knapsack-in.txt` should 
-contain problem ID, buy string, solution ID, and time,
-which are separated by commas.
-For example:
+Each line of `knapsack-in.txt` should contain problem ID, buy string, solution ID, and time, which are separated by commas. For example:
 
 ```
 prob-002,,29259,381
@@ -80,7 +77,6 @@ It outputs selected solutions to be submitted to stdout.
 
 ## Self-nomination for judges’ prize
 
-Our mining puzzle solver creates beautiful tasks.
-Please see 83.png, which is officially selected for block 83.
+Our mining puzzle solver creates beautiful tasks. Please see 83.png. It illustrates our task that is officially selected for block 83.
 
 ![Our puzzle task for block 83](83.png)
