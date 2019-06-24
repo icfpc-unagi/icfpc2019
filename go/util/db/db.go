@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"sync"
 
 	"google.golang.org/appengine/log"
 
@@ -13,27 +14,29 @@ import (
 )
 
 var db *sqlx.DB
+var once sync.Once
 
 func getDatabase() *sqlx.DB {
-	if db != nil {
-		return db
-	}
-
-	password := os.Getenv("SQL_PASSWORD")
-	if password != "" {
-		password = ":" + password
-	}
-	dsn := fmt.Sprintf("%s%s@%s(%s)/%s",
-		getEnvOrDefault("SQL_USER", "root"), password,
-		getEnvOrDefault("SQL_PROTOCOL", "tcp"),
-		getEnvOrDefault("SQL_ADDRESS", "127.0.0.1:3306"),
-		getEnvOrDefault("SQL_DATABASE", getEnvOrDefault("SQL_USER", "root")))
-	var err error
-	db, err = sqlx.Open(getEnvOrDefault("SQL_DRIVER", "mysql"), dsn)
-	if err != nil {
-		panic(fmt.Errorf("%+v", errors.Errorf(
-			"failed to open a new SQL connection: %s", err)))
-	}
+	// if db != nil {
+	// 	return db
+	// }
+	once.Do(func() {
+		password := os.Getenv("SQL_PASSWORD")
+		if password != "" {
+			password = ":" + password
+		}
+		dsn := fmt.Sprintf("%s%s@%s(%s)/%s",
+			getEnvOrDefault("SQL_USER", "root"), password,
+			getEnvOrDefault("SQL_PROTOCOL", "tcp"),
+			getEnvOrDefault("SQL_ADDRESS", "127.0.0.1:3306"),
+			getEnvOrDefault("SQL_DATABASE", getEnvOrDefault("SQL_USER", "root")))
+		var err error
+		db, err = sqlx.Open(getEnvOrDefault("SQL_DRIVER", "mysql"), dsn)
+		if err != nil {
+			panic(fmt.Errorf("%+v", errors.Errorf(
+				"failed to open a new SQL connection: %s", err)))
+		}
+	})
 	return db
 }
 

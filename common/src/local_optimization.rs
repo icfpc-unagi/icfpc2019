@@ -561,7 +561,7 @@ pub fn optimize_pure_move2(
             break;
         }
         loop_count += 1;
-        let start = rng.gen_range(0, dsol.actions.len() - 5);
+        let start = rng.gen_range(0, dsol.actions.len() - w + 1);
         let end = start + w;
         let num_empty = dsol.deactivate_range(start, end);
         let mut best: Vec<_> = dsol.actions[start..end].iter().cloned().collect();
