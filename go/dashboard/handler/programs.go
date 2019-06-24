@@ -27,7 +27,7 @@ func programsHandler(ctx context.Context, r *http.Request) (HTML, error) {
 			program_code,
 			program_boosters,
 			program_created
-		FROM programs ORDER BY program_created`); err != nil {
+		FROM programs ORDER BY program_created DESC`); err != nil {
 		return "", err
 	}
 	output := HTML(
