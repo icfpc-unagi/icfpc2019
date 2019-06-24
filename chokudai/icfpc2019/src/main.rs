@@ -84,7 +84,7 @@ fn main() {
     let (flag, act) = optimization_actions(
         &best_second_state,
         &best_ans_action,
-        60,
+        120,
         &ChokudaiOptions::chokudai(),
     );
     best_ans_action = act;
