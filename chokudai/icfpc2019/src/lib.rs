@@ -999,7 +999,7 @@ pub fn shortening_actions(
         }
 
 
-        if end_action > actions.len() + 20 {
+        if end_action > actions.len() + 30 {
             end_action = actions.len();
             action_range = end_action - start_action;
         }
