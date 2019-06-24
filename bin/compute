@@ -8,6 +8,15 @@ zones=(
   asia-southeast1-a
   asia-southeast1-b
   asia-southeast1-c
+  us-west1-a
+  us-west1-b
+  us-west1-c
+  us-west1-a
+  us-west1-b
+  us-west1-c
+  us-west1-a
+  us-west1-b
+  us-west1-c
 )
 num_zones="${#zones[@]}"
 default_zone="${zones[$(( RANDOM % num_zones ))]}"
@@ -68,7 +77,7 @@ compute::create() {
       --boot-disk-device-name="${FLAGS_instance}"
 
       # Image.
-      --image=image-20190616c
+      --image=image-20190624a
       --image-project=icfpc-primary
 
       # Network
