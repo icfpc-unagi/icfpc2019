@@ -8,8 +8,11 @@ edition = "2018"
 common = { path = "../common" }
 glob = "0.3.0"
 
-[profile.dev]
-overflow-checks = true
+[[bin]]
+name = "main"
+path = "src/main.rs"
 
-[profile.test]
-overflow-checks = true
+[[bin]]
+name = "problem_sizes"
+path = "src/problem_sizes_main.rs"
+
