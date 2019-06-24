@@ -95,6 +95,30 @@ impl DynamicMap {
         n
     }
 
+    pub fn apply_with_positions(&mut self, state: &WorkerState) -> Vec<(usize, usize)> {
+        let cells = state.visible_manipulators_on_empty_cells(&self.initial_square_map);
+        let mut filled_positions = vec![];
+        for cell in cells {
+            if self.fill_count[cell.0][cell.1] == 0 {
+                filled_positions.push(cell);
+            }
+            self.fill_count[cell.0][cell.1] += 1;
+        }
+        filled_positions
+    }
+
+    pub fn cancel_with_positions(&mut self, state: &WorkerState) -> Vec<(usize, usize)> {
+        let cells = state.visible_manipulators_on_empty_cells(&self.initial_square_map);
+        let mut unfilled_positions = vec![];
+        for cell in cells {
+            self.fill_count[cell.0][cell.1] -= 1;
+            if self.fill_count[cell.0][cell.1] == 0 {
+                unfilled_positions.push(cell);
+            }
+        }
+        unfilled_positions
+    }
+
     pub fn to_square_map(&self) -> SquareMap {
         let (xsize, ysize) = get_xysize(&self.initial_square_map);
         let mut ret = self.initial_square_map.clone();
@@ -467,7 +491,8 @@ mod tests {
             let (_, sm_naive) = get_filled_square_map_naive(&task, &actions, b, e);
             print_map(&sm_naive);
 
-            let mut dsol = DynamicSolution::new(&task.0, &task.1, &get_initial_state(&task), &actions);
+            let mut dsol =
+                DynamicSolution::new(&task.0, &task.1, &get_initial_state(&task), &actions);
             dsol.deactivate_range(b, e + 1);
             let sm_dynamic = dsol.dynamic_map.to_square_map();
             print_map(&sm_dynamic);
@@ -477,7 +502,8 @@ mod tests {
 
         // 次はdeactivate, activate連発
         {
-            let mut dsol = DynamicSolution::new(&task.0, &task.1, &get_initial_state(&task), &actions);
+            let mut dsol =
+                DynamicSolution::new(&task.0, &task.1, &get_initial_state(&task), &actions);
 
             for _ in 0..30 {
                 let (b, e) = generate_random_range();
