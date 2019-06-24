@@ -165,7 +165,7 @@ func runCommand(
 	go func() {
 		select {
 		case <-done:
-		case <-time.After(time.Second * 600):
+		case <-time.After(time.Second * 2400):
 			errChan <- errors.New("deadline exceeded")
 			syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
 			time.Sleep(30)
