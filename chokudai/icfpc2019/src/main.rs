@@ -12,15 +12,15 @@ fn main() {
     let H = first_field.len();
     let W = first_field[0].len();
     let default_field = first_field.clone();
+    let first_state = get_first_state(first_field, first_itemfield, FX, FY);
 
     let mut best_size = 99999999;
-    let mut best_second_state: State = get_first_state(first_field, first_itemfield, FX, FY);
+    let mut best_second_state: State = first_state.clone();
     let mut best_pre_action: Vec<Action> = Vec::with_capacity(0);
     let mut best_ans_action: Vec<Action> = Vec::with_capacity(0);
 
     let loop_first = 0;
     let mut loop_cnt = loop_first;
-
 
     loop {
         let mut initialMove;
@@ -53,33 +53,62 @@ fn main() {
 
         //let mut final_action = make_action_by_state(&first_state, 1);
         let mut final_action = make_action_by_state(&second_state, &ChokudaiOptions::default());
-        let (flag, act) = optimization_actions(&second_state, &final_action, 5, &ChokudaiOptions::default());
+        let (flag, act) =
+            optimization_actions(&second_state, &final_action, 5, &ChokudaiOptions::default());
         if flag {
             final_action = act;
         }
 
-        let size = (initialMove.1).len() + final_action.len();
+        let f2_action = optimize_pure_move(
+            &second_state.field,
+            &second_state.item_field,
+            &second_state.p,
+            &final_action,
+        );
+
+        let size = (initialMove.1).len() + f2_action.len();
         eprintln!("add: {} size: {}", loop_cnt - 1, size);
         if best_size > size && size != 0 {
             best_size = size;
             best_pre_action = initialMove.1;
             best_second_state = second_state.clone();
-            best_ans_action = final_action.clone();
+            best_ans_action = f2_action.clone();
         }
     }
-    let (flag, act) = optimization_actions(&best_second_state, &best_ans_action, 30, &ChokudaiOptions::default());
+
+    //let mut final_action = make_action_by_state(&best_second_state, &ChokudaiOptions::default());
+    let (flag, act) = optimization_actions(
+        &best_second_state,
+        &best_ans_action,
+        60,
+        &ChokudaiOptions::default(),
+    );
     best_ans_action = act;
 
     let mut best_action: Vec<Action> = Vec::with_capacity(0);
     for act in &best_pre_action {
         best_action.push(*act);
     }
-
-    //iwi opt
+    for act in &best_ans_action {
+        best_action.push(*act);
+    }
 
     best_size = best_action.len();
+    eprintln!("Best: {}", best_size);
 
-    let mut best_string = actions_to_string(&best_action);
+
+    //iwi opt
+    let best2 = optimize_pure_move(
+        &first_state.field,
+        &first_state.item_field,
+        &first_state.p,
+        &best_action,
+    );
+
+
+    best_size = best2.len();
+
+    let mut best_string = actions_to_string(&best2);
 
 
     eprintln!("Best: {}", best_size);

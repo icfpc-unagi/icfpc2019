@@ -14,6 +14,7 @@ pub struct ChokudaiOptions {
     pub OptType: usize,   //移動の最適化タイプ　0:貪欲 1: 連続した2手のみ先読み
     pub RandFlag: bool,   //true: 初期位置の採用方法のランダム導入（影響弱め）
     pub miningFlag: bool, //true: 直線移動の強化
+    pub RightCheck: bool, //true: 直進判定に
 }
 
 impl Default for ChokudaiOptions {
@@ -22,6 +23,7 @@ impl Default for ChokudaiOptions {
             OptType: 1,
             RandFlag: false,
             miningFlag: false,
+            RightCheck: false,
         }
     }
 }
@@ -33,11 +35,25 @@ impl ChokudaiOptions {
                 OptType: 1,
                 RandFlag: false,
                 miningFlag: false,
+                RightCheck: false,
             },
             ChokudaiOptions {
                 OptType: 1,
                 RandFlag: false,
                 miningFlag: true,
+                RightCheck: false,
+            },
+            ChokudaiOptions {
+                OptType: 1,
+                RandFlag: false,
+                miningFlag: false,
+                RightCheck: true,
+            },
+            ChokudaiOptions {
+                OptType: 1,
+                RandFlag: false,
+                miningFlag: true,
+                RightCheck: true,
             },
         ]
     }
@@ -262,7 +278,7 @@ pub fn make_move(a2: &Vec<Action>, R: usize, L: usize, d: usize) -> Vec<Action> 
     actions
 }
 
-fn check_straight(S: &State, tx: usize, ty: usize) -> bool {
+fn check_straight(S: &State, tx: usize, ty: usize, option: &ChokudaiOptions) -> bool {
     let d = S.p.dir;
     let sx = S.p.x;
     let sy = S.p.y;
@@ -279,20 +295,24 @@ fn check_straight(S: &State, tx: usize, ty: usize) -> bool {
         let dx = (tx - px) as i32;
         let dy = (ty - py) as i32;
 
-        /*
-        let mut hasManu = false;
-        for dxy in &S.p.manipulators {
-            if *dxy == (dx, dy){
-                hasManu = true;
-                break;
+        if option.RightCheck {
+            let mut hasManu = false;
+            for dxy in &S.p.manipulators {
+                if *dxy == (dx, dy) {
+                    hasManu = true;
+                    break;
+                }
             }
-        }
-        if !hasManu {return false;}
-        if !is_visible(&S.field, (px, py), (dx, dy)) {return false;}
-        */
-
-        if get_diff(sy, ty) > 1 {
-            return false;
+            if !hasManu {
+                return false;
+            }
+            if !is_visible(&S.field, (px, py), (dx, dy)) {
+                return false;
+            }
+        } else {
+            if get_diff(sy, ty) > 1 {
+                return false;
+            }
         }
 
         for x in sx + 1..tx {
@@ -300,6 +320,7 @@ fn check_straight(S: &State, tx: usize, ty: usize) -> bool {
                 return false;
             }
         }
+        //eprintln!("ok!");
 
         return true;
     } else if d == 1 {
@@ -307,34 +328,106 @@ fn check_straight(S: &State, tx: usize, ty: usize) -> bool {
         if ty >= sy {
             return false;
         }
-        if get_diff(sx, tx) > 1 {
-            return false;
+
+        let px = tx;
+        let py = sy + 1;
+        let dx = (tx - px) as i32;
+        let dy = (ty - py) as i32;
+
+        if option.RightCheck {
+            let mut hasManu = false;
+            for dxy in &S.p.manipulators {
+                if *dxy == (dx, dy) {
+                    hasManu = true;
+                    break;
+                }
+            }
+            if !hasManu {
+                return false;
+            }
+            if !is_visible(&S.field, (px, py), (dx, dy)) {
+                return false;
+            }
+        } else {
+            if get_diff(sx, tx) > 1 {
+                return false;
+            }
         }
+
+
         for y in ty..sy {
             if S.field[sx][y] == Square::Block {
                 return false;
             }
         }
+        //eprintln!("ok!");
         return true;
     } else if d == 2 {
         if tx >= sx {
             return false;
         }
-        if get_diff(sy, ty) > 1 {
-            return false;
+
+        let px = tx + 1;
+        let py = sy;
+        let dx = (tx - px) as i32;
+        let dy = (ty - py) as i32;
+
+        if option.RightCheck {
+            let mut hasManu = false;
+            for dxy in &S.p.manipulators {
+                if *dxy == (dx, dy) {
+                    hasManu = true;
+                    break;
+                }
+            }
+            if !hasManu {
+                return false;
+            }
+            if !is_visible(&S.field, (px, py), (dx, dy)) {
+                return false;
+            }
+        } else {
+            if get_diff(sy, ty) > 1 {
+                return false;
+            }
         }
+
+
         for x in tx + 1..sx {
             if S.field[x][sy] == Square::Block {
                 return false;
             }
         }
+        //eprintln!("ok!");
         return true;
     } else if d == 3 {
         if ty <= sy {
             return false;
         }
-        if get_diff(sx, tx) > 1 {
-            return false;
+
+        let px = tx;
+        let py = sy - 1;
+        let dx = (tx - px) as i32;
+        let dy = (ty - py) as i32;
+
+        if option.RightCheck {
+            let mut hasManu = false;
+            for dxy in &S.p.manipulators {
+                if *dxy == (dx, dy) {
+                    hasManu = true;
+                    break;
+                }
+            }
+            if !hasManu {
+                return false;
+            }
+            if !is_visible(&S.field, (px, py), (dx, dy)) {
+                return false;
+            }
+        } else {
+            if get_diff(sx, tx) > 1 {
+                return false;
+            }
         }
         for y in sy + 1..ty {
             if S.field[sx][y] == Square::Block {
@@ -556,7 +649,6 @@ fn get_next_action(
 
         for i in 0..point_list.len() {
             let target_pos = point_list[i];
-            //println!("{}", firstloop);
             //eprintln!("check: {} {}", target_pos.0, target_pos.1);
             //塗り済みであるかの検出
             if current_state.field[target_pos.0][target_pos.1] != Square::Empty {
@@ -566,7 +658,7 @@ fn get_next_action(
 
             let mut actions: Vec<Action> = Vec::with_capacity(0);
 
-            if check_straight(&current_state, target_pos.0, target_pos.1) {
+            if check_straight(&current_state, target_pos.0, target_pos.1, option) {
                 //println!("find");
                 actions = get_straight(&current_state, target_pos.0, target_pos.1);
             } else if false
@@ -800,7 +892,6 @@ pub fn optimization_actions(
     actions: &Vec<Action>,
     Seconds: usize,
     option: &ChokudaiOptions,
-
 ) -> (bool, Vec<Action>) {
 
     let mut ans: Vec<Action> = actions.clone();
@@ -842,10 +933,10 @@ pub fn shortening_actions(
     let start = Instant::now();
 
     let mut minimum_range = std::cmp::min(5, actions.len() / 2);
-    let mut maximum_range = std::cmp::min(actions.len() - 2, std::cmp::max(30, minimum_range));
+    let mut maximum_range = std::cmp::min(actions.len() - 2, std::cmp::max(50, minimum_range));
     while minimum_range >= maximum_range {
         minimum_range = std::cmp::min(5, actions.len() / 2);
-        maximum_range = std::cmp::min(actions.len() - 2, std::cmp::max(30, minimum_range));
+        maximum_range = std::cmp::min(actions.len() - 2, std::cmp::max(50, minimum_range));
     }
 
     let H = first_state.field.len();
@@ -864,9 +955,14 @@ pub fn shortening_actions(
         use rand::Rng;
         let mut rng = rand::thread_rng();
 
-        let action_range = rng.gen::<usize>() % (maximum_range - minimum_range + 1) + minimum_range;
+        let mut action_range =
+            rng.gen::<usize>() % (maximum_range - minimum_range + 1) + minimum_range;
         let start_action = rng.gen::<usize>() % (actions.len() - action_range);
-        let end_action = start_action + action_range;
+        let mut end_action = start_action + action_range;
+        if end_action > actions.len() + 30 {
+            end_action = actions.len();
+            action_range = end_action - start_action;
+        }
 
         //println!("{} {} {}", start_action, end_action, actions.len());
         let (flag, act) = shortening(
@@ -1006,19 +1102,22 @@ fn shortening(
         } else if end_position.dir == (start_position.dir + 3) % 4 {
             stockL = 1;
         }
-        let a2 = make_move(&acts, stockR, stockL, start_position.dir);
 
         let mut now_actions: Vec<Action> = Vec::with_capacity(0);
         for i in 0..start {
             let act = actions[i];
             now_actions.push(act);
         }
-        for a in a2 {
-            now_actions.push(a);
-        }
-        for i in end..actions.len() {
-            let act = actions[i];
-            now_actions.push(act);
+
+        if (end == actions.len()) {
+            let a2 = make_move(&acts, stockR, stockL, start_position.dir);
+            for a in a2 {
+                now_actions.push(a);
+            }
+            for i in end..actions.len() {
+                let act = actions[i];
+                now_actions.push(act);
+            }
         }
 
         let mut final_action = now_actions;
