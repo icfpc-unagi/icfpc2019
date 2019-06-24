@@ -19,6 +19,8 @@ func init() {
 }
 
 func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
+	booster := r.FormValue("booster")
+
 	log.Debugf(ctx, "starting ranking handler...")
 	// problem_id, program_id => index of scores
 	scoreTable := map[int64]map[int64]int{}
@@ -79,8 +81,9 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		FROM solutions NATURAL JOIN problem_data
 		WHERE
 			solution_score IS NOT NULL AND
-			solution_booster = ""
-		GROUP BY program_id, problem_id`); err != nil {
+			solution_booster = ?
+		GROUP BY program_id, problem_id`,
+		booster); err != nil {
 		return "", err
 	}
 
@@ -134,14 +137,41 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		programIDs = append(programIDs, programID)
 	}
 
+	boosters := []struct {
+		SolutionBooster string `db:"solution_booster"`
+	}{}
+	if err := db.Select(ctx, &boosters, `
+		SELECT DISTINCT solution_booster FROM solutions`); err != nil {
+		return "", err
+	}
+
 	log.Debugf(ctx, "rendering rankings...")
 	var output HTMLBuffer
+	output.WriteHTML("Select booster: ")
+	for _, b := range boosters {
+		sb := Escape(b.SolutionBooster)
+		sbn := sb
+		if sbn == "" {
+			sbn = "None"
+		}
+		output.WriteHTML(
+			`<span style="display:inline-block;margin:0 1ex;">`,
+			`[<a href="/ranking/?booster=`, sb, `">`,
+			sbn, `</a>]</span>`)
+	}
+	output.WriteHTML("<h1>")
+	if booster == "" {
+		output.WriteString("Ranking without boosters")
+	} else {
+		output.WriteString(fmt.Sprintf("Ranking with booster: %s", booster))
+	}
+	output.WriteHTML("</h1>")
 	// var output HTML
 	output.WriteHTML(
 		`<table class="table table-clickable">`,
 		`<thead><tr><td>Problem</td><td colspan="2" align="center">Best</td>`)
 	for i, programID := range programIDs {
-		if i > 30 {
+		if i > 20 {
 			break
 		}
 		output.WriteHTML(`<td colspan="2" align="center">`)
@@ -181,7 +211,7 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 
 		programIDToScore := scoreTable[problem.ProblemID]
 		for i, programID := range programIDs {
-			if i > 30 {
+			if i > 20 {
 				break
 			}
 			appendScore(&scores[programIDToScore[programID]], false)
