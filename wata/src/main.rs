@@ -21,7 +21,8 @@ fn compute_dist(map: &Vec<Vec<Square>>, (sx, sy): (usize, usize)) -> Vec<Vec<usi
 }
 
 pub fn split_solve_sub(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx, sy): (usize, usize),
-                        c: usize, ex: usize, buy_c: usize, buy_ex: usize, optimize: bool) -> (usize, Vec<Vec<Action>>) {
+                        c: usize, ex: usize, buy_c: usize, buy_ex: usize, optimize: bool, many_starts: bool, ops: &[chokudai::ChokudaiOptions])
+                         -> (usize, Vec<Vec<Action>>, chokudai::ChokudaiOptions) {
     let n = map.len();
     let m = map[0].len();
     let mut p_t_as = bootstrap_clone(&(map.clone(), boosters.clone(), sx, sy), c, buy_c);
@@ -86,21 +87,72 @@ pub fn split_solve_sub(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster
     let mut pre_state = WorkersState::new_t0_with_options(sx, sy, &mut pre_map, buy_boosters);
     sim2::apply_multi_actions(&mut pre_map, &mut pre_boosters, &mut pre_state, &pre_actions);
     
+    let mut starts = vec![];
+    if many_starts {
+        for s in 0..=c {
+            starts.push(p_t_as[s].0);
+        }
+        let mut dists = vec![];
+        for i in 0..=c {
+            dists.push(compute_dist(&map, p_t_as[i].0));
+        }
+        let mut nearest = vec![(!0, (!0, !0)); 4];
+        for i in 0..n {
+            for j in 0..m {
+                if map[i][j] != Square::Block {
+                    let mut min_dist = !0;
+                    for a in 0..=c {
+                        min_dist.setmin(dists[a][i][j]);
+                    }
+                    let mut num = 0;
+                    for d in 0..4 {
+                        let (x, y) = apply_move((i, j), d);
+                        if map[x][y] == Square::Block {
+                            num += 1;
+                        }
+                    }
+                    if num > 0 && num < 4 {
+                        nearest[num].setmin((min_dist, (i, j)));
+                    }
+                }
+            }
+        }
+        for d in 1..4 {
+            if nearest[d].0 != !0 {
+                starts.push(nearest[d].1);
+            }
+        }
+    } else {
+        starts.push(p_t_as[0].0);
+    }
+    starts.sort();
+    starts.dedup();
+    dbg!(&starts);
+    
     let mut best = vec![];
     let mut best_op = chokudai::ChokudaiOptions::default();
-    let (sx0, sy0) = p_t_as[0].0;
-    for op in chokudai::ChokudaiOptions::small() {
-        let mut state = chokudai::get_first_state(map.clone(), boosters.clone(), sx0, sy0);
-        state.p.manipulators = manipulators.clone();
-        let act = chokudai::make_action_by_state(&state, &op);
-        let mut state = PlayerState::new(sx0, sy0);
-        state.manipulators = manipulators.clone();
-        let act = optimize_pure_move(&pre_map.clone(), &boosters.clone(), &state, &act);
-        if best.len() == 0 || best.len() > act.len() {
-            best = act;
-            best_op = op;
+    let mut best_start = (!0, !0);
+    for op in ops {
+        for &(sx0, sy0) in &starts {
+            let mut state = chokudai::get_first_state(map.clone(), boosters.clone(), sx0, sy0);
+            state.p.manipulators = manipulators.clone();
+            let act = chokudai::make_action_by_state(&state, &op);
+            let mut state = PlayerState::new(sx0, sy0);
+            state.manipulators = manipulators.clone();
+            let act = optimize_pure_move(&pre_map.clone(), &boosters.clone(), &state, &act);
+            let mut state = chokudai::get_first_state(map.clone(), boosters.clone(), sx0, sy0);
+            state.p.manipulators = manipulators.clone();
+            let act = chokudai::optimization_actions(&state, &act, 6, &op).1;
+            if best.len() == 0 || best.len() > act.len() {
+                best = act;
+                best_op = op.clone();
+                best_start = (sx0, sy0);
+            }
         }
     }
+    dbg!(best_start);
+    dbg!(p_t_as[0].0);
+    let (sx0, sy0) = best_start;
     if optimize {
         let mut state = PlayerState::new(sx0, sy0);
         state.manipulators = manipulators.clone();
@@ -251,7 +303,7 @@ pub fn split_solve_sub(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster
             lb = mid;
         }
     }
-    (ub, best_moves)
+    (ub, best_moves, best_op)
 }
 
 pub fn split_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>, (sx, sy): (usize, usize), buy: &str, all: i32) -> Vec<Vec<Action>> {
@@ -293,34 +345,33 @@ pub fn split_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>,
     let mut results = vec![];
     let mut best_c = !0;
     let mut best_ex = !0;
+    let mut best_op = chokudai::ChokudaiOptions::default();
     for c in 0..=count_clone {
-        if c != 0 && c != count_clone && all != 2 {
+        if c != count_clone && all == 0 {
             continue;
         }
-        if c != count_clone && all == 0 {
+        if c != 0 && c != count_clone && all == 1 {
             continue;
         }
         results.push(vec![]);
         let ex_max = (count_extend + buy_extend) / (c + buy_clone + 1);
         for ex in 0..=ex_max {
-            if ex != 0 && ex != ex_max {
-                continue;
-            }
             if ex != ex_max && all == 0 {
                 continue;
             }
-            let (max_t, moves) = split_solve_sub(map, boosters, (sx, sy), c + buy_clone, ex, buy_clone, buy_extend, false);
+            let (max_t, moves, op) = split_solve_sub(map, boosters, (sx, sy), c + buy_clone, ex, buy_clone, buy_extend, false, false, &chokudai::ChokudaiOptions::small());
             if min_t.setmin(max_t) {
                 ret = moves;
                 best_c = c;
                 best_ex = ex;
+                best_op = op;
             }
             results.last_mut().unwrap().push(max_t);
-            eprintln!("{}, {}: {}", c, ex, max_t);
+            eprintln!("c = {}, ex = {}: {}", c, ex, max_t);
         }
     }
     dbg!(results);
-    let (max_t, moves) = split_solve_sub(map, boosters, (sx, sy), best_c + buy_clone, best_ex, buy_clone, buy_extend, true);
+    let (max_t, moves, _) = split_solve_sub(map, boosters, (sx, sy), best_c + buy_clone, best_ex, buy_clone, buy_extend, true, true, &[best_op]);
     if min_t.setmin(max_t) {
         ret = moves;
     }
