@@ -143,6 +143,7 @@ pub fn split_solve_sub(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster
             let mut state = chokudai::get_first_state(map.clone(), boosters.clone(), sx0, sy0);
             state.p.manipulators = manipulators.clone();
             let act = chokudai::optimization_actions(&state, &act, 6, &op).1;
+            // let act = chokudai::optimization_actions(&state, &act, 6, &chokudai::ChokudaiOptions::chokudai()).1;
             if best.len() == 0 || best.len() > act.len() {
                 best = act;
                 best_op = op.clone();
@@ -159,6 +160,7 @@ pub fn split_solve_sub(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster
         let mut state = chokudai::get_first_state(map.clone(), boosters.clone(), sx0, sy0);
         state.p.manipulators = manipulators.clone();
         best = chokudai::optimization_actions(&state, &best, 120, &best_op).1;
+        // best = chokudai::optimization_actions(&state, &best, 120, &chokudai::ChokudaiOptions::chokudai()).1;
         // best = chokudai::optimization_actions(&state, &best, 60, &best_op).1;
         
         for w in 6..=9 {
@@ -391,12 +393,32 @@ pub fn split_solve(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster>>>,
     ret
 }
 
+fn flip<T: Copy>(a: &mut Vec<Vec<T>>) {
+    let n = a.len();
+    let m = a[0].len();
+    let b = a.clone();
+    for i in 0..n {
+        for j in 0..m {
+            a[i][j] = b[i][m - j - 1];
+        }
+    }
+}
+
+fn flip_task(map: &mut SquareMap, boosters: &mut BoosterMap, sy: &mut usize) {
+    let m = map[0].len();
+    flip(map);
+    flip(boosters);
+    *sy = m - *sy - 1;
+}
+
 fn main() {
     let taskfile = std::env::args().nth(1).expect("usage: args[1] = taskfile");
     let buy = std::env::args().nth(2).expect("usage: args[2] = buy");
     let all: i32 = std::env::args().nth(3).unwrap_or("0".to_owned()).parse().unwrap();
-    let (map, boosters, sx, sy) = read_task(&taskfile);
-    let moves = split_solve(&map, &boosters, (sx, sy), &buy, all);
+    let (mut map, mut boosters, sx, mut sy) = read_task(&taskfile);
+    flip_task(&mut map, &mut boosters, &mut sy);
+    let mut moves = split_solve(&map, &boosters, (sx, sy), &buy, all);
+    flip_solution(&mut moves);
     let moves = solution_to_string(&moves);
     println!("{}", moves);
 }

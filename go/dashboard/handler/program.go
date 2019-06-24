@@ -43,25 +43,15 @@ func programHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		SELECT
 			problem_id,
 			problem_name,
-			solution_booster,
-			MAX(solution_id) AS solution_id,
+			solution_id,
 			solution_score,
-			MAX(solution_modified) AS solution_modified
-		FROM (
-			SELECT
-				problem_id,
-				solution_booster,
-				problem_name,
-				MIN(solution_score) AS solution_score
-			FROM
-				programs
-				NATURAL LEFT JOIN problems
-				NATURAL LEFT JOIN solutions
-			WHERE program_id = ?
-			GROUP BY problem_id, solution_booster
-			ORDER BY solution_score DESC) AS t
+			solution_booster,
+			solution_modified
+		FROM
+			programs
+			NATURAL LEFT JOIN problems
 			NATURAL LEFT JOIN solutions
-		GROUP BY problem_id, solution_booster, solution_score
+		WHERE program_id = ?
 		ORDER BY problem_name, solution_booster`, programID); err != nil {
 		return "", err
 	}
