@@ -89,6 +89,12 @@ pub fn get_solution_sets(solutions: &Vec<Solution>) -> Vec<Vec<Solution>> {
     solution_sets
 }
 
+pub fn get_original_score(xt: usize, yt: usize, t_best: i32, t_team: i32) -> f64 {
+    let (xt, yt, t_best) = (xt as f64, yt as f64, t_best as f64);
+    let t_team = t_team as f64;
+    f64::ceil(1000.0 * f64::log2(xt * yt) * t_best / t_team)
+}
+
 pub fn get_scores(
     solution_set: &Vec<Solution>,
     problem_sizes: &HashMap<String, (usize, usize)>,
@@ -98,12 +104,10 @@ pub fn get_scores(
 
     let times = solution_set.iter().map(|s| s.time);
     let t_best = times.clone().min().unwrap();
-    let (xt, yt, t_best) = (xt as f64, yt as f64, t_best as f64);
 
     times
         .map(|t_team| {
-            let t_team = t_team as f64;
-            f64::ceil(1000.0 * f64::log2(xt * yt) * t_best / t_team)
+            get_original_score(xt, yt, t_best, t_team)
         })
         .collect()
 }
