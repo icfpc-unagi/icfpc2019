@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math"
 	"net/http"
-	"os"
 	"regexp"
 	"sort"
 
@@ -44,7 +43,6 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		if err != nil {
 			return "", err
 		}
-		fmt.Fprintf(os.Stderr, "%v", md)
 		problemSizeByID[problem.ProblemID] = md.MaxX * md.MaxY
 		scoreTable[problem.ProblemID] = map[int64]int{}
 	}
@@ -161,7 +159,7 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 	}
 	output.WriteHTML("<h1>")
 	if booster == "" {
-		output.WriteString("Ranking without boosters")
+		output.WriteHTML("Ranking without boosters")
 	} else {
 		output.WriteString(fmt.Sprintf("Ranking with booster: %s", booster))
 	}

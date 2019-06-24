@@ -64,7 +64,7 @@ var tmpl = template.Must(template.New("solution").Parse(`
 
 	<p>{{.SolutionDescription}}</p>
 
-	<div style="text-align:center"><img src="/solution_image?solution_id={{.SolutionID}}"></div>
+	<div style="text-align:center"><img src="/solution_image?solution_id={{.SolutionID}}" class="pix"></div>
 
 	<details><summary><h3 style="display:inline-block"><a name="output">Output:</a></h3></summary>
 	<pre>{{.SolutionDataBlob}}</pre></details>

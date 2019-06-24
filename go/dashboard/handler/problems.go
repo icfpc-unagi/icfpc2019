@@ -44,7 +44,7 @@ func problemsHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		sb.WriteString(id)
 		sb.WriteString(`</td><td><img src="/problem_image?problem_id=`)
 		sb.WriteString(id)
-		sb.WriteString(`" style="max-width:400px;height:auto"></td><td>`)
+		sb.WriteString(`" class="w400 pix"></td><td>`)
 		sb.WriteString(template.HTMLEscapeString(problem.ProblemName))
 		fmt.Fprintf(sb, `</td><td>(%v,%v)</td><td><code>%v</code></td><td>`, md.MaxX, md.MaxY, md.Boosters)
 		sb.WriteString(template.HTMLEscapeString(problem.ProblemCreated))

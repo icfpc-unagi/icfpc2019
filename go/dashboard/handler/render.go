@@ -538,6 +538,15 @@ table.table-clickable tr[data-href]:hover td {
 	background: #eee;
 }
 
+.w400 {
+	max-width: 400px;
+	height: auto;
+}
+
+.pix {
+	image-rendering: pixelated;
+}
+
 </style>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script>
