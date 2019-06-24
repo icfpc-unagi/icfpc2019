@@ -56,7 +56,7 @@ fn main() {
         let (flag, act) = optimization_actions(
             &second_state,
             &final_action,
-            1,
+            10,
             &ChokudaiOptions::chokudai(),
         );
         if flag {
@@ -84,7 +84,7 @@ fn main() {
     let (flag, act) = optimization_actions(
         &best_second_state,
         &best_ans_action,
-        2,
+        60,
         &ChokudaiOptions::chokudai(),
     );
     best_ans_action = act;

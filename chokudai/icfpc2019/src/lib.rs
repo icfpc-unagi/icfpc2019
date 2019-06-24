@@ -908,16 +908,27 @@ pub fn optimization_actions(
 
     let start = Instant::now();
 
+    let mut blankNum = 1000;
+
     loop {
         let end = start.elapsed();
         let time = end.as_secs();
         if time >= Seconds as u64 {
             break;
         }
-        let (flag, act) =
-            shortening_actions(first_state, &ans, (Seconds as u64 - time) as usize, option);
+        let (flag, act) = shortening_actions(
+            first_state,
+            &ans,
+            (Seconds as u64 - time) as usize,
+            option,
+            blankNum,
+        );
         if flag {
             ans = act;
+        //eprintln!("ok");
+        } else {
+            blankNum += 1;
+            //eprintln!("ng");
         }
     }
 
@@ -935,6 +946,7 @@ pub fn shortening_actions(
     actions: &Vec<Action>,
     Seconds: usize,
     option: &ChokudaiOptions,
+    blankNum: usize,
 ) -> (bool, Vec<Action>) {
     if actions.len() < 3 {
         return (false, Vec::with_capacity(0));
@@ -967,9 +979,27 @@ pub fn shortening_actions(
 
         let mut action_range =
             rng.gen::<usize>() % (maximum_range - minimum_range + 1) + minimum_range;
-        let start_action = rng.gen::<usize>() % (actions.len() - action_range);
+        let mut start_action = rng.gen::<usize>() % (actions.len() - action_range);
         let mut end_action = start_action + action_range;
-        if end_action > actions.len() + 30 {
+
+        if (blankNum < 20) {
+            eprintln!("akiba-range {}", blankNum);
+            let (s, t) = get_best_chokudai_range(
+                &first_state.field,
+                &first_state.item_field,
+                &first_state.p,
+                &actions,
+                blankNum,
+            );
+            start_action = s;
+            end_action = t;
+            action_range = t - s;
+
+            eprintln!("akiba-range=result {} {}", s, t);
+        }
+
+
+        if end_action > actions.len() + 20 {
             end_action = actions.len();
             action_range = end_action - start_action;
         }
@@ -986,6 +1016,8 @@ pub fn shortening_actions(
 
         if flag {
             return (true, act);
+        } else if blankNum < 20 {
+            break;
         }
     }
 
@@ -1119,8 +1151,20 @@ fn shortening(
             now_actions.push(act);
         }
 
-        if (end == actions.len()) {
+        if (end != actions.len()) {
             let a2 = make_move(&acts, stockR, stockL, start_position.dir);
+
+            /*
+            eprintln!(
+                "Move ({}, {}) to ({}, {}), cost {}",
+                start_position.x,
+                start_position.y,
+                end_position.x,
+                end_position.y,
+                a2.len()
+            );
+            */
+
             for a in a2 {
                 now_actions.push(a);
             }
