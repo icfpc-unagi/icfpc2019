@@ -24,7 +24,7 @@ func extendSolutionHandler(
 	if err := func() error {
 		result, err := tx.ExecContext(ctx, `
 			UPDATE solutions
-			SET solution_lock = NOW() + INTERVAL 5 MINUTE
+			SET solution_lock = NOW() + INTERVAL 2 MINUTE
 			WHERE solution_id = ? AND NOW() < solution_lock
 			LIMIT 1`, req.GetSolutionId())
 		if err != nil {

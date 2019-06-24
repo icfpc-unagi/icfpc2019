@@ -33,7 +33,7 @@ func acquireSolutionHandler(
 				UPDATE solutions
 				SET
 					solution_id = (@solution_id := solution_id),
-					solution_lock = NOW() + INTERVAL 5 MINUTE
+					solution_lock = NOW() + INTERVAL 3 MINUTE
 				WHERE
 					solution_lock < NOW()
 				ORDER BY solution_lock

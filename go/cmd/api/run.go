@@ -73,9 +73,10 @@ func runOnce(
 	done := make(chan struct{}, 1)
 	defer close(done)
 	go func() {
-		for {
+		failed := 0
+		for failed < 3 {
 			select {
-			case <-time.After(time.Second * 60):
+			case <-time.After(time.Second * 20):
 				fmt.Fprintf(os.Stderr,
 					"extending solution: %d\n", solution.GetSolutionId())
 				_, err := apiutil.Call(ctx, &pb.Api_Request{
@@ -85,7 +86,9 @@ func runOnce(
 				})
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "failed to extend lock: %+v", err)
-					return
+					failed++
+				} else {
+					failed = 0
 				}
 			case <-done:
 				return
