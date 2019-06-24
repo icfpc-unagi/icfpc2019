@@ -52,9 +52,13 @@ fn main() {
         //eprintln!("{}", second_state.p.manipulators.len());
 
         //let mut final_action = make_action_by_state(&first_state, 1);
-        let mut final_action = make_action_by_state(&second_state, &ChokudaiOptions::default());
-        let (flag, act) =
-            optimization_actions(&second_state, &final_action, 5, &ChokudaiOptions::default());
+        let mut final_action = make_action_by_state(&second_state, &ChokudaiOptions::chokudai());
+        let (flag, act) = optimization_actions(
+            &second_state,
+            &final_action,
+            1,
+            &ChokudaiOptions::chokudai(),
+        );
         if flag {
             final_action = act;
         }
@@ -80,8 +84,8 @@ fn main() {
     let (flag, act) = optimization_actions(
         &best_second_state,
         &best_ans_action,
-        60,
-        &ChokudaiOptions::default(),
+        2,
+        &ChokudaiOptions::chokudai(),
     );
     best_ans_action = act;
 

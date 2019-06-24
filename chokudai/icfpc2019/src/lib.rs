@@ -29,6 +29,16 @@ impl Default for ChokudaiOptions {
 }
 
 impl ChokudaiOptions {
+
+    pub fn chokudai() -> ChokudaiOptions {
+        ChokudaiOptions {
+            OptType: 1,
+            RandFlag: false,
+            miningFlag: false,
+            RightCheck: true,
+        }
+    }
+
     pub fn small() -> Vec<ChokudaiOptions> {
         vec![
             ChokudaiOptions {
@@ -329,8 +339,8 @@ fn check_straight(S: &State, tx: usize, ty: usize, option: &ChokudaiOptions) -> 
             return false;
         }
 
-        let px = tx;
-        let py = sy + 1;
+        let px = sx;
+        let py = ty + 1;
         let dx = (tx - px) as i32;
         let dy = (ty - py) as i32;
 
@@ -405,8 +415,8 @@ fn check_straight(S: &State, tx: usize, ty: usize, option: &ChokudaiOptions) -> 
             return false;
         }
 
-        let px = tx;
-        let py = sy - 1;
+        let px = sx;
+        let py = ty - 1;
         let dx = (tx - px) as i32;
         let dy = (ty - py) as i32;
 
