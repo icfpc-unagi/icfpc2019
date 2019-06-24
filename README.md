@@ -63,8 +63,7 @@ It uses greedy algorithms and dynamic programming.
 See `common/src/{bootstrap.rs, bootstrap_clone.rs}`.
 * Given them, multi-worker solution is
 created by splitting the single-worker solution
-and concatenating to the initial sequence.  
-See `wata/src/main.rs`.
+and concatenating to the initial sequence. See `wata/src/main.rs`.
 * Local refinement is applied to the solution.
 It tries to improve the solution
 by removing some parts of the solution
@@ -79,7 +78,7 @@ See `common/src/local_optimization.rs`.
 
 ### Deciding what to buy
 
-We first prepare solutions
+* We first prepare solutions
 for different buy settings for each task.
 Then, we need to select what to buy for all tasks.
 We formalized this problem as a variant of knapsack problems,
@@ -89,6 +88,14 @@ See `knapsack/src/*.rs`.
 
 
 ## Feedback about the contest
+
+* The conditions of mining puzzles seem too loose,
+even at last rounds.
+Top teams could solve all mining puzzles
+and performance of puzzle solvers did not matter.
+In additoin, there was little incentive to create 
+interesting and/or hard tasks for mining puzzles.
+
 
 
 ## Self-nomination for judges’ prize
