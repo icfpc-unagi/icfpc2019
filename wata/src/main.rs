@@ -81,10 +81,20 @@ pub fn split_solve_sub(map: &Vec<Vec<Square>>, boosters: &Vec<Vec<Option<Booster
     let mut pre_map = map.clone();
     let mut pre_boosters = boosters.clone();
     let pre_actions: Vec<_> = p_t_as.iter().map(|(_, _, acts)| acts.clone()).collect();
-    let buy_boosters: Vec<_> = (0..100).map(|_| Booster::CloneWorker).chain((0..100).map(|_| Booster::Extension)).collect();
-    // let buy_boosters: Vec<_> = (0..buy_c).map(|_| Booster::CloneWorker).chain((0..buy_ex).map(|_| Booster::Extension)).collect();
+    // let buy_boosters: Vec<_> = (0..100).map(|_| Booster::CloneWorker).chain((0..100).map(|_| Booster::Extension)).collect();
+    let buy_boosters: Vec<_> = (0..buy_c).map(|_| Booster::CloneWorker).chain((0..buy_ex).map(|_| Booster::Extension)).collect();
+
+    let task = read_task("tmp-tos/221.desc");
+    assert_eq!(pre_map, task.0);
+    assert_eq!(pre_boosters, task.1);
+    assert_eq!((sx, sy), (task.2, task.3)); 
+    assert_eq!(buy_boosters, parse_buy("CB"));
+
     let mut pre_state = WorkersState::new_t0_with_options(sx, sy, &mut pre_map, buy_boosters);
+    eprintln!("{:?}", &pre_state);
+    dbg!(solution_to_string(&pre_actions));
     sim2::apply_multi_actions(&mut pre_map, &mut pre_boosters, &mut pre_state, &pre_actions);
+    eprintln!("!!!! ok !!!!");
     
     let mut best = vec![];
     let mut best_op = chokudai::ChokudaiOptions::default();
