@@ -47,15 +47,12 @@ fn main() -> std::io::Result<()> {
     let ipath = std::env::args().nth(1).expect("usage: args[1] = condfile(input)");
     let pinput = puzzle::read(&ipath).expect("Unable to read data");
     let opath = std::env::args().nth(2).expect("usage: args[2] = descfile(output)");
-    let bool_map = generate_raster_v2(&pinput);
-    /*
-    let bool_map = bool_map.or_else(
-        || generate_raster_marine_day(&pinput));
-    let bool_map = Some(bool_map.unwrap()); // debug!!
-    let bool_map = bool_map.unwrap_or_else(
-        || generate_raster_v1(&pinput));
-    // let bool_map = generate_raster_v1(&pinput); // debug!!
-    */
+    let bool_map = None;
+
+    // let bool_map = bool_map.or_else(|| generate_raster_v2(&pinput));
+    let bool_map = bool_map.or_else(|| generate_raster_marine_day(&pinput));
+    // let bool_map = bool_map.or_else(|| Some(generate_raster_v1(&pinput)));
+
     let bool_map = bool_map.unwrap();
 
     let taskspec = raster_map_to_task_specification(
@@ -73,6 +70,17 @@ fn main() -> std::io::Result<()> {
     Ok(())
 }
 
+fn try_put(map: &mut Vec<Vec<Cell>>, poss: &[(usize, usize)]) -> bool {
+    for &(x, y) in poss {
+        if map[x][y] == Out {
+            return false;
+        }
+    }
+    for &(x, y) in poss {
+        map[x][y] = In ;
+    }
+    true
+}
 
 fn generate_raster_marine_day(pinput: &puzzle::PazzleInput) -> Option<Vec<Vec<bool>>> {
     let mut rng = rand::thread_rng(); // デフォルトの乱数生成器を初期化します
@@ -96,8 +104,31 @@ fn generate_raster_marine_day(pinput: &puzzle::PazzleInput) -> Option<Vec<Vec<bo
         let y = y + 1;
         map[x][y] = Out;
     }
+    for &(x, y) in &isqs {
+        let x = x + 1;
+        let y = y + 1;
+        map[x][y] = In;
+        let mut cands = vec![
+            [(x, y-2), (x, y-1), (x, y)],
+            [(x, y-1), (x, y), (x, y+1)],
+            [(x, y), (x, y+1), (x, y+2)],
+        ];
+        cands.shuffle(&mut rng);
+        let mut ok = false;
+        for cand in cands {
+            ok &= try_put(&mut map, &cand);
+            if ok { break; }
+        }
+        if !ok {
+            eprintln!("in: equal x with out?"); return None;
+        }
+    }
+    let mut xlast = 0;
     for k in 0..m {
-        let x = 5*k+3;
+        let xmin = 5*k+1;
+        let xmax = 5*k+5;
+        let xmid = 5*k+3;
+        let x = xmid; // todo
         if k != 0 {
             let mut ok = false;
             'h: for h in 0..n-2 {
@@ -139,21 +170,6 @@ fn generate_raster_marine_day(pinput: &puzzle::PazzleInput) -> Option<Vec<Vec<bo
                 continue;
             }
             eprintln!("cannot avoid out"); return None;
-        }
-    }
-    for &(x, y) in &isqs {
-        let mut x = x + 1;
-        let y = y + 1;
-        while map[x][y] != In {
-            if map[x][y] == Out {
-                eprintln!("in: equal x with out?"); return None;
-            }
-            map[x][y] = In;
-            if x % 5 == 1 || x % 5 == 2 {
-                x += 1;
-            } else {
-                x -= 1;
-            }
         }
     }
     adjust_vnum(&mut map, vmin, vmax);
