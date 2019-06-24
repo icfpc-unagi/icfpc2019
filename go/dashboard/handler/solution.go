@@ -53,7 +53,7 @@ var tmpl = template.Must(template.New("solution").Parse(`
 		<tbody>
 			<tr>
 				<td>{{.SolutionID}}</td>
-				<td>{{.ProgramName}} ({{.ProgramID}})</td>
+				<td><a href="/program?program_id={{.ProgramID}}">{{.ProgramName}} ({{.ProgramID}})</a></td>
 				<td>{{.ProblemName}} ({{.ProblemID}})</td>
 				<td>{{.SolutionBooster}}</td>
 				{{if .SolutionInvalid}}<td style="color:red">invalid<a href="#retry">?</a>{{else}}<td>{{.SolutionScore}}{{end}}</td>
