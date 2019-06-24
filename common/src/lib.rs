@@ -158,6 +158,32 @@ impl std::fmt::Display for Action {
     }
 }
 
+
+pub fn flip_solution(lists: &mut Vec<Vec<Action>>) {
+    for mut list in lists {
+        flip_actions(&mut list);
+    }
+}
+
+pub fn flip_actions(list: &mut Vec<Action>) {
+    for mut act in list {
+        *act = act.flip();
+    }
+}
+
+impl Action {
+    pub fn flip(self) -> Action {
+        match self {
+            Action::Move(d) => Action::Move((4-d)%4),
+            Action::TurnR => Action::TurnL,
+            Action::TurnL => Action::TurnR,
+            Action::Extension(dx, dy) => Action::Extension(dx, -dy),
+            Action::Teleport(x, y) => unimplemented!(),
+            a => a,
+        }
+    }
+}
+
 pub fn actions_to_string(list: &Vec<Action>) -> String {
     let mut out = String::new();
     for mv in list {
