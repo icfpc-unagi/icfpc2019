@@ -116,63 +116,61 @@ fn generate_raster_marine_day(pinput: &puzzle::PazzleInput) -> Option<Vec<Vec<bo
         cands.shuffle(&mut rng);
         let mut ok = false;
         for cand in cands {
-            ok &= try_put(&mut map, &cand);
+            ok |= try_put(&mut map, &cand);
             if ok { break; }
         }
         if !ok {
             eprintln!("in: equal x with out?"); return None;
         }
     }
-    let mut xlast = 0;
-    for k in 0..m {
-        let xmin = 5*k+1;
-        let xmax = 5*k+5;
-        let xmid = 5*k+3;
-        let x = xmid; // todo
-        if k != 0 {
+    {
+        let mut xlast = 1;
+        for k in 0..m {
+            let xmid = 5*k+3;
             let mut ok = false;
-            'h: for h in 0..n-2 {
+            for h in 0..n-2 {
                 let y = if k % 2 == 0 {
                     1 + h
                 } else {
                     n-2 - h
                 };
-                for dx in 1..=4 {
-                    if map[x-dx][y] == Out {
-                        continue 'h
-                    }
+                let mut cand = vec![];
+                for x in xlast..=xmid {
+                    cand.push((x, y));
                 }
-                for dx in 1..=4 {
-                    map[x-dx][y] = In;
-                }
-                ok = true;
-                break;
+                ok |= try_put(&mut map, &cand);
+                if ok { break; }
             }
             if !ok {
                 eprintln!("horizontal conn"); return None;
             }
+            xlast = xmid;
         }
+    }
+    for k in 0..m {
+        let xmin = 5*k+1;
+        let xmax = 5*k+5;
+        let xmid = 5*k+3;
         for y in 1..n-1 {
-            if map[x][y] != Out {
-                map[x][y] = In;
-                continue;
+            let mut ok = false;
+            for x in xmin..=xmax {
+                ok |= map[x][y].as_bool();
             }
-            if map[x-1][y-1] != Out && map[x-1][y] != Out && map[x-1][y+1] != Out {
-                map[x-1][y-1] = In;
-                map[x-1][y] = In;
-                map[x-1][y+1] = In;
-                continue;
+            if ok { continue; }
+            ok |= try_put(&mut map, &[(xmid, y)]);
+            if ok { continue; }
+
+            let mut cands = vec![[(xmid-1, y)], [(xmid+1, y)]];
+            cands.shuffle(&mut rng);
+            for cand in cands {
+                ok |= try_put(&mut map, &cand);
+                if ok { break; }
             }
-            if map[x+1][y-1] != Out && map[x+1][y] != Out && map[x+1][y+1] != Out {
-                map[x+1][y-1] = In;
-                map[x+1][y] = In;
-                map[x+1][y+1] = In;
-                continue;
-            }
+            if ok { continue; }
             eprintln!("cannot avoid out"); return None;
         }
     }
-    adjust_vnum(&mut map, vmin, vmax);
+    //adjust_vnum(&mut map, vmin, vmax);
 
     let mut bool_map = vec![vec![false; n]; n];
     for x in 0..n {
