@@ -237,7 +237,7 @@ impl DynamicSolution {
         n
     }
 
-        /*
+    /*
     pub fn deactivate_range2(&mut self, begin: usize, end: usize) -> Vec<(usize, usize)> {
         // step begin, step endは踏む。その間を除く。
         assert!(begin < end);
@@ -419,7 +419,7 @@ fn manhattan_distance(x1: usize, y1: usize, x2: usize, y2: usize) -> usize {
     (((x1 as i32) - (x2 as i32)).abs() + ((y1 as i32) - (y2 as i32)).abs()) as usize
 }
 
-pub fn get_best_chokudai_range(
+pub fn get_best_chokudai_range_naive(
     square_map: &SquareMap,
     booster_map: &BoosterMap,
     initial_state: &WorkerState,
@@ -473,6 +473,65 @@ pub fn get_best_chokudai_range(
         let dif3 = dsol.reactivate_range(begin, end);
         assert_eq!(dif3, n_unfilled_squares);
         begin -= 1;
+    }
+
+    (best_range.1, best_range.2)
+}
+
+pub fn get_best_chokudai_range(
+    square_map: &SquareMap,
+    booster_map: &BoosterMap,
+    initial_state: &WorkerState,
+    actions: &Vec<Action>,
+    max_unfilled_squares: usize,
+) -> (usize, usize) {
+    // 「ステップ数 - 始点と終点の距離（ﾏﾝﾊｯﾀﾝｷｮﾘ）」が最大となる部分を返す
+
+    // 全く塗ってない移動を最適化する
+    let mut dsol = DynamicSolution::new(square_map, booster_map, initial_state, actions);
+    let (xsize, ysize) = get_xysize(square_map);
+
+    let mut best_range = (0, !0, !0);
+
+    // state beginは踏んだまま。endも踏んだまま。(begin, end) を消しても、大丈夫。というところを探す。
+    let mut begin = dsol.states.len() - 2;
+    let mut n_unfilled_squares = 0;
+    let mut end = begin + 1;
+
+    while begin != !0 {
+        // 後ろからやっていって、extensionを踏んだらやめる
+        match dsol.actions[begin] {
+            Action::TurnL => (),
+            Action::TurnR => (),
+            Action::Move(_) => (),
+            Action::Nothing => (),
+            _ => break,
+        }
+
+        // 踏む個数の条件を満たすように縮める
+        while begin < end - 1 && n_unfilled_squares > max_unfilled_squares {
+            // end - 1 を踏むことにして区間を短くする
+            let dif1 = dsol.reactivate_step(end - 1);
+            n_unfilled_squares -= dif1;
+            end = end - 1;
+        }
+
+        let n_steps = end - begin;
+        let dist = manhattan_distance(
+            dsol.states[begin].x,
+            dsol.states[begin].y,
+            dsol.states[end].x,
+            dsol.states[end].y,
+        );
+        best_range.setmax((n_steps - dist, begin, end));
+
+        //let dif3 = dsol.reactivate_range(begin, end);
+        //assert_eq!(dif3, n_unfilled_squares);
+
+        // begin をふまないことにしてバイバイする
+        let dif2 = dsol.deactivate_step(begin);
+        n_unfilled_squares += dif2;
+        begin = begin - 1;
     }
 
     (best_range.1, best_range.2)
@@ -647,5 +706,23 @@ mod tests {
         actions.insert(10, Action::TurnR);
         actions.insert(10, Action::TurnR);
         */
+    }
+
+    #[test]
+    fn test_chokudai() {
+        let (task, actions) = prepare_task_and_actions();
+
+        for k in 1..20 {
+            let fast =
+                get_best_chokudai_range(&task.0, &task.1, &get_initial_state(&task), &actions, k);
+            let naive = get_best_chokudai_range_naive(
+                &task.0,
+                &task.1,
+                &get_initial_state(&task),
+                &actions,
+                k,
+            );
+            assert_eq!(fast, naive);
+        }
     }
 }
