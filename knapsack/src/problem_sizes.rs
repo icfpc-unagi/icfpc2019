@@ -365,13 +365,15 @@ pub fn get_problem_sizes() -> ProblemSizes {
     get_problem_sizes_embedded()
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn it_works() {
-        assert_eq!(get_problem_sizes_embedded(), get_problem_sizes_from_task_files());
+        assert_eq!(
+            get_problem_sizes_embedded(),
+            get_problem_sizes_from_task_files()
+        );
     }
 }

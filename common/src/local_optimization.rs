@@ -336,7 +336,7 @@ pub fn optimize_pure_move(
 
         if n_new_actions < n_original_actions {
             // dbg!((begin, end, n_original_actions, n_new_actions));
-            eprintln!("{} -> {}", n_original_actions, n_new_actions);
+            // eprintln!("{} -> {}", n_original_actions, n_new_actions);
             dsol.replace(begin, end, &new_actions);
         } else {
             let diff3 = dsol.reactivate_range(begin, end);
@@ -346,7 +346,7 @@ pub fn optimize_pure_move(
         begin -= 1;
     }
 
-    eprintln!("Optimization till: {}", begin);
+    // eprintln!("Optimization till: {}", begin);
     let optimized_actions1 = &dsol.actions;
     let optimized_actions2 = optimize_remove_nothing(&optimized_actions1);
     eprintln!(
