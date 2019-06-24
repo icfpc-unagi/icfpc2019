@@ -179,7 +179,7 @@ func runCommand(
 	fmt.Fprintf(os.Stderr, "solver finalized\n")
 
 	var output []byte
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 4; i++ {
 		var timeout bool
 		output, timeout, err = commandWithTimeout("/nfs/bin/solution_checker",
 			path.Join(dir, "task"),
