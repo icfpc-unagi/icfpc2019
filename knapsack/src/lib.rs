@@ -1,9 +1,11 @@
-use common::SetMinMax;
 use std::collections::HashMap;
 use std::io::BufRead;
 
+pub mod knapsack_problem;
 pub mod problem_sizes;
 
+use crate::KnapsackProblem;
+pub use knapsack_problem::*;
 pub use problem_sizes::*;
 
 //
@@ -49,8 +51,7 @@ pub fn read_solutions(input_path: &str) -> Vec<Solution> {
 
     let mut solutions = vec![];
 
-    // Read the file line by line using the lines() iterator from std::io::BufRead.
-    for (index, line) in reader.lines().enumerate() {
+    for line in reader.lines() {
         let line = line.unwrap(); // Ignore errors.
         let line = line.trim();
         if line == "" {
@@ -91,7 +92,7 @@ pub fn get_solution_sets(solutions: &Vec<Solution>) -> Vec<Vec<Solution>> {
 pub fn get_scores(
     solution_set: &Vec<Solution>,
     problem_sizes: &HashMap<String, (usize, usize)>,
-) -> Vec<i32> {
+) -> Vec<f64> {
     let problem_name = &solution_set[0].problem_name;
     let &(xt, yt) = problem_sizes.get(problem_name).unwrap();
 
@@ -102,7 +103,7 @@ pub fn get_scores(
     times
         .map(|t_team| {
             let t_team = t_team as f64;
-            f64::ceil(1000.0 * f64::log2(xt * yt) * t_best / t_team) as i32
+            f64::ceil(1000.0 * f64::log2(xt * yt) * t_best / t_team)
         })
         .collect()
 }
@@ -111,49 +112,13 @@ pub fn get_scores(
 // ナップサック問題関連
 //
 
-pub fn solve_knapsack_problem(item_sets: &Vec<Vec<(usize, i32)>>, capacity: usize) -> Vec<usize> {
-    let n_item_sets = item_sets.len();
-
-    let mut dp = vec![vec![]; n_item_sets + 1];
-    // dp[i][x] := i番目までのアイテムセットが終わってて、ここまででxだけ使った時の、最良コスト。
-    dp[0] = (0..=capacity).map(|x| ((x * 100) as i32, !0, !0)).collect();
-
-    for i in 0..n_item_sets {
-        dp[i + 1] = (0..=capacity).map(|x| (dp[i][x].0, !0, x)).collect();
-
-        for (j, (weight, score)) in item_sets[i].iter().enumerate() {
-            if *weight > capacity {
-                continue;
-            }
-            for x in 0..=capacity - weight {
-                let ts = dp[i][x].0 + score;
-                dp[i + 1][x + weight].setmax((ts, j, x));
-            }
-        }
-    }
-    assert_eq!(
-        dp[n_item_sets].iter().max().unwrap().0,
-        dp[n_item_sets][capacity].0
-    );
-
-    let mut x = capacity;
-    let mut selection = vec![!0; n_item_sets];
-    for i in (0..n_item_sets).rev() {
-        let t = dp[i + 1][x];
-        selection[i] = t.1;
-        x = t.2;
-    }
-
-    selection
-}
-
 pub fn get_knapsack_problem(
     solution_sets: &Vec<Vec<Solution>>,
     budget: usize,
     problem_sizes: &HashMap<String, (usize, usize)>,
-) -> (Vec<Vec<(usize, i32)>>, usize) {
-    (
-        solution_sets
+) -> KnapsackProblem {
+    KnapsackProblem {
+        item_sets: solution_sets
             .iter()
             .map(|solutions| {
                 let scores = get_scores(solutions, problem_sizes);
@@ -164,8 +129,8 @@ pub fn get_knapsack_problem(
                     .collect()
             })
             .collect(),
-        budget / 100,
-    )
+        capacity: budget / 100,
+    }
 }
 
 pub fn solve(
@@ -175,8 +140,8 @@ pub fn solve(
 ) -> Vec<Solution> {
     let solution_sets = get_solution_sets(solutions);
 
-    let (item_sets, capacity) = get_knapsack_problem(&solution_sets, budget, &problem_sizes);
-    let selection = solve_knapsack_problem(&item_sets, capacity);
+    let knapsack_problem = get_knapsack_problem(&solution_sets, budget, &problem_sizes);
+    let selection = solve_knapsack_problem(&knapsack_problem);
 
     let mut selected_solutions = vec![];
     for i in 0..selection.len() {
