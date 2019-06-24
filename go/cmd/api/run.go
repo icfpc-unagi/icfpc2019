@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/imos/icfpc2019/go/util/apiutil"
@@ -145,6 +146,7 @@ func runCommand(
 		path.Join(dir, "solution"),
 		solution.GetProgramCode())
 	cmd := exec.Command("bash", "-c", script)
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	cmd.Stderr = stderr
 	done := make(chan struct{}, 1)
 	errChan := make(chan error, 5)
@@ -160,6 +162,8 @@ func runCommand(
 		case <-done:
 		case <-time.After(time.Second * 600):
 			errChan <- errors.New("deadline exceeded")
+			syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+			time.Sleep(30)
 			cmd.Process.Kill()
 		}
 	}()
