@@ -73,7 +73,11 @@ See `common/src/local_optimization.rs`.
 
 ### Solving puzzles
 
-
+* Our puzzle solvers heavily relies
+on narrow paths for satisfying point constraints.
+* It then adjusts the area and number of vertices 
+to satisfy the area and vertices constraings.
+* See `puzzle/src/*.rs`.
 
 
 ### Deciding what to buy
