@@ -30,7 +30,9 @@ func run(args ...string) error {
 	ctx := context.Background()
 	canceled := false
 	for threadID := 0; threadID*16 < int(*parallel); threadID++ {
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
 			for {
 				queue <- struct{}{}
 				if canceled {
@@ -170,9 +172,10 @@ func runCommand(
 	var output []byte
 	for i := 0; i < 2; i++ {
 		var timeout bool
-		output, timeout, err = commandWithTimeout("/nfs/programs/scorer",
+		output, timeout, err = commandWithTimeout("/nfs/bin/solution_checker",
 			path.Join(dir, "task"),
-			path.Join(dir, "solution"))
+			path.Join(dir, "solution"),
+			path.Join(dir, "buy"))
 		if !timeout {
 			break
 		}

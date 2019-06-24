@@ -88,9 +88,14 @@ async function main() {
     await sleep(1000);
     document.getElementById("execute_solution").click();
     await sleep(100);
+    while (document.getElementById("output").innerHTML ==
+        "Done uploading solution") {
+        await sleep(500);
+        document.getElementById("execute_solution").click();
+    }
     while (true) {
-        if (document.getElementById("output").innerHTML !=
-            "Pre-processing and validating the task...") {
+        var output = document.getElementById("output").innerHTML;
+        if (output != "Pre-processing and validating the task...") {
             break;
         }
         await sleep(50);

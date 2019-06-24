@@ -135,9 +135,12 @@ func insertProgramHandler(
 		return errors.WithStack(err)
 	}
 	if err := func() error {
-		result, err := tx.ExecContext(
-			ctx, "INSERT programs(program_name, program_code) VALUES(?, ?)",
-			req.GetProgramName(), req.GetProgramCode())
+		result, err := tx.ExecContext(ctx, `
+			INSERT programs(program_name, program_code, program_boosters)
+			VALUES(?, ?, ?)`,
+			req.GetProgramName(),
+			req.GetProgramCode(),
+			req.GetProgramBoosters())
 		if err != nil {
 			return errors.WithStack(err)
 		}

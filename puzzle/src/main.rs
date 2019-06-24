@@ -2,9 +2,11 @@ use std::fs::File;
 use std::io::prelude::*;
 
 use rand::Rng;
+use rand::seq::SliceRandom;
 
 use common::{parse_map, apply_move};
 use common::task2::*;
+use common::gen_unagi;
 
 #[derive(Copy, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 enum Cell {
@@ -27,8 +29,15 @@ impl Cell {
     pub fn is_unk(self) -> bool {
         self >= UOut && self <= UIn
     }
+    pub fn as_char(self) -> char {
+        match self {
+            Out => '#',
+            UOut => '*',
+            UIn => '.',
+            In => ' ',
+        }
+    }
 }
-
 
 
 use Cell::*;
@@ -38,11 +47,16 @@ fn main() -> std::io::Result<()> {
     let ipath = std::env::args().nth(1).expect("usage: args[1] = condfile(input)");
     let pinput = puzzle::read(&ipath).expect("Unable to read data");
     let opath = std::env::args().nth(2).expect("usage: args[2] = descfile(output)");
-    let bool_map = generate_raster_marine_day(&pinput);
+    let bool_map = generate_raster_v2(&pinput);
+    /*
+    let bool_map = bool_map.or_else(
+        || generate_raster_marine_day(&pinput));
     let bool_map = Some(bool_map.unwrap()); // debug!!
     let bool_map = bool_map.unwrap_or_else(
         || generate_raster_v1(&pinput));
     // let bool_map = generate_raster_v1(&pinput); // debug!!
+    */
+    let bool_map = bool_map.unwrap();
 
     let taskspec = raster_map_to_task_specification(
         &bool_map,
@@ -162,6 +176,133 @@ fn generate_raster_marine_day(pinput: &puzzle::PazzleInput) -> Option<Vec<Vec<bo
         eprintln!("check failed!"); return None;
 }
 
+fn generate_raster_v2(pinput: &puzzle::PazzleInput) -> Option<Vec<Vec<bool>>> {
+    let mut rng = rand::thread_rng(); // デフォルトの乱数生成器を初期化します
+    let puzzle::PazzleInput {tsize, vmin, vmax, isqs, osqs, ..} = pinput.clone();
+    // dbg!(&osqs);
+    let n = tsize + 2;
+    let mut map = vec![vec![UOut; n]; n];
+    let img = gen_unagi::gen_unagi();
+    /*
+    dbg!((img.len(), img[0].len()));
+    {
+        for i0 in 0..img.len() {
+            for i1 in 0..img[i0].len() {
+                eprint!("{}", img[i0][i1] as u8);
+            }
+            eprintln!();
+        }
+    }
+    */
+    dbg!(tsize);
+    {
+        let w = img.len();
+        let h = img[0].len();
+        for x in 0..tsize.min(w) {
+            for y in 0..tsize.min(h) {
+                if img[x][y] {
+                    map[x][h-y] = UIn;
+                }
+            }
+        }
+    }
+    // assert!(false);
+    /*
+    let img = [
+        b"*****",
+        b"*.*.*",
+        b"*.*.*",
+        b"*....",
+        b"*****",
+    ];
+    for x in 0..tsize {
+        for y in 0..tsize {
+            let imgx = x*5/tsize;
+            let imgy = y*5/tsize;
+            if img[4-imgy][imgx] == b'.' {
+                map[x][y] = UIn;
+            }
+        }
+    }
+    */
+
+    // generate a polygon
+    for i in 0..n {
+        map[0][i] = Out;
+        map[n-1][i] = Out;
+        map[i][0] = Out;
+        map[i][n-1] = Out;
+    }
+    for &(x, y) in &isqs {
+        map[x+1][y+1] = In;
+    }
+    /*
+    for &(x, y) in &osqs {
+        map[x+1][y+1] = Out;
+    }
+    */
+    let mut osqs_shuffled = osqs.clone();
+    osqs_shuffled.shuffle(&mut rng);
+    for &(x, y) in &osqs_shuffled {
+        let x = x+1;
+        let y = y+1;
+        let mut bfs = BFS::new(n, n);
+        let (mut path, goalx, goaly) = bfs.search(
+            x, y,
+            |qx, qy| { !map[qx][qy].as_bool() },  // goal = out
+            |qx, qy| { map[qx][qy] == In }  // block = isqs
+        );
+        path.push((goalx, goaly));
+        for &(px, py) in &path {
+            map[px][py] = Out;
+        }
+        assert_eq!(map[x][y], Out);
+    }
+
+    for &(x, y) in &isqs {
+        let x = x+1;
+        let y = y+1;
+        assert!(map[x][y] != Out);
+        map[x][y] = UOut;
+    }
+    let mut isqs_shuffled = isqs.clone();
+    isqs_shuffled.shuffle(&mut rng);
+    for &(x, y) in &isqs_shuffled {
+        let x = x+1;
+        let y = y+1;
+        let mut bfs = BFS::new(n, n);
+        let (mut path, goalx, goaly) = bfs.search(
+            x, y,
+            |qx, qy| { map[qx][qy].as_bool() },  // goal = in
+            |qx, qy| { map[qx][qy] == Out }  // block = osqs
+        );
+        path.push((goalx, goaly));
+        for &(px, py) in &path {
+            map[px][py] = In;
+        }
+        assert_eq!(map[x][y], In);
+    }
+
+    adjust_vnum(&mut map, vmin, vmax);
+
+    let mut bool_map = vec![vec![false; n]; n];
+    for i in 0..n {
+        for j in 0..n {
+            eprint!("{}", map[j][n-1-i].as_char());
+        }
+        eprintln!();
+    }
+    for x in 0..n {
+        for y in 0..n {
+            bool_map[x][y] = map[x][y].as_bool();
+        }
+    }
+    if puzzle::check(&pinput, &bool_map) {
+        return Some(bool_map);
+    }
+    eprintln!("check failed!"); return None;
+}
+
 fn generate_raster_v1(pinput: &puzzle::PazzleInput) -> Vec<Vec<bool>> {
     let mut rng = rand::thread_rng(); // デフォルトの乱数生成器を初期化します
     let puzzle::PazzleInput {tsize, vmin, vmax, isqs, osqs, ..} = pinput.clone();
@@ -228,68 +369,67 @@ fn generate_raster_v1(pinput: &puzzle::PazzleInput) -> Vec<Vec<bool>> {
 }
 
 
-fn adjust_vnum(map: &mut Vec<Vec<Cell>>, vmin: usize, vmax: usize)
-        {
+fn adjust_vnum(map: &mut Vec<Vec<Cell>>, vmin: usize, vmax: usize) {
     let mut rng = rand::thread_rng();
     let n = map.len();
     assert_eq!(n, map[0].len());
-            // vertex wo fuyasu
-            let mut n_vertex = 0;
-            for x in 0..(n-1) {
-                for y in 0..(n-1) {
-                    if is_corner(&map, x, y) {
-                        n_vertex += 1;
-                    }
-                }
-            }
-            assert!(n_vertex <= vmax);
-            'search_v: while n_vertex < vmin {
-                let x: usize = rng.gen::<usize>() % (n-2) + 1;
-                let y: usize = rng.gen::<usize>() % (n-2) + 1;
-                if !map[x][y].is_unk() {
-                    continue;
-                }
-                eprintln!("{} < {}", n_vertex, vmin);
-                // dbg!((n_vertex, vmin));
-                let orig = map[x][y].as_bool();
-                let mut cnt = 0;
-                for d in 0..4 {
-                    let (tx, ty) = apply_move((x, y), d);
-                    if map[tx][ty].as_bool() != orig {
-                        cnt += 1;
-                        // こういうのも駄目なので除外
-                        // ?.#
-                        // #..
-                        // ?.?
-                        let (sx, sy) = apply_move(apply_move((x, y), (d+2)%4), (d+1)%4);
-                        if map[sx][sy].as_bool() != orig {
-                            continue 'search_v;
-                        }
-                        let (sx, sy) = apply_move(apply_move((x, y), (d+2)%4), (d+3)%4);
-                        if map[sx][sy].as_bool() != orig {
-                            continue 'search_v;
-                        }
-                    }
-                }
-                if cnt != 1 {
-                    continue;
-                }
-                eprintln!("found ({}, {})", x, y);
-                // dbg!((x, y));
-                for dx in 0..2 { for dy in 0..2 {
-                    if is_corner(&map, x-dx, y-dy) {
-                        n_vertex -= 1;
-                    }
-                }}
-                map[x][y] = Cell::as_unk(!orig);
-                for dx in 0..2 { for dy in 0..2 {
-                    if is_corner(&map, x-dx, y-dy) {
-                        n_vertex += 1;
-                    }
-                }}
-                // todo(tos)
+    // vertex wo fuyasu
+    let mut n_vertex = 0;
+    for x in 0..(n-1) {
+        for y in 0..(n-1) {
+            if is_corner(&map, x, y) {
+                n_vertex += 1;
             }
         }
+    }
+    assert!(n_vertex <= vmax);
+    'search_v: while n_vertex < vmin {
+        let x: usize = rng.gen::<usize>() % (n-2) + 1;
+        let y: usize = rng.gen::<usize>() % (n-2) + 1;
+        if !map[x][y].is_unk() {
+            continue;
+        }
+        eprintln!("{} < {}", n_vertex, vmin);
+        // dbg!((n_vertex, vmin));
+        let orig = map[x][y].as_bool();
+        let mut cnt = 0;
+        for d in 0..4 {
+            let (tx, ty) = apply_move((x, y), d);
+            if map[tx][ty].as_bool() != orig {
+                cnt += 1;
+                // こういうのも駄目なので除外
+                // ?.#
+                // #..
+                // ?.?
+                let (sx, sy) = apply_move(apply_move((x, y), (d+2)%4), (d+1)%4);
+                if map[sx][sy].as_bool() != orig {
+                    continue 'search_v;
+                }
+                let (sx, sy) = apply_move(apply_move((x, y), (d+2)%4), (d+3)%4);
+                if map[sx][sy].as_bool() != orig {
+                    continue 'search_v;
+                }
+            }
+        }
+        if cnt != 1 {
+            continue;
+        }
+        eprintln!("found ({}, {})", x, y);
+        // dbg!((x, y));
+        for dx in 0..2 { for dy in 0..2 {
+            if is_corner(&map, x-dx, y-dy) {
+                n_vertex -= 1;
+            }
+        }}
+        map[x][y] = Cell::as_unk(!orig);
+        for dx in 0..2 { for dy in 0..2 {
+            if is_corner(&map, x-dx, y-dy) {
+                n_vertex += 1;
+            }
+        }}
+        // todo(tos)
+    }
+}
 
 fn is_corner(map: &Vec<Vec<Cell>>, x: usize, y: usize) -> bool {
     let mut cnt = 0;
