@@ -139,8 +139,10 @@ func runCommand(
 		return errors.WithStack(err)
 	}
 	script := fmt.Sprintf(
-		"task='%s'; buy='%s'; buy_string='%s'; solution='%s'; %s",
+		"task='%s'; task_name='%s'; buy='%s'; "+
+			"buy_string='%s'; solution='%s'; %s",
 		path.Join(dir, "task"),
+		strings.TrimSuffix(solution.GetProblemName(), ".desc"),
 		path.Join(dir, "buy"),
 		solution.GetSolutionBooster(),
 		path.Join(dir, "solution"),
