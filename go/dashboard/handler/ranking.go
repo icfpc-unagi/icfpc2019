@@ -182,6 +182,10 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 	}
 	output.WriteHTML(`</thead><tbody>`)
 	appendScore := func(s *Score, best bool) {
+		if s == nil {
+			output.WriteHTML(`<td align="right">-</td><td></td>`)
+			return
+		}
 		note := Escape(fmt.Sprintf("%d", s.ComputedScore))
 		if best {
 			note = `<a href="/program?program_id=` +
@@ -212,7 +216,11 @@ func rankingHandler(ctx context.Context, r *http.Request) (HTML, error) {
 			if i > 20 {
 				break
 			}
-			appendScore(&scores[programIDToScore[programID]], false)
+			if idx, ok := programIDToScore[programID]; ok {
+				appendScore(&scores[idx], false)
+			} else {
+				appendScore(nil, false)
+			}
 		}
 		output.WriteHTML("</tr>")
 	}
