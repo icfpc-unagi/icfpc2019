@@ -1,13 +1,13 @@
 package handler
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"html/template"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/imos/icfpc2019/go/util/db"
 	"google.golang.org/appengine"
@@ -56,7 +56,7 @@ var tmpl = template.Must(template.New("solution").Parse(`
 				<td>{{.ProgramName}} ({{.ProgramID}})</td>
 				<td>{{.ProblemName}} ({{.ProblemID}})</td>
 				<td>{{.SolutionBooster}}</td>
-				<td>{{.SolutionScore}}</td>
+				{{if .SolutionInvalid}}<td style="color:red">invalid<a href="#retry">?</a>{{else}}<td>{{.SolutionScore}}{{end}}</td>
 				<td>{{.SolutionModified}}</td>
 			</tr>
 		</tbody>
@@ -64,7 +64,7 @@ var tmpl = template.Must(template.New("solution").Parse(`
 
 	<p>{{.SolutionDescription}}</p>
 
-	<div style="text-align:center"><img src="/solution_image?solution_id={{.SolutionID}}"></div>
+	<div style="text-align:center"><img src="/solution_image?solution_id={{.SolutionID}}" class="pix"></div>
 
 	<details><summary><h3 style="display:inline-block"><a name="output">Output:</a></h3></summary>
 	<pre>{{.SolutionDataBlob}}</pre></details>
@@ -75,7 +75,7 @@ var tmpl = template.Must(template.New("solution").Parse(`
 {{if .SolutionDone}}
 	<form method="POST" action="/solution/retry">
 	<input type="hidden" name="solution_id" value="{{.SolutionID}}">
-	<input type="submit" value="Retry?">
+	<a name="retry"><input type="submit" value="Retry?"></a>
 	</form>
 {{end}}
 `))
@@ -99,6 +99,7 @@ func solutionHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		ProgramName         string  `db:"program_name"`
 		ProblemID           int64   `db:"problem_id"`
 		ProblemName         string  `db:"problem_name"`
+		SolutionInvalid     bool
 	}{}
 	if err := db.Row(ctx, &solution, `
 		SELECT
@@ -126,7 +127,10 @@ func solutionHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		`, solutionID); err != nil {
 		return "", err
 	}
-	var buf bytes.Buffer
+	if solution.SolutionScore != nil && *solution.SolutionScore >= 100000000 {
+		solution.SolutionInvalid = true
+	}
+	var buf strings.Builder
 	if err = tmpl.Execute(&buf, solution); err != nil {
 		return "", err
 	}

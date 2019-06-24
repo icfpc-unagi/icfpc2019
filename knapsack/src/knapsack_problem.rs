@@ -25,7 +25,9 @@ pub fn solve_knapsack_problem(problem: &KnapsackProblem) -> Vec<usize> {
     dp[0] = (0..=capacity).map(|x| ((x * 100) as f64, !0, !0)).collect();
 
     for i in 0..n_item_sets {
-        dp[i + 1] = (0..=capacity).map(|x| (dp[i][x].0, !0, x)).collect();
+        // この行は要らないことにする。必ずweightが0のアイテムが含まれるはずで、そいつを必ず使ってくれ。
+        // dp[i + 1] = (0..=capacity).map(|x| (dp[i][x].0, !0, x)).collect();
+        dp[i + 1] = vec![(std::f64::MIN, !0, !0); capacity + 1];
 
         for (j, (weight, score)) in item_sets[i].iter().enumerate() {
             if *weight > capacity {

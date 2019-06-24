@@ -18,9 +18,9 @@ func programHandler(ctx context.Context, r *http.Request) (HTML, error) {
 	if err != nil {
 		return "", err
 	}
-	program := struct{
-		ProgramName    string `db:"program_name"`
-		ProgramCode    string `db:"program_code"`
+	program := struct {
+		ProgramName string `db:"program_name"`
+		ProgramCode string `db:"program_code"`
 	}{}
 	if err := db.Row(ctx, &program,
 		`SELECT
@@ -65,13 +65,14 @@ func programHandler(ctx context.Context, r *http.Request) (HTML, error) {
 		ORDER BY problem_name, solution_booster`, programID); err != nil {
 		return "", err
 	}
-	output := HTML(
-		`<h2 style="display:inline-block;margin-right:10px">` + Escape(program.ProgramName) + `</h2>` +
-		`<code style="border:solid 1px silver;border-radius:3px;background:white;padding:2px">` + Escape(program.ProgramCode) + `</code>` +
-		`<table class="table table-clickable">` +
-			`<thead><tr><td>Name</td><td>Booster</td>` +
-			`<td>Score</td><td width="300">Image</td><td>Modified</td></thead>` +
-			`<tbody>`)
+	output := &HTMLBuffer{}
+	output.WriteHTML(
+		`<h2 style="display:inline-block;margin-right:10px">`, Escape(program.ProgramName), `</h2>`,
+		`<code style="border:solid 1px silver;border-radius:3px;background:white;padding:2px">`, Escape(program.ProgramCode), `</code>`,
+		`<table class="table table-clickable">`,
+		`<thead><tr><td>Name</td><td>Booster</td>`,
+		`<td>Score</td><td width="300">Image</td><td>Modified</td></thead>`,
+		`<tbody>`)
 	for _, problem := range problems {
 		booster := HTML("None")
 		if problem.SolutionBooster != nil && *problem.SolutionBooster != "" {
@@ -86,25 +87,26 @@ func programHandler(ctx context.Context, r *http.Request) (HTML, error) {
 			} else {
 				score = Escape(fmt.Sprintf("%d", *problem.SolutionScore))
 			}
-			image = `<img src="/solution_image?solution_id=` + Escape(fmt.Sprintf("%d", *problem.SolutionID)) + `" style="max-width:300px;height:auto">`
-			dataHref = ` data-href="/solution?solution_id=` + Escape(fmt.Sprintf("%d", *problem.SolutionID)) + `"`
+			image = HTML(fmt.Sprintf(`<img src="/solution_image?solution_id=%d" class="w400 pix">`, *problem.SolutionID))
+			dataHref = HTML(fmt.Sprintf(` data-href="/solution?solution_id=%d"`, *problem.SolutionID))
 		}
 		modified := "-"
 		if problem.SolutionModified != nil {
 			modified = *problem.SolutionModified
 		}
-		output += `<tr` + dataHref + `><td>` +
-			Escape(problem.ProblemName) +
-			"</td><td>" +
-			booster +
-			"</td><td>" +
-			score +
-			"</td><td>" +
-			image +
-			"</td><td>" +
-			Escape(modified) +
-			"</td></tr>"
+
+		output.WriteHTML(`<tr`, dataHref, `><td>`,
+			Escape(problem.ProblemName),
+			"</td><td>",
+			booster,
+			"</td><td>",
+			score,
+			"</td><td>",
+			image,
+			"</td><td>",
+			Escape(modified),
+			"</td></tr>")
 	}
-	output += `</tbody></table>`
-	return output, nil
+	output.WriteHTML(`</tbody></table>`)
+	return output.HTML(), nil
 }

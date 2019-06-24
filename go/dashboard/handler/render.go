@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"html/template"
 	"net/http"
+	"strings"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
@@ -538,6 +538,15 @@ table.table-clickable tr[data-href]:hover td {
 	background: #eee;
 }
 
+.w400 {
+	max-width: 400px;
+	height: auto;
+}
+
+.pix {
+	image-rendering: pixelated;
+}
+
 </style>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script>
@@ -595,18 +604,18 @@ func Escape(s string) HTML {
 	return HTML(template.HTMLEscapeString(s))
 }
 
-type HTMLBuffer bytes.Buffer
+type HTMLBuffer strings.Builder
 
 func (b *HTMLBuffer) WriteHTML(s ...HTML) {
 	for _, ss := range s {
-		(*bytes.Buffer)(b).WriteString(string(ss))
+		(*strings.Builder)(b).WriteString(string(ss))
 	}
 }
 
 func (b *HTMLBuffer) WriteString(s string) {
-	(*bytes.Buffer)(b).WriteString(template.HTMLEscapeString(s))
+	(*strings.Builder)(b).WriteString(template.HTMLEscapeString(s))
 }
 
 func (b *HTMLBuffer) HTML() HTML {
-	return HTML((*bytes.Buffer)(b).String())
+	return HTML((*strings.Builder)(b).String())
 }

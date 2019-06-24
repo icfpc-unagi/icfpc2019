@@ -7,11 +7,8 @@ fn main() {
     let budget = std::env::args().nth(2).expect("usage: args[2] = budget");
     let budget = budget.parse().unwrap();
     let solutions = read_solutions(&in_file_path);
-
-    let problem_sizes = get_problem_sizes();
-
-    let selected_solutions = solve(&solutions, budget, &problem_sizes);
-    //eprintln!("{:?}", &selected_solutions);
+    eprintln!("Loading done");
+    let selected_solutions = solve(&solutions, budget);
 
     for solution in &selected_solutions {
         println!(

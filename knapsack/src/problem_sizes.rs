@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-type ProblemSizes = HashMap<String, (usize, usize)>;
+pub type ProblemSizes = HashMap<String, (usize, usize)>;
 
 const PROBLEM_SIZES: [(&str, (usize, usize)); 300] = [
     ("prob-001", (8, 3)),

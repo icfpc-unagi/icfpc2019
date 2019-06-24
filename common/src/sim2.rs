@@ -322,4 +322,16 @@ mod tests {
         assert!(map.iter().all(|v| v.iter().all(|&s| s != Square::Empty)));
     }
 
+    #[test]
+    fn test_wata_221_buy() {
+        let (mut map, mut booster, init_x, init_y) = read_task(
+            "../data/part-3-clones/prob-221.desc");
+        let solution = parse_sol(
+            "DDDWDDDDDDDWWWWDWDDWWDDDDSDDDDDDDDDSCCZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZCB(1,-2)#AWWWWWWWDDDWDDWDDWDDDDDDDWDWWDDDWWWWWWWWDWDDWWWWWWDDDWDDDWWDDDDDDDDDWWWWWWDDDDDDDDDDDDWDWWWB(1,-2)#SSSSSAAAAAAAADDDDDDDWWWWWWWWWWWWDDDWDDWDDWDDDDDDDWDWWDDDWWWWWWWWDWDDWWWWWWDDDWDDDSDDDDDDDWWAAAWWWWWWWAAAWWAAAWAAWWWWWAAAAAWWWWWWAWAWWAAAWAAAAAAAAAAAWB(1,-2)#B(1,-2)");
+        let init_boosters = parse_buy(&"CB");
+        let mut state = WorkersState::new_t0_with_options(init_x, init_y, &mut map, init_boosters);
+        apply_multi_actions(&mut map, &mut booster, &mut state, &solution);
+        // eprintln!("{:?}", state);
+        // assert!(false);
+    }
 }
